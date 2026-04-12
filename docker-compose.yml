@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  beigebox-security:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      BEIGEBOX_SECURITY_HOST: 0.0.0.0
+      BEIGEBOX_SECURITY_PORT: 8001
+      BEIGEBOX_SECURITY_DEBUG: "false"
+      BEIGEBOX_SECURITY_DATA_DIR: /app/data
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped

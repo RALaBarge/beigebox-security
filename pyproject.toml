@@ -1,0 +1,89 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "beigebox-security"
+version = "0.1.0"
+description = "Comprehensive security orchestration for LLM/RAG stacks: poisoning detection, parameter validation, anomaly detection, memory integrity"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Jinx", email = "ops@beigebox.ai"}
+]
+keywords = ["security", "llm", "rag", "poisoning-detection", "anomaly-detection", "parameter-validation"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries",
+]
+
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "httpx>=0.25.0",
+    "numpy>=1.21",
+    "scikit-learn>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-asyncio>=0.21",
+    "pytest-cov>=4.1",
+    "black>=23.0",
+    "ruff>=0.1",
+    "mypy>=1.5",
+]
+docker = [
+    "docker>=6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/beigebox-ai/beigebox-security"
+Documentation = "https://beigebox-security.readthedocs.io"
+Repository = "https://github.com/beigebox-ai/beigebox-security"
+"Bug Tracker" = "https://github.com/beigebox-ai/beigebox-security/issues"
+
+[project.scripts]
+beigebox-security = "beigebox_security.cli:main"
+
+[tool.setuptools]
+packages = ["beigebox_security", "beigebox_security.routers", "beigebox_security.integrations"]
+
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311', 'py312']
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+select = ["E", "F", "W"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers"
+testpaths = ["tests"]
+markers = [
+    "unit: Unit tests (no I/O)",
+    "integration: Integration tests (with I/O)",
+    "e2e: End-to-end tests",
+    "slow: Tests that take >1s",
+]

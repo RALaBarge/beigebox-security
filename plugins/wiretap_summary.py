@@ -35,6 +35,8 @@ PLUGIN_NAME = "wiretap_summary"
 class WiretapSummaryTool:
     """Summarises recent proxy traffic from wire.jsonl."""
 
+    description = 'Summarise recent BeigeBox proxy traffic — request counts, models used, errors. input = optional time window. Example: {"tool": "wiretap_summary", "input": "last hour"}'
+
     def run(self, query: str = "") -> str:
         try:
             from beigebox.config import get_config

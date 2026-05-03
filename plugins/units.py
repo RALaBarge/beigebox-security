@@ -108,6 +108,8 @@ def _convert_temp(value: float, from_unit: str, to_unit: str) -> str:
 class UnitsTool:
     """Unit converter — length, weight, data size, temperature."""
 
+    description = 'Convert between common units (length, weight, temperature, data size). input = natural-language conversion. Example: {"tool": "units", "input": "100 miles to km"}'
+
     def run(self, query: str) -> str:
         q = query.strip()
 

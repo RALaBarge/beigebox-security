@@ -57,6 +57,8 @@ def _build_tree(names: list[str], sizes: dict[str, int]) -> str:
 class ZipInspectorTool:
     """Inspect zip archives — returns file tree and text previews."""
 
+    description = 'List a zip archive in workspace/in/ and preview UTF-8 text contents. input = zip filename. Example: {"tool": "zip_inspector", "input": "data.zip"}'
+
     def run(self, query: str) -> str:
         query = query.strip()
 

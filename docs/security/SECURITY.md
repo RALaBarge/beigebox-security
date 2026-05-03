@@ -153,7 +153,7 @@ backends:
     timeout: 30                              # Prevent hanging requests
     
   - name: openrouter
-    url: https://openrouter.io/api/v1
+    url: https://openrouter.ai/api/v1
     auth: "$OPENROUTER_API_KEY"              # Environment variable
     allowed_models: ["gpt*", "claude*"]
     rate_limit: 100                          # Requests per minute

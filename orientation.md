@@ -143,7 +143,7 @@ The next labeled batch is **principle-violation-first, size-irrelevant.** What's
 ## Open architectural opportunities (separate from H-batch)
 
 - **Tool ABC is informal.** `NetworkAuditTool`, `CDPTool`, `CalculatorTool`, etc. are duck-typed (`run(input_text) -> str`) but not enforced by a `tools/base.py:Tool` Protocol. Adding one + having every tool inherit would apply the factory-pattern stance at the tool layer. Touches every tool, so deferred until v3 settles.
-- **Two `ParameterValidator` classes.** `beigebox/tools/validation.py:ParameterValidator` is wired into the registry and fires on dispatch. `beigebox/security/mcp_parameter_validator.py:ParameterValidator` has a more thorough multi-tier API but its actual instantiation surface needs tracing. Possible duplication, possible defense-in-depth — worth a focused look.
+- ~~**Two `ParameterValidator` classes.**~~ Closed 2026-05-03 (H-6). `security/mcp_parameter_validator.py` was dead code — re-exported from `security/__init__.py` but never instantiated outside its own docstring. Validation flows entirely through `tools/validation.py:ParameterValidator`, wired at `tools/registry.py:368`. The dead file plus `tests/test_v3_thin_proxy.py:127`'s comment "mcp_parameter_validator was deleted in v3" was the same constitution/code-mismatch pattern as H-1.
 - **Cosmetic**: `security/tool_call_validator.py:285` has a stale `# Optional SQLiteStore for audit logging` comment.
 
 ## Invariant being enforced (factory pattern, ongoing)

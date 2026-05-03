@@ -210,6 +210,8 @@ class DocParserTool:
         /absolute/path/to/file.docx
     """
 
+    description = 'Parse a file in workspace/in/ to Markdown and index it in vector memory. input = filename. Example: {"tool": "doc_parser", "input": "report.pdf"}'
+
     def run(self, query: str) -> str:
         query = query.strip().strip("'\"")
         if not query:

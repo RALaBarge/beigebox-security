@@ -26,6 +26,8 @@ PLUGIN_NAME = "dice"
 class DiceTool:
     """Dice roller — understands XdY notation and common RPG rolls."""
 
+    description = 'Roll dice or flip a coin. input = roll in XdY notation, optionally with "drop lowest". Example: {"tool": "dice", "input": "3d6"}'
+
     def run(self, query: str) -> str:
         q = query.lower().strip()
 

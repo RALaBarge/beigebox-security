@@ -13,6 +13,7 @@ import logging
 import time
 from beigebox.config import get_config
 from beigebox.logging import log_tool_call
+from beigebox.tools.base import Tool
 from beigebox.tools.validation import ParameterValidator
 from beigebox.tools.web_search import WebSearchTool
 from beigebox.tools.web_scraper import WebScraperTool
@@ -49,7 +50,7 @@ class ToolRegistry:
     """Manages available tools based on configuration."""
 
     def __init__(self, vector_store=None):
-        self.tools: dict[str, object] = {}
+        self.tools: dict[str, Tool] = {}
         cfg = get_config()
         tools_cfg = cfg.get("tools", {})
 
@@ -59,6 +60,13 @@ class ToolRegistry:
         # Webhook notifier (optional)
         webhook_url = tools_cfg.get("webhook_url", "")
         self.notifier = ToolNotifier(webhook_url)
+
+        # Workspace output path — used by plan_manager, research_agent,
+        # parallel_research, evidence_synthesis. (workspace_file tool was
+        # deleted in H-1; this directory is still the canonical write
+        # target for the surviving tools that emit artifacts.)
+        from pathlib import Path as _P
+        _ws_out = _P(__file__).parent.parent.parent / cfg.get("workspace", {}).get("path", "./workspace") / "out"
 
         if not tools_cfg.get("enabled", False):
             logger.info("Tools disabled globally")
@@ -334,6 +342,18 @@ class ToolRegistry:
                 self.tools[name] = tool
         if plugin_tools:
             logger.info("Tool registry after plugins: %s", list(self.tools.keys()))
+
+        # --- Protocol sanity: every registered tool satisfies Tool ---
+        # Catches contract violations at startup (missing `description` or
+        # `run`) instead of at first dispatch.
+        for _name, _tool in self.tools.items():
+            if not isinstance(_tool, Tool):
+                raise TypeError(
+                    f"Tool {_name!r} ({type(_tool).__name__}) does not satisfy "
+                    f"the Tool protocol. Required: description: str + "
+                    f"run(self, input_text: str) -> str | dict. "
+                    f"See beigebox/tools/base.py."
+                )
 
     def get(self, name: str):
         """Get a tool by name, or None if not registered."""

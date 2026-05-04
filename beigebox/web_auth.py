@@ -24,17 +24,122 @@ API paths (/v1/, /api/) are unaffected — they use Bearer token auth as before.
 from __future__ import annotations
 
 import hashlib
+import hmac
+import json
 import logging
 import os
 import secrets
+import time
 from abc import ABC, abstractmethod
-from base64 import urlsafe_b64encode
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 from urllib.parse import urlencode
 
 import httpx
-from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+
+
+# ---------------------------------------------------------------------------
+# Signed-cookie helpers — stdlib HMAC + base64 + timestamp, drop-in replacement
+# for the previous itsdangerous URLSafeTimedSerializer.
+#
+# Token wire format: "<payload-b64url>.<ts>.<sig-b64url>"
+#   payload-b64url = urlsafe-b64(json.dumps(payload).encode())  (no '=' padding)
+#   ts             = decimal seconds since epoch (issued-at), as ASCII
+#   sig-b64url     = urlsafe-b64(HMAC-SHA256(secret, salt|payload-b64url|ts))
+#                                                                  (no '=' padding)
+#
+# - Salt is mixed into the MAC input (matches the itsdangerous "salt" semantics:
+#   different salts produce non-interchangeable signatures even for identical
+#   secret+payload).
+# - HMAC uses SHA-256.
+# - Verify uses hmac.compare_digest (constant-time).
+# - max_age check rejects tokens older than max_age seconds (and tokens
+#   timestamped in the future by more than a small clock-skew tolerance).
+# ---------------------------------------------------------------------------
+
+_FUTURE_SKEW = 60  # seconds of tolerated forward clock skew on verify
+
+
+class BadSignature(Exception):
+    """Raised when a session token fails MAC verification or is malformed."""
+
+
+class SignatureExpired(BadSignature):
+    """Raised when a session token's age exceeds max_age."""
+
+
+def _b64u_encode(b: bytes) -> str:
+    """URL-safe base64 with padding stripped (RFC 4648 §5, "base64url")."""
+    return urlsafe_b64encode(b).rstrip(b"=").decode("ascii")
+
+
+def _b64u_decode(s: str) -> bytes:
+    """Inverse of _b64u_encode — re-pads before decoding."""
+    pad = "=" * (-len(s) % 4)
+    return urlsafe_b64decode(s + pad)
+
+
+class _TimedSigner:
+    """HMAC-signed, time-stamped JSON serializer.
+
+    API mirrors the subset of itsdangerous.URLSafeTimedSerializer we used:
+    ``dumps(payload)`` returns a string token; ``loads(token, max_age=N)``
+    returns the payload or raises BadSignature/SignatureExpired.
+    """
+
+    def __init__(self, secret: str, salt: str = "") -> None:
+        # Accept str secret (matches itsdangerous), encode once.
+        self._key = secret.encode("utf-8") if isinstance(secret, str) else bytes(secret)
+        self._salt = salt.encode("utf-8") if isinstance(salt, str) else bytes(salt)
+
+    def _mac(self, payload_b64: str, ts: str) -> bytes:
+        msg = self._salt + b"|" + payload_b64.encode("ascii") + b"|" + ts.encode("ascii")
+        return hmac.new(self._key, msg, hashlib.sha256).digest()
+
+    def dumps(self, payload) -> str:
+        data = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
+        payload_b64 = _b64u_encode(data)
+        ts = str(int(time.time()))
+        sig_b64 = _b64u_encode(self._mac(payload_b64, ts))
+        return f"{payload_b64}.{ts}.{sig_b64}"
+
+    def loads(self, token: str, max_age: int | None = None):
+        if not isinstance(token, str):
+            raise BadSignature("token must be a string")
+        try:
+            payload_b64, ts_str, sig_b64 = token.split(".")
+        except ValueError:
+            raise BadSignature("malformed token")
+
+        # Verify MAC (constant-time).
+        try:
+            given_sig = _b64u_decode(sig_b64)
+        except Exception:
+            raise BadSignature("malformed signature")
+        expected_sig = self._mac(payload_b64, ts_str)
+        if not hmac.compare_digest(given_sig, expected_sig):
+            raise BadSignature("signature mismatch")
+
+        # Parse timestamp.
+        try:
+            issued_at = int(ts_str)
+        except ValueError:
+            raise BadSignature("malformed timestamp")
+
+        now = int(time.time())
+        # Reject tokens far in the future (corruption / clock issue / forgery).
+        if issued_at > now + _FUTURE_SKEW:
+            raise BadSignature("timestamp in the future")
+        if max_age is not None and (now - issued_at) > max_age:
+            raise SignatureExpired(f"token older than {max_age}s")
+
+        # Decode payload.
+        try:
+            payload_bytes = _b64u_decode(payload_b64)
+            return json.loads(payload_bytes.decode("utf-8"))
+        except Exception:
+            raise BadSignature("malformed payload")
 
 logger = logging.getLogger(__name__)
 
@@ -316,7 +421,7 @@ class WebAuthManager:
         self._enabled: bool = bool(enabled)
         self.mode = web_ui_cfg.get("mode", "none")
         self._providers: dict[str, OAuthProvider] = {}
-        self._signer: URLSafeTimedSerializer | None = None
+        self._signer: _TimedSigner | None = None
 
         if self.mode != "oauth":
             return
@@ -331,7 +436,7 @@ class WebAuthManager:
             )
         else:
             logger.info("WebAuth: BB_SESSION_SECRET resolved from %s", secret_source)
-        self._signer = URLSafeTimedSerializer(secret, salt="bb-web-session")
+        self._signer = _TimedSigner(secret, salt="bb-web-session")
 
         for prov_cfg in web_ui_cfg.get("providers", []):
             pname = prov_cfg.get("name", "").lower()

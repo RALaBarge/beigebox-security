@@ -1,6 +1,6 @@
 """
 Web scraper: fetch a URL and extract clean text content.
-Uses requests + BeautifulSoup. No API key needed.
+Uses httpx + stdlib html.parser. No API key needed.
 
 On every successful fetch:
   1. Saves the raw HTML to <save_dir>/scraped/<domain>_<timestamp>.html
@@ -16,9 +16,10 @@ import os
 import re
 import urllib.parse
 from datetime import datetime, timezone
+from html import unescape
+from html.parser import HTMLParser
 
-import requests
-from bs4 import BeautifulSoup
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,105 @@ DEFAULT_HEADERS = {
 
 # Chunk size for RAG embedding — keeps each chunk within typical embedding limits.
 _CHUNK_CHARS = 1500
+
+# Tags whose subtree we drop entirely — script/style and chrome elements.
+# Matches the previous bs4 .decompose() set.
+_SKIP_TAGS = frozenset({"script", "style", "nav", "footer", "header", "aside", "noscript"})
+
+# Block-level tags after whose end-tag we emit a newline so the subsequent
+# whitespace collapse keeps text on its own line — mimics bs4's
+# get_text(separator="\n") "every block on a fresh line" behavior.
+_BLOCK_TAGS = frozenset({
+    "p", "div", "br", "li", "ul", "ol", "tr", "td", "th", "table",
+    "h1", "h2", "h3", "h4", "h5", "h6", "section", "article",
+    "blockquote", "pre", "hr", "figure", "figcaption", "main",
+})
+
+
+class _TextExtractor(HTMLParser):
+    """Stdlib HTMLParser subclass that mirrors the previous bs4 extraction.
+
+    Preserves:
+      * decompose-equivalent: drop subtree of script/style/nav/footer/header/aside/noscript.
+      * get_text(separator="\\n"): emit \\n between block-level elements.
+      * resilience: convert_charrefs=True handles entity decoding; malformed
+        HTML is best-effort (HTMLParser is lenient by default).
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        # Stack of currently open tags. We push on every starttag and pop on
+        # the matching endtag. We *also* tolerate void elements (br, hr, img,
+        # etc.) — handle_startendtag is called for those and we never push.
+        self._stack: list[str] = []
+        # Count of currently-open _SKIP_TAGS ancestors. While >0 we drop data.
+        self._skip_depth: int = 0
+        self._chunks: list[str] = []
+
+    # --- tag handling ------------------------------------------------------
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        tag = tag.lower()
+        self._stack.append(tag)
+        if tag in _SKIP_TAGS:
+            self._skip_depth += 1
+        # <br> is special-cased: real-world HTML often emits <br> as a start
+        # tag without a self-close — treat it as a line break unconditionally.
+        if tag == "br" and self._skip_depth == 0:
+            self._chunks.append("\n")
+
+    def handle_startendtag(self, tag: str, attrs) -> None:
+        # Void / self-closed elements (e.g. <br/>, <hr/>, <img/>).
+        tag = tag.lower()
+        if tag == "br" and self._skip_depth == 0:
+            self._chunks.append("\n")
+        elif tag in _BLOCK_TAGS and self._skip_depth == 0:
+            self._chunks.append("\n")
+        # Don't push to the stack — there's no matching endtag.
+
+    def handle_endtag(self, tag: str) -> None:
+        tag = tag.lower()
+        # Pop until we find a matching open tag (forgiving of mismatched
+        # nesting in the wild). If we never find it, leave stack alone.
+        if tag in self._stack:
+            while self._stack:
+                popped = self._stack.pop()
+                if popped in _SKIP_TAGS:
+                    self._skip_depth = max(0, self._skip_depth - 1)
+                if popped == tag:
+                    break
+        if tag in _BLOCK_TAGS and self._skip_depth == 0:
+            self._chunks.append("\n")
+
+    # --- data handling -----------------------------------------------------
+
+    def handle_data(self, data: str) -> None:
+        if self._skip_depth > 0:
+            return
+        self._chunks.append(data)
+
+    # --- result ------------------------------------------------------------
+
+    def get_text(self) -> str:
+        # Join, then collapse: strip every line, drop blank lines, rejoin
+        # with single \n. Matches the previous bs4 cleanup pass.
+        raw = "".join(self._chunks)
+        # convert_charrefs handles most entities, but be defensive.
+        raw = unescape(raw)
+        lines = [line.strip() for line in raw.splitlines() if line.strip()]
+        return "\n".join(lines)
+
+
+def _extract_text_from_html(html: str) -> str:
+    """Mirror of the previous bs4 path: strip script/style/chrome, get text, collapse."""
+    parser = _TextExtractor()
+    try:
+        parser.feed(html)
+        parser.close()
+    except Exception as e:
+        # html.parser is lenient — but be paranoid about pathological input.
+        logger.debug("HTML parse warning: %s", e)
+    return parser.get_text()
 
 
 class WebScraperTool:
@@ -129,24 +229,17 @@ class WebScraperTool:
             logger.warning("WebScraperTool blocked URL %s: %s", url, err)
             return f"Blocked: {err}"
         try:
-            resp = requests.get(url, headers=DEFAULT_HEADERS, timeout=15)
+            # follow_redirects=True matches the requests default behavior.
+            resp = httpx.get(
+                url,
+                headers=DEFAULT_HEADERS,
+                timeout=15,
+                follow_redirects=True,
+            )
             resp.raise_for_status()
 
             raw_html = resp.text
-            soup = BeautifulSoup(raw_html, "html.parser")
-
-            # decompose() removes each tag and its subtree from the parse tree
-            # entirely, so get_text() below never sees script/style content.
-            for tag in soup(["script", "style", "nav", "footer", "header", "aside"]):
-                tag.decompose()
-
-            text = soup.get_text(separator="\n", strip=True)
-
-            # Filter blank lines and strip leading/trailing whitespace per line.
-            # This collapses the excessive blank lines that get_text() emits
-            # between block elements into a clean single-newline-separated text.
-            lines = [line.strip() for line in text.splitlines() if line.strip()]
-            text = "\n".join(lines)
+            text = _extract_text_from_html(raw_html)
 
             # Save raw HTML (preserves original structure, evergreen format)
             filepath = self._save_html(url, raw_html)

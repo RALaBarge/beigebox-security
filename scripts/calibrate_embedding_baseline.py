@@ -2,6 +2,17 @@
 """
 Baseline Calibration Tool for RAG Poisoning Detection.
 
+DEPRECATED 2026-05-04: This script reads embeddings out of ChromaDB, which
+has been removed from BeigeBox in favor of PostgreSQL + pgvector. To
+recalibrate against a postgres corpus, query the `embeddings` table
+directly (see the SQL recipe below) and pipe the vectors into
+`compute_baseline_statistics`. The chromadb code path is preserved as
+read-only history.
+
+  # PostgreSQL recipe — adapt as needed:
+  # psql -d beigebox -c "COPY (SELECT embedding FROM embeddings
+  #     ORDER BY random() LIMIT 200) TO STDOUT WITH CSV;"
+
 Collects baseline embedding statistics from legitimate corpus for production deployment.
 Analyzes N embeddings to compute mean, std, percentiles, and per-dimension stats.
 

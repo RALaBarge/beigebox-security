@@ -2,6 +2,14 @@
 """
 Migrate vector embeddings from ChromaDB to PostgreSQL + pgvector.
 
+MIGRATION COMPLETE 2026-05-04 — kept for historical reference; do not run
+against new data. ChromaDB has been removed from the BeigeBox codebase as
+of 2026-05-04. This script remains in the tree because it is the
+authoritative record of how the migration was performed; if you have an
+old chromadb directory you still need to migrate, you will need to
+reinstall `chromadb` manually (it is no longer a project dependency)
+before this script will run.
+
 This is a one-time migration script for users with existing ChromaDB data.
 If you're starting fresh, you don't need to run this.
 

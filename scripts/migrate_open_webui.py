@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
 """
 Import existing Open WebUI conversation history into BeigeBox.
-Reads from Open WebUI's SQLite DB and writes to our SQLite + ChromaDB.
 
-Usage:
+DEPRECATED 2026-05-04: This script targeted the legacy SQLiteStore + ChromaDB
+storage stack. Both have been removed:
+  - SQLiteStore was decomposed into per-entity repos in batch B (April 2026).
+  - ChromaDB was removed in favor of PostgreSQL + pgvector on 2026-05-04.
+
+The script is preserved as read-only history. To resurrect it, port the
+write path to use:
+  - `beigebox.storage.repos.make_conversation_repo(db)` for messages,
+  - `beigebox.storage.backends.make_backend("postgres", connection_string=...)`
+    plus `VectorStore(backend=..., embedding_model=..., embedding_url=...)`
+    for embeddings.
+
+Original usage (no longer functional):
     python scripts/migrate_open_webui.py --source ~/.config/open-webui/webui.db
     python scripts/migrate_open_webui.py --source /path/to/webui.db --dry-run
 """
@@ -15,11 +26,6 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from beigebox.config import get_config
-from beigebox.storage.sqlite_store import SQLiteStore
-from beigebox.storage.vector_store import VectorStore
-from beigebox.storage.models import Message
 
 
 def read_open_webui_db(db_path: str) -> list[dict]:
@@ -89,7 +95,7 @@ def extract_messages(chat_data: dict) -> list[dict]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Import Open WebUI history")
+    parser = argparse.ArgumentParser(description="Import Open WebUI history (DEPRECATED)")
     parser.add_argument("--source", "-s", required=True, help="Path to Open WebUI webui.db")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be imported without writing")
     args = parser.parse_args()
@@ -119,42 +125,13 @@ def main():
             print(f"  ... and {len(conversations) - 5} more")
         return
 
-    cfg = get_config()
-    sqlite = SQLiteStore(cfg["storage"]["sqlite_path"])
-    vector = VectorStore(
-        chroma_path=cfg["storage"]["chroma_path"],
-        embedding_model=cfg["embedding"]["model"],
-        embedding_url=cfg["embedding"]["backend_url"],
+    print(
+        "\nERROR: This script is deprecated. The SQLiteStore and ChromaDB write\n"
+        "       paths it depended on were removed from BeigeBox. See the module\n"
+        "       docstring for a migration plan that targets the current\n"
+        "       per-entity repos + PostgreSQL + pgvector stack."
     )
-
-    imported = 0
-    for conv in conversations:
-        msgs = extract_messages(conv["chat"])
-        for msg_data in msgs:
-            msg = Message(
-                conversation_id=conv["id"],
-                role=msg_data["role"],
-                content=msg_data["content"],
-                model=msg_data.get("model", ""),
-                timestamp=msg_data.get("timestamp", conv.get("created_at", "")),
-            )
-            sqlite.store_message(msg)
-            vector.store_message(
-                message_id=msg.id,
-                conversation_id=conv["id"],
-                role=msg.role,
-                content=msg.content,
-                model=msg.model,
-                timestamp=msg.timestamp,
-            )
-            imported += 1
-
-        if imported % 100 == 0:
-            print(f"  Imported {imported} messages...")
-
-    print(f"\nDone. Imported {imported} messages from {len(conversations)} conversations.")
-    print(f"SQLite: {cfg['storage']['sqlite_path']}")
-    print(f"ChromaDB: {cfg['storage']['chroma_path']}")
+    sys.exit(2)
 
 
 if __name__ == "__main__":

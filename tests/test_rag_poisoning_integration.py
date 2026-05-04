@@ -1,27 +1,28 @@
 """
-Integration tests for RAG poisoning detection with ChromaBackend.
+Integration tests for RAG poisoning detection with MemoryBackend.
 
 Tests the full integration of:
-- RAGPoisoningDetector in ChromaBackend
+- RAGPoisoningDetector in MemoryBackend
 - Configuration loading
 - Different detection modes (warn, quarantine, strict)
 - Baseline tracking during storage
+
+Originally written against ChromaBackend; switched to MemoryBackend after
+chromadb was removed from the project. The two share the same detector
+interface, so the test logic is unchanged.
 """
 
 import pytest
 import numpy as np
-import tempfile
-from pathlib import Path
 
-from beigebox.storage.backends.chroma import ChromaBackend
+from beigebox.storage.backends.memory import MemoryBackend
 from beigebox.security.rag_poisoning_detector import RAGPoisoningDetector
 
 
 @pytest.fixture
-def tmp_chroma_path():
-    """Create a temporary directory for ChromaDB."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        yield tmpdir
+def tmp_chroma_path(tmp_path):
+    """Legacy-named fixture; MemoryBackend ignores the path but tests still pass it."""
+    return str(tmp_path)
 
 
 @pytest.fixture
@@ -37,23 +38,23 @@ def normal_embeddings():
     return [np.random.randn(128).tolist() for _ in range(20)]
 
 
-class TestChromaBackendDetection:
-    """Test ChromaBackend integration with detector."""
+class TestMemoryBackendDetection:
+    """Test MemoryBackend integration with detector."""
 
     def test_initialization_with_detector(self, tmp_chroma_path, detector):
-        """Test ChromaBackend initializes with detector."""
-        backend = ChromaBackend(tmp_chroma_path, rag_detector=detector, detection_mode="warn")
+        """Test MemoryBackend initializes with detector."""
+        backend = MemoryBackend(rag_detector=detector, detection_mode="warn")
         assert backend._detector is not None
         assert backend._detection_mode == "warn"
 
     def test_initialization_without_detector(self, tmp_chroma_path):
-        """Test ChromaBackend creates default detector."""
-        backend = ChromaBackend(tmp_chroma_path)
+        """Test MemoryBackend creates default detector."""
+        backend = MemoryBackend()
         assert backend._detector is not None
 
     def test_upsert_normal_embeddings(self, tmp_chroma_path, detector, normal_embeddings):
         """Test storing normal embeddings."""
-        backend = ChromaBackend(tmp_chroma_path, rag_detector=detector, detection_mode="warn")
+        backend = MemoryBackend(rag_detector=detector, detection_mode="warn")
 
         ids = [f"msg_{i}" for i in range(len(normal_embeddings))]
         docs = [f"document {i}" for i in range(len(normal_embeddings))]
@@ -66,7 +67,7 @@ class TestChromaBackendDetection:
 
     def test_baseline_updated_with_safe_embeddings(self, tmp_chroma_path, detector, normal_embeddings):
         """Test that baseline is updated with stored safe embeddings."""
-        backend = ChromaBackend(tmp_chroma_path, rag_detector=detector, detection_mode="warn")
+        backend = MemoryBackend(rag_detector=detector, detection_mode="warn")
 
         stats_before = detector.get_baseline_stats()
         assert stats_before["count"] == 0
@@ -83,7 +84,7 @@ class TestChromaBackendDetection:
 
     def test_detection_modes_warn(self, tmp_chroma_path, detector):
         """Test warn mode: logs and stores poisoned vectors."""
-        backend = ChromaBackend(tmp_chroma_path, rag_detector=detector, detection_mode="warn")
+        backend = MemoryBackend(rag_detector=detector, detection_mode="warn")
 
         # Create one safe and one poisoned embedding
         safe_emb = [np.random.randn(128).tolist() for _ in range(10)]
@@ -107,9 +108,7 @@ class TestChromaBackendDetection:
 
     def test_detection_modes_quarantine(self, tmp_chroma_path, detector):
         """Test quarantine mode: rejects poisoned vectors."""
-        backend = ChromaBackend(
-            tmp_chroma_path, rag_detector=detector, detection_mode="quarantine"
-        )
+        backend = MemoryBackend(rag_detector=detector, detection_mode="quarantine")
 
         # Build baseline
         safe_embs = [np.random.randn(128).tolist() for _ in range(20)]
@@ -141,7 +140,7 @@ class TestChromaBackendDetection:
 
     def test_detection_modes_strict(self, tmp_chroma_path, detector):
         """Test strict mode: raises error on poisoned vectors."""
-        backend = ChromaBackend(tmp_chroma_path, rag_detector=detector, detection_mode="strict")
+        backend = MemoryBackend(rag_detector=detector, detection_mode="strict")
 
         # Build baseline
         safe_embs = [np.random.randn(128).tolist() for _ in range(10)]
@@ -159,7 +158,7 @@ class TestChromaBackendDetection:
 
     def test_detector_stats_accessible(self, tmp_chroma_path, detector):
         """Test that detector stats are accessible through backend."""
-        backend = ChromaBackend(tmp_chroma_path, rag_detector=detector, detection_mode="warn")
+        backend = MemoryBackend(rag_detector=detector, detection_mode="warn")
 
         stats = backend.get_detector_stats()
         assert "detector" in stats
@@ -175,7 +174,7 @@ class TestPoisoningScenarios:
 
     def test_magnitude_attack_detection(self, tmp_chroma_path, detector):
         """Test detection of magnitude-based poisoning attack."""
-        backend = ChromaBackend(tmp_chroma_path, rag_detector=detector, detection_mode="quarantine")
+        backend = MemoryBackend(rag_detector=detector, detection_mode="quarantine")
 
         # Build baseline with normal embeddings
         np.random.seed(99)
@@ -204,7 +203,7 @@ class TestPoisoningScenarios:
 
     def test_sparse_vector_detection(self, tmp_chroma_path, detector):
         """Test detection of sparse (mostly zero) embeddings."""
-        backend = ChromaBackend(tmp_chroma_path, rag_detector=detector, detection_mode="quarantine")
+        backend = MemoryBackend(rag_detector=detector, detection_mode="quarantine")
 
         # Build baseline with normal dense embeddings
         baseline_embs = [np.random.randn(128).tolist() for _ in range(30)]
@@ -241,7 +240,7 @@ class TestPerformance:
         """Test that upsert with detection doesn't exceed budget."""
         import time
 
-        backend = ChromaBackend(tmp_chroma_path, rag_detector=detector, detection_mode="warn")
+        backend = MemoryBackend(rag_detector=detector, detection_mode="warn")
 
         # Generate batch of embeddings
         np.random.seed(100)

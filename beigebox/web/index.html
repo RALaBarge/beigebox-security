@@ -1848,11 +1848,9 @@
   <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="tab-key">1</span>Dashboard</div>
   <div class="tab" data-tab="tap"       onclick="switchTab('tap')">      <span class="tab-key">2</span>Tap</div>
   <div class="tab" data-tab="chat"      onclick="switchTab('chat')">     <span class="tab-key">3</span>Chat</div>
-  <div class="tab" data-tab="harness"   onclick="switchTab('harness')">  <span class="tab-key">4</span>Harness</div>
-  <div class="tab" data-tab="discovery" onclick="switchTab('discovery')"><span class="tab-key">5</span>Lab</div>
-  <div class="tab" data-tab="studio"    onclick="switchTab('studio')">   <span class="tab-key">6</span>Studio</div>
-  <div class="tab" data-tab="security"  onclick="switchTab('security')"> <span class="tab-key">7</span>Security</div>
-  <div class="tab" data-tab="toolbox"   onclick="switchTab('toolbox')">  <span class="tab-key">8</span>Toolbox</div>
+  <div class="tab" data-tab="studio"    onclick="switchTab('studio')">   <span class="tab-key">4</span>Studio</div>
+  <div class="tab" data-tab="security"  onclick="switchTab('security')"> <span class="tab-key">5</span>Security</div>
+  <div class="tab" data-tab="toolbox"   onclick="switchTab('toolbox')">  <span class="tab-key">6</span>Toolbox</div>
 </div>
 
 <!-- ── Content ─────────────────────────────────────────────────────────── -->
@@ -1889,11 +1887,7 @@
 
   <!-- 2. Chat (direct + agent) -->
   <div class="panel" id="panel-chat">
-    <div class="subnav">
-      <button id="chat-sub-direct-btn" class="subnav-active" onclick="switchChatSub('direct')">Direct</button>
-      <button id="chat-sub-agent-btn" onclick="switchChatSub('agent')">Council</button>
-      <button id="chat-sub-voice-btn" onclick="switchChatSub('voice')">Voice</button>
-    </div>
+    <!-- Council + Voice subtabs removed in v3 UI cleanup; Direct is the only sub-view now -->
 
     <!-- Direct sub-view -->
     <div id="chat-sub-direct" style="display:flex;flex-direction:column;flex:1;min-height:0">
@@ -1913,82 +1907,12 @@
       <div id="chat-pane-container" style="flex:1;min-height:0;overflow:hidden">
         <!-- panes injected by JS -->
       </div>
-      <div class="z-hint">z-commands: <code>z: search</code> <code>z: code</code> <code>z: complex</code> <code>z: help</code></div>
       <div id="chat-input-area">
-        <div class="z-help-wrap">
-          <button id="z-help-btn">z: ?</button>
-          <div class="z-help-tip" id="z-help-tip">loading…</div>
-        </div>
         <textarea id="chat-input" placeholder="Send a message… (Enter=send, Shift+Enter=newline)" rows="1"
           onkeydown="chatKeydown(event)" oninput="autoResize(this)"></textarea>
-        <button id="mic-btn" title="Push to talk (click to toggle, hold to record)">🎙</button>
         <button class="primary" onclick="sendChat()" id="send-btn">Send</button>
       </div>
     </div><!-- /chat-sub-direct -->
-
-    <!-- Council sub-view (multi-model proposer/voter; was the Agent panel pre-v3) -->
-    <div id="chat-sub-agent" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden">
-      <div class="toolbar">
-        <span class="toolbar-label" style="color:var(--lavender)">⚖ Council · Proposer:</span>
-        <select id="council-op-model" style="height:26px;font-size:12px;padding:2px 6px;min-width:160px">
-          <option value="">— default —</option>
-        </select>
-        <span class="toolbar-spacer"></span>
-        <button onclick="opClear()">✕ Clear</button>
-      </div>
-
-      <!-- Council: allowed model pool -->
-      <div id="council-model-pool" style="padding:6px 12px;background:var(--bg-panel);border-bottom:1px solid var(--bg-border)">
-        <div style="font-size:11px;color:var(--fg-muted);margin-bottom:4px">Models the council may use <span style="color:var(--fg-dim)">(leave all unchecked to allow any)</span>:</div>
-        <div id="council-model-list" style="display:flex;flex-wrap:wrap;gap:6px;max-height:70px;overflow-y:auto">
-          <span style="color:var(--fg-muted);font-size:11px">Loading models…</span>
-        </div>
-      </div>
-
-      <!-- Council mode -->
-      <div id="op-council-area" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
-        <div id="council-proposal-area"></div>
-        <div id="council-input-area">
-          <input id="council-input" placeholder="Describe what you need the council to think about…"
-            onkeydown="if(event.key==='Enter'&&!_councilRunning)councilPropose()">
-          <button class="primary" onclick="councilPropose()" id="council-propose-btn">Propose</button>
-        </div>
-      </div>
-    </div><!-- /chat-sub-agent -->
-
-    <!-- Voice/Vision sub-view -->
-    <div id="chat-sub-voice" style="display:none;flex-direction:column;flex:1;min-height:0">
-      <div id="voice-container">
-        <div id="voice-camera-row">
-          <video id="voice-video" autoplay muted playsinline></video>
-          <div id="voice-status-col">
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <span id="voice-status-badge">● idle</span>
-              <button id="voice-camera-toggle" onclick="voiceToggleCamera()" style="font-size:11px;padding:2px 10px">📷 off</button>
-            </div>
-            <div id="voice-vad-bar"><div id="voice-vad-fill"></div></div>
-            <div id="voice-controls">
-              <button id="voice-start-btn" class="primary" onclick="voiceStart()" style="padding:4px 18px">▶ Start</button>
-              <button id="voice-stop-btn" onclick="voiceStop()" style="display:none;padding:4px 18px;background:var(--red);color:#fff">■ Stop</button>
-              <select id="voice-model" style="height:26px;font-size:11px;padding:2px 6px;min-width:140px">
-                <option value="">— model (default) —</option>
-              </select>
-              <select id="voice-tts-voice" style="height:26px;font-size:11px;padding:2px 6px">
-                <option value="af_bella">af_bella</option>
-                <option value="af_sarah">af_sarah</option>
-                <option value="alloy">alloy</option>
-                <option value="echo">echo</option>
-                <option value="af">af</option>
-                <option value="am_adam">am_adam</option>
-              </select>
-              <button onclick="voiceClearTranscript()" style="font-size:11px;padding:2px 8px">✕ Clear</button>
-            </div>
-            <div id="voice-error" style="font-size:11px;color:var(--red);display:none"></div>
-          </div>
-        </div>
-        <div id="voice-transcript"></div>
-      </div>
-    </div><!-- /chat-sub-voice -->
   </div>
 
   <!-- 3. Tap (includes Conversations) -->
@@ -2116,381 +2040,6 @@
       </div>
     </div>
   </div>
-
-  <!-- 4. Harness — parallel agent runner -->
-  <div class="panel" id="panel-harness">
-    <!-- Mode toggle + toolbar -->
-    <div class="toolbar">
-      <span class="toolbar-label">Mode:</span>
-      <div style="display:flex;gap:0;border:1px solid var(--bg-border);border-radius:2px;overflow:hidden;flex-shrink:0">
-        <button id="harness-mode-ensemble" onclick="setHarnessMode('ensemble')"
-          style="border-radius:0;border:none;padding:2px 10px;font-size:11px;background:var(--bg-input);color:var(--fg-dim)">Ensemble</button>
-        <button id="harness-mode-ralph" onclick="setHarnessMode('ralph')"
-          style="border-radius:0;border:none;padding:2px 10px;font-size:11px;background:var(--bg-input);color:var(--fg-dim)">⚡ Ralph</button>
-      </div>
-      <span class="toolbar-spacer"></span>
-      <span id="harness-ensemble-controls" style="display:none;gap:6px;align-items:center">
-        <span class="toolbar-label" style="color:var(--yellow)">Judge:</span>
-        <select id="harness-ensemble-judge" style="height:26px;font-size:12px;padding:2px 6px;min-width:160px">
-          <option value="">— use operator default —</option>
-        </select>
-        <button onclick="harnessEnsembleRun()" class="primary" id="harness-ensemble-run-btn">▶ Run Ensemble</button>
-        <button onclick="toggleQBank()" id="harness-qbank-btn" title="Question bank">📋</button>
-        <button onclick="harnessEnsembleClear()">✕ Clear</button>
-      </span>
-      <span id="harness-ralph-controls" style="display:none;gap:6px;align-items:center">
-        <span class="toolbar-label" style="color:var(--green)">Model:</span>
-        <select id="harness-ralph-model" style="height:26px;font-size:12px;padding:2px 6px;min-width:140px">
-          <option value="">— operator default —</option>
-        </select>
-        <span class="toolbar-label" style="color:var(--fg-muted)">max iter:</span>
-        <input id="harness-ralph-max-iter" type="number" value="20" min="1" max="100"
-          style="width:48px;height:26px;font-size:12px;padding:2px 4px;background:var(--bg-input);border:1px solid var(--bg-border);color:var(--fg);border-radius:2px">
-        <button onclick="harnessRalphRun()" class="primary" id="harness-ralph-run-btn" style="background:var(--green);color:#000">⚡ Run</button>
-        <button onclick="harnessRalphStop()" id="harness-ralph-stop-btn" style="display:none">◼ Stop</button>
-        <button onclick="harnessRalphClear()">✕ Clear</button>
-      </span>
-    </div>
-
-    <!-- Ralph: spec + test config (shown only in ralph mode) -->
-    <div id="harness-ralph-config" style="display:none;padding:6px 12px;background:var(--bg-panel);border-bottom:1px solid var(--bg-border);display:none;flex-direction:column;gap:4px">
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="font-size:11px;color:var(--green);width:80px;flex-shrink:0">PROMPT.md</span>
-        <input id="harness-ralph-spec-path" type="text" placeholder="/path/to/PROMPT.md  (leave blank to use textarea below)"
-          style="flex:1;height:24px;font-size:11px;padding:2px 6px;background:var(--bg-input);border:1px solid var(--bg-border);color:var(--fg);border-radius:2px">
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="font-size:11px;color:var(--fg-muted);width:80px;flex-shrink:0">Test cmd</span>
-        <input id="harness-ralph-test-cmd" type="text" placeholder="pytest tests/ -x  or  npm test  or  make test"
-          style="flex:1;height:24px;font-size:11px;padding:2px 6px;background:var(--bg-input);border:1px solid var(--bg-border);color:var(--fg);border-radius:2px">
-        <span style="font-size:11px;color:var(--fg-muted);width:60px;flex-shrink:0">Work dir</span>
-        <input id="harness-ralph-work-dir" type="text" placeholder="(cwd)"
-          style="width:180px;height:24px;font-size:11px;padding:2px 6px;background:var(--bg-input);border:1px solid var(--bg-border);color:var(--fg);border-radius:2px">
-      </div>
-
-      <!-- Wiggam planning sub-section -->
-      <div style="display:flex;gap:8px;align-items:center;border-top:1px solid var(--bg-border);padding-top:4px;margin-top:2px">
-        <span style="font-size:11px;color:var(--yellow);width:80px;flex-shrink:0">🚔 Wiggam</span>
-        <span style="font-size:11px;color:var(--fg-muted)">Officers:</span>
-        <div id="harness-wiggam-officer-list" style="display:flex;gap:4px;flex-wrap:wrap;flex:1;min-height:22px;align-items:center">
-          <span style="font-size:10px;color:var(--fg-muted)">(uses Wiggam model if none selected)</span>
-        </div>
-        <select id="harness-wiggam-add-officer" style="height:22px;font-size:11px;padding:1px 4px;min-width:130px">
-          <option value="">＋ add officer</option>
-        </select>
-        <button onclick="wiggamAddOfficer()" style="padding:2px 8px;font-size:11px">＋</button>
-        <span class="toolbar-label" style="color:var(--fg-muted)">rounds:</span>
-        <input id="harness-wiggam-rounds" type="number" value="3" min="1" max="8"
-          style="width:36px;height:22px;font-size:11px;padding:2px 4px;background:var(--bg-input);border:1px solid var(--bg-border);color:var(--fg);border-radius:2px">
-        <button onclick="harnessWiggamPlan()" id="harness-wiggam-btn"
-          style="padding:2px 10px;font-size:11px;background:var(--yellow);color:#000;border:none;border-radius:2px;cursor:pointer">🚔 Plan</button>
-      </div>
-    </div>
-
-    <!-- Wiggam planning output panel (shown during/after planning) -->
-    <div id="harness-wiggam-panel" style="display:none;flex-shrink:0;max-height:50%;overflow-y:auto;border-bottom:2px solid var(--yellow);background:var(--bg-deep)">
-      <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--bg-border)">
-        <span style="font-size:10px;color:var(--yellow);text-transform:uppercase;letter-spacing:1px">🚔 Wiggam Planning Room</span>
-        <span id="harness-wiggam-status" style="font-size:10px;color:var(--fg-muted)"></span>
-        <span style="flex:1"></span>
-        <button id="harness-wiggam-approve-btn" style="display:none;padding:2px 10px;font-size:11px;background:var(--green);color:#000;border:none;border-radius:2px;cursor:pointer"
-          onclick="wiggamApproveAndRun()">✓ Approve &amp; Run Ralph</button>
-        <button onclick="document.getElementById('harness-wiggam-panel').style.display='none'" style="font-size:11px;padding:2px 6px">✕</button>
-      </div>
-      <div id="harness-wiggam-body" style="padding:8px 14px;font-size:12px;line-height:1.6"></div>
-    </div>
-
-    <!-- Orchestrated: available target pool -->
-    <div id="harness-orch-target-area" style="display:none;padding:4px 12px;background:var(--bg-panel);border-bottom:1px solid var(--bg-border);flex-wrap:wrap;align-items:center;gap:6px">
-      <span style="color:var(--fg-muted);font-size:11px;flex-shrink:0">Available to master:</span>
-      <div id="harness-orch-target-chips" style="display:flex;gap:4px;flex-wrap:wrap;flex:1"></div>
-      <select id="harness-orch-add-select" style="height:22px;font-size:11px;padding:1px 4px;min-width:140px">
-        <option value="">＋ add target</option>
-        <option value="operator">operator</option>
-      </select>
-      <button onclick="harnessOrchAddTarget()" style="padding:2px 8px;font-size:11px">＋</button>
-    </div>
-
-    <!-- Ensemble: model checklist -->
-    <div id="harness-ensemble-model-area" style="display:none;padding:6px 12px;background:var(--bg-panel);border-bottom:1px solid var(--bg-border)">
-      <div style="font-size:11px;color:var(--fg-muted);margin-bottom:4px">Select models to compare (min 2):</div>
-      <div id="harness-ensemble-model-list" style="display:flex;flex-wrap:wrap;gap:6px;max-height:80px;overflow-y:auto">
-        <span style="color:var(--fg-muted);font-size:11px">Loading models…</span>
-      </div>
-    </div>
-
-    <!-- Ensemble: question bank (toggled by 📋 button) -->
-    <div id="harness-qbank-area" style="display:none;padding:6px 12px;background:var(--bg-deep);border-bottom:1px solid var(--bg-border)">
-      <div style="display:flex;gap:5px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
-        <span style="font-size:10px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:1px;flex-shrink:0">Category:</span>
-        <button onclick="qbankSetCat('all')"       id="qbcat-all"       class="qbcat active-cat">All</button>
-        <button onclick="qbankSetCat('math')"      id="qbcat-math"      class="qbcat">Math</button>
-        <button onclick="qbankSetCat('logic')"     id="qbcat-logic"     class="qbcat">Logic</button>
-        <button onclick="qbankSetCat('coding')"    id="qbcat-coding"    class="qbcat">Coding</button>
-        <button onclick="qbankSetCat('reasoning')" id="qbcat-reasoning" class="qbcat">Reasoning</button>
-        <button onclick="qbankSetCat('knowledge')" id="qbcat-knowledge" class="qbcat">Knowledge</button>
-        <span style="flex:1"></span>
-        <button onclick="qbankRandom()" style="padding:1px 10px;font-size:11px;background:var(--yellow);color:#000;border:none;border-radius:2px;cursor:pointer">🎲 Random</button>
-      </div>
-      <div id="harness-qbank-list" style="max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:3px"></div>
-    </div>
-
-    <!-- Prompt input (shared — hidden in ralph mode) -->
-    <div id="harness-prompt-area" style="padding:6px 12px;background:var(--bg-panel);border-bottom:1px solid var(--bg-border);display:flex;gap:8px;flex-shrink:0">
-      <textarea id="harness-prompt" rows="2"
-        style="flex:1;resize:none;font-size:12px;padding:4px 8px"
-        onkeydown="if(event.ctrlKey&&event.key==='Enter'){harnessMode==='ensemble'?harnessEnsembleRun():harnessRalphRun()}"
-        placeholder="Enter goal or prompt… (Ctrl+Enter to run)"></textarea>
-    </div>
-
-    <!-- Ralph: inline spec textarea (shown when no spec_path) -->
-    <div id="harness-ralph-spec-area" style="display:none;padding:6px 12px;background:var(--bg-panel);border-bottom:1px solid var(--bg-border);flex-shrink:0">
-      <textarea id="harness-ralph-spec-inline" rows="5"
-        style="width:100%;resize:vertical;font-size:11px;padding:4px 8px;font-family:monospace;box-sizing:border-box"
-        placeholder="Paste spec / PROMPT.md contents here (or set path above)…"></textarea>
-    </div>
-
-    <!-- Orchestrated layout: master pane + worker grid -->
-    <div id="harness-orch-layout" style="display:none;flex:1;overflow:hidden;flex-direction:column;min-height:0">
-      <div id="harness-master-pane" style="height:45%;overflow-y:auto;padding:10px 14px;background:var(--bg-deep);border-bottom:2px solid var(--cyan)">
-        <div style="font-size:10px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">◈ Orchestrator</div>
-        <div id="harness-master-body" style="font-size:12px;line-height:1.6;color:var(--fg)">
-          <span style="color:var(--fg-muted)">Waiting for goal…</span>
-        </div>
-      </div>
-      <div id="harness-orch-splitter" style="height:4px;background:var(--cyan);cursor:row-resize;flex-shrink:0;user-select:none" onmousedown="startOrchSplitterDrag(event)"></div>
-      <div id="harness-orch-grid" style="flex:1;overflow-y:auto;padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start">
-        <div class="empty">Worker results will appear here.</div>
-      </div>
-    </div>
-
-    <!-- Ensemble: results grid -->
-    <div id="harness-ensemble-grid" style="display:none;flex:1;overflow-y:auto;padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start">
-      <div class="empty">Select models, enter a prompt, and run ensemble.</div>
-    </div>
-
-    <!-- Ralph: iteration log + agent panes -->
-    <div id="harness-ralph-layout" style="display:none;flex:1;overflow:hidden;flex-direction:column;min-height:0">
-      <div id="harness-ralph-log-pane" style="height:40%;overflow-y:auto;padding:8px 14px;background:var(--bg-deep);border-bottom:2px solid var(--green)">
-        <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">⚡ Ralph Loop</div>
-        <div id="harness-ralph-log-body" style="font-size:12px;line-height:1.6;color:var(--fg)">
-          <span style="color:var(--fg-muted)">Configure spec and test command, then run.</span>
-        </div>
-      </div>
-      <div id="harness-ralph-splitter" style="height:4px;background:var(--green);cursor:row-resize;flex-shrink:0;user-select:none" onmousedown="startRalphSplitterDrag(event)"></div>
-      <div id="harness-ralph-grid" style="flex:1;overflow-y:auto;padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start">
-        <div class="empty">Iteration agent output will appear here.</div>
-      </div>
-    </div>
-
-    <!-- Agentic: sequential multi-turn operator run -->
-    <div id="harness-agentic-layout" style="display:none;flex:1;overflow-y:auto;padding:10px 14px;flex-direction:column;gap:8px;min-height:0">
-      <div class="empty">Enter a goal above and run — the operator executes it step by step across multiple turns.</div>
-    </div>
-  </div>
-
-  <!-- 5. Lab -->
-  <div class="panel" id="panel-discovery" style="flex-direction:column">
-    <div class="subnav">
-      <button id="lab-sub-exp-btn" class="subnav-active" onclick="switchLabSub('experiments')">Experiments</button>
-      <button id="lab-sub-bench-btn" onclick="switchLabSub('bench')">Bench</button>
-      <button id="lab-sub-eval-btn" onclick="switchLabSub('eval')">Eval</button>
-      <button id="lab-sub-dgm-btn" onclick="switchLabSub('dgm')">⟳ DGM</button>
-    </div>
-
-    <!-- Experiments sub-panel -->
-    <div id="lab-experiments" style="display:flex;flex-direction:column;flex:1;min-height:0">
-      <div class="toolbar">
-        <select id="disc-opportunity-select" style="flex:1;max-width:280px">
-          <option value="">Loading opportunities…</option>
-        </select>
-        <select id="disc-candidate-model" style="max-width:180px">
-          <option value="">candidate model…</option>
-        </select>
-        <select id="disc-weight-profile">
-          <option value="general">general</option>
-          <option value="code">code</option>
-          <option value="reasoning">reasoning</option>
-          <option value="safety">safety</option>
-        </select>
-        <button id="disc-run-btn" class="primary" onclick="runDiscoveryExperiment()">▶ Run</button>
-        <button onclick="loadDiscoveryResults()">↺ Results</button>
-        <span class="toolbar-spacer"></span>
-      </div>
-      <div class="scroll-area" id="discovery-body">
-        <div class="empty">Select an opportunity and click Run, or load past results.</div>
-      </div>
-    </div>
-
-    <!-- Bench sub-panel -->
-    <div id="lab-bench" style="display:none;flex-direction:column;flex:1;min-height:0">
-      <div class="toolbar">
-        <button id="bench-run-btn" class="primary" onclick="runBench()">▶ Run</button>
-        <button onclick="resetBench()" style="margin-left:4px">↺ Reset</button>
-        <span class="toolbar-spacer"></span>
-        <label style="font-size:11px;color:var(--fg-muted);margin-right:4px">runs</label>
-        <input id="bench-num-runs" type="number" value="5" min="1" max="20"
-               style="width:46px;text-align:center;font-size:11px">
-        <label style="font-size:11px;color:var(--fg-muted);margin:0 4px 0 8px">tokens</label>
-        <input id="bench-num-predict" type="number" value="120" min="10" max="512"
-               style="width:56px;text-align:center;font-size:11px">
-      </div>
-      <div style="display:flex;flex:1;min-height:0;gap:0">
-        <!-- Left: model picker + prompt -->
-        <div style="width:260px;flex-shrink:0;border-right:1px solid var(--bg-border);display:flex;flex-direction:column;padding:12px;gap:8px">
-          <div style="font-size:10px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:0.5px">Models</div>
-          <div id="bench-model-list" style="flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column;gap:4px">
-            <div class="empty" style="font-size:11px">Loading…</div>
-          </div>
-          <div style="font-size:10px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:8px">Prompt</div>
-          <textarea id="bench-prompt" rows="5"
-            style="resize:vertical;font-size:11px;font-family:inherit;background:var(--bg-input);border:1px solid var(--bg-border);color:var(--fg);border-radius:4px;padding:6px"
-            placeholder="Leave blank for default prompt…"></textarea>
-        </div>
-        <!-- Right: results -->
-        <div style="flex:1;display:flex;flex-direction:column;min-width:0">
-          <div id="bench-results" class="scroll-area">
-            <div class="empty">Select models and click Run.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Eval sub-panel -->
-    <div id="lab-eval" style="display:none;flex-direction:column;flex:1;min-height:0">
-      <div class="toolbar">
-        <select id="eval-suite-select" style="flex:1;max-width:220px" onchange="onEvalSuiteChange()">
-          <option value="">Loading suites…</option>
-        </select>
-        <select id="eval-model-select" style="max-width:220px">
-          <option value="">default model</option>
-        </select>
-        <button id="eval-run-btn" class="primary" onclick="runEval()">▶ Run</button>
-        <button id="eval-stop-btn" onclick="stopEval()" style="display:none">■ Stop</button>
-        <span class="toolbar-spacer"></span>
-        <span id="eval-progress" style="font-size:11px;color:var(--fg-muted)"></span>
-      </div>
-      <!-- Summary bar -->
-      <div id="eval-summary" style="display:none;padding:6px 12px;background:var(--bg-panel);border-bottom:1px solid var(--bg-border);font-size:11px;display:none;gap:16px;align-items:center">
-        <span id="eval-summary-suite" style="color:var(--fg-muted)"></span>
-        <span id="eval-summary-pass" style="color:var(--green);font-weight:600"></span>
-        <span id="eval-summary-fail" style="color:var(--red);font-weight:600"></span>
-        <span id="eval-summary-score" style="color:var(--fg-muted)"></span>
-      </div>
-      <!-- Results table -->
-      <div id="eval-results" class="scroll-area" style="flex:1;min-height:0;font-size:11px">
-        <div class="empty">Select a suite and click Run.</div>
-      </div>
-    </div>
-
-    <!-- DGM sub-panel -->
-    <div id="lab-dgm" style="display:none;flex-direction:column;flex:1;min-height:0">
-
-      <!-- Primary toolbar -->
-      <div class="toolbar" style="flex-wrap:wrap;row-gap:4px">
-        <button id="dgm-run-btn" class="primary" onclick="dgmRun()" style="background:var(--cyan);color:#000">⟳ Run DGM</button>
-        <button id="dgm-stop-btn" style="display:none" onclick="dgmStop()">◼ Stop</button>
-        <button onclick="dgmClear()">✕ Clear</button>
-        <button id="dgm-revert-btn" style="display:none;background:var(--red);color:#fff;border-color:var(--red)" onclick="dgmRevertLast()">↺ Revert Last Run</button>
-        <button id="dgm-goal-toggle" onclick="dgmToggleGoal()" style="font-size:11px" title="Set an optimization goal to steer proposals">Goal ▾</button>
-        <button id="dgm-history-toggle" onclick="dgmToggleHistory()" style="font-size:11px" title="View past DGM runs">History ▾</button>
-        <button id="dgm-config-toggle" onclick="dgmToggleConfig()" style="font-size:11px" title="View current config values DGM can modify">Config ▾</button>
-        <span class="toolbar-spacer"></span>
-        <label style="font-size:11px;color:var(--fg-muted)">iter</label>
-        <input id="dgm-iterations" type="number" value="20" min="1" max="100"
-               style="width:48px;text-align:center;font-size:11px">
-        <label style="font-size:11px;color:var(--fg-muted);margin:0 4px">rotate</label>
-        <input id="dgm-rotation" type="number" value="5" min="1" max="20"
-               style="width:40px;text-align:center;font-size:11px">
-        <label style="font-size:11px;color:var(--fg-muted);margin:0 4px">thresh</label>
-        <input id="dgm-threshold" type="number" value="0.65" min="0.1" max="1.0" step="0.05"
-               style="width:48px;text-align:center;font-size:11px">
-        <label style="font-size:11px;color:var(--fg-muted);margin:0 4px">probes</label>
-        <input id="dgm-probes" type="number" value="3" min="1" max="10"
-               style="width:36px;text-align:center;font-size:11px">
-        <label style="font-size:11px;color:var(--fg-muted);margin:0 4px">patience</label>
-        <input id="dgm-patience" type="number" placeholder="auto" min="1" max="50"
-               style="width:48px;text-align:center;font-size:11px" title="Stop after N consecutive non-improvements (blank = auto)">
-      </div>
-
-      <!-- Secondary toolbar: model selectors + rubric -->
-      <div class="toolbar" style="border-top:none;padding-top:0;gap:6px;flex-wrap:wrap">
-        <label style="font-size:11px;color:var(--fg-muted)">Judge/Proposer</label>
-        <select id="dgm-judge-model" style="font-size:11px;max-width:180px" title="Model used for proposing changes and judging before/after">
-          <option value="">routing model (default)</option>
-        </select>
-        <label style="font-size:11px;color:var(--fg-muted);margin-left:8px">Probe model</label>
-        <select id="dgm-probe-model" style="font-size:11px;max-width:180px" title="Model being evaluated — whose responses DGM compares before/after each change">
-          <option value="">config default</option>
-        </select>
-        <label style="font-size:11px;color:var(--fg-muted);margin-left:8px">Start rubric</label>
-        <select id="dgm-start-rubric" style="font-size:11px;max-width:150px" title="Which evaluation rubric to start from">
-          <option value="">first (helpfulness)</option>
-          <option value="helpfulness">helpfulness</option>
-          <option value="accuracy">accuracy</option>
-          <option value="conciseness">conciseness</option>
-          <option value="directness">directness</option>
-          <option value="completeness">completeness</option>
-          <option value="expert_quality">expert quality</option>
-          <option value="clarity">clarity</option>
-          <option value="actionability">actionability</option>
-        </select>
-      </div>
-
-      <!-- Goal input (hidden by default) -->
-      <div id="dgm-goal-row" style="display:none;padding:6px 12px;background:var(--bg-input);border-bottom:1px solid var(--bg-border)">
-        <textarea id="dgm-goal" rows="2"
-          style="width:100%;box-sizing:border-box;font-size:11px;font-family:inherit;background:var(--bg-panel);border:1px solid var(--bg-border);color:var(--fg);border-radius:4px;padding:6px;resize:vertical"
-          placeholder="Optional: describe what you want DGM to optimize toward — e.g. 'make responses more concise' or 'improve code formatting quality'"></textarea>
-      </div>
-
-      <!-- Config snapshot (hidden by default) -->
-      <div id="dgm-config-row" style="display:none;padding:8px 12px;background:var(--bg-input);border-bottom:1px solid var(--bg-border);font-size:11px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="color:var(--fg-muted);font-size:10px;text-transform:uppercase;letter-spacing:0.5px">Current DGM-modifiable config values</span>
-          <button onclick="dgmLoadConfig()" style="font-size:10px;padding:2px 6px">Refresh</button>
-        </div>
-        <div id="dgm-config-list" style="display:flex;flex-wrap:wrap;gap:6px">
-          <span style="color:var(--fg-muted)">Click Refresh to load…</span>
-        </div>
-      </div>
-
-      <!-- Stats bar -->
-      <div id="dgm-stats-bar" style="display:none;padding:6px 12px;background:var(--bg-panel);border-bottom:1px solid var(--bg-border);font-size:11px;color:var(--fg-muted);display:flex;gap:16px;align-items:center;flex-wrap:wrap">
-        <span>Iter: <b id="dgm-stat-iter" style="color:var(--fg)">0</b></span>
-        <span>Kept: <b id="dgm-stat-kept" style="color:var(--green)">0</b></span>
-        <span>Reverted: <b id="dgm-stat-reverted" style="color:var(--red)">0</b></span>
-        <span>Keep rate: <b id="dgm-stat-keeprate" style="color:var(--cyan)">—</b></span>
-        <span>Rubric: <b id="dgm-stat-rubric" style="color:var(--yellow)">—</b></span>
-        <span>Rotates in: <b id="dgm-stat-rotate" style="color:var(--fg-muted)">—</b></span>
-        <span id="dgm-run-id-label" style="margin-left:auto;font-size:10px;color:var(--fg-muted)"></span>
-      </div>
-
-      <!-- Main area: output log + optional history panel side by side -->
-      <div style="display:flex;flex:1;min-height:0">
-
-        <!-- Output log -->
-        <div id="dgm-output" class="scroll-area" role="log" aria-live="polite" aria-label="DGM run output"
-             style="font-size:12px;font-family:monospace;padding:12px;flex:1;min-width:0">
-          <div class="empty">Configure parameters and click Run DGM. The loop will propose config changes, test them against real traffic, and keep improvements.</div>
-        </div>
-
-        <!-- Run history panel (hidden by default) -->
-        <div id="dgm-history-panel" style="display:none;width:300px;flex-shrink:0;border-left:1px solid var(--bg-border);flex-direction:column">
-          <div style="padding:8px 12px;font-size:11px;font-weight:600;border-bottom:1px solid var(--bg-border);display:flex;align-items:center;gap:8px">
-            <span>Run History</span>
-            <button onclick="dgmLoadHistory()" style="font-size:10px;padding:2px 6px;margin-left:auto">Refresh</button>
-          </div>
-          <div id="dgm-history-list" class="scroll-area" style="flex:1;font-size:11px;padding:8px">
-            <div class="empty">No runs yet.</div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-
   <!-- 6. Studio — three-column prompt playground -->
   <div class="panel" id="panel-studio">
 
@@ -3940,8 +3489,7 @@ function switchTab(name) {
   if (name === 'dashboard') loadDashboard();
   if (name === 'tap')       loadTap();
   if (name === 'chat')      { initChatPanes(); loadModels(); }
-  if (name === 'harness')   { loadModelsForPanes(); setHarnessMode(harnessMode); }
-  if (name === 'discovery') loadDiscoveryOpportunities();
+  // (harness + discovery tabs removed in v3 UI cleanup)
   if (name === 'studio')    loadStudio();
   if (name === 'security')  loadSecurityPanel();
   if (name === 'toolbox')   loadToolbox();
@@ -4924,9 +4472,7 @@ async function loadDashboard() {
         </div>`;
       html += ghost('Proxy',                'backend: http://host.docker.internal:11434');
       html += ghost('Storage · SQLite',     '0 messages');
-      html += ghost('Storage · ChromaDB',   '');
-      html += ghost('Decision LLM',         'disabled');
-      html += ghost('Embedding Classifier', '');
+      html += ghost('Vector store',         '');
       html += ghost('Tools',                'web_search, calculator, datetime, memory, …');
       html += ghost('WASM Runtime',        'disabled');
       html += `<div style="color:var(--fg-muted);font-size:10px;padding:6px 0 2px;letter-spacing:0.5px">
@@ -4935,10 +4481,10 @@ async function loadDashboard() {
     if (st.proxy) {
       html += subsystem('Proxy',              true,                   `transparent passthrough · ${esc(st.proxy.backend_url || '—')}`);
       html += subsystem('Storage · SQLite',   st.storage?.sqlite,     st.storage?.stats ? `${st.storage.stats.messages ?? st.storage.stats.total_messages ?? 0} messages` : '');
-      html += subsystem('Storage · ChromaDB', st.storage?.vector,     '');
-      html += subsystem('Decision LLM',       st.routing?.decision_llm?.enabled, st.routing?.decision_llm?.model ? `model: ${esc(st.routing.decision_llm.model)}` : 'disabled');
-      const ecOk = st.routing?.embedding_classifier?.ready;
-      html += `<div class="subsystem-row"><span class="status-dot ${ecOk ? 'ok' : 'err'}" style="display:inline-block;vertical-align:middle;margin-right:6px"></span><span class="subsystem-name">Embedding Classifier</span><span class="subsystem-detail" style="flex:1"></span><button id="dash-rebuild-btn" onclick="rebuildCentroids()" style="font-size:10px;padding:2px 8px;margin-left:8px">Rebuild</button></div>`;
+      const vecBackend = st.storage?.vector_backend || 'vector store';
+      const vecLabel = `Storage · ${vecBackend.charAt(0).toUpperCase() + vecBackend.slice(1)}`;
+      html += subsystem(vecLabel,             st.storage?.vector,     '');
+      // (Decision LLM + Embedding Classifier rows removed in v3 — features deleted)
       html += subsystem('Tools',              st.tools?.enabled,      st.tools?.available?.join(', ') || '');
       if (st.wasm !== undefined) {
         const wasmDetail = st.wasm.enabled
@@ -5720,18 +5266,7 @@ async function loadModelsForPanes() {
     });
   });
 
-  // Also populate operator target dropdown
-  if (opSel) {
-    const curOp = opSel.value;
-    const baseOpts = opSel.innerHTML.split('<option').filter(o => o.includes('operator')).map(o => '<option' + o).join('');
-    opSel.innerHTML = `<option value="operator">operator (default)</option>`;
-    models.forEach(id => {
-      const opt = document.createElement('option');
-      opt.value = 'model:' + id; opt.textContent = 'model: ' + id + deviceSuffix;
-      if ('model:' + id === curOp) opt.selected = true;
-      opSel.appendChild(opt);
-    });
-  }
+  // (Operator target dropdown removed in v3 alongside the Operator class.)
 
   // Also populate harness orch add-select and master model select
   const orchAddSel = document.getElementById('harness-orch-add-select');

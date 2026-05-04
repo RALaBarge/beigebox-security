@@ -69,7 +69,7 @@ def make_backend(backend_type: str, **kwargs) -> VectorBackend:
     Instantiate a vector backend by name.
 
     Args:
-        backend_type: Registry key (e.g. "chromadb").
+        backend_type: Registry key (e.g. "postgres", "memory").
         **kwargs:     Passed directly to the backend constructor.
 
     Raises:
@@ -89,8 +89,9 @@ def make_backend(backend_type: str, **kwargs) -> VectorBackend:
 def build_backend_kwargs(cfg: dict, vector_store_path) -> tuple[str, dict]:
     """Resolve (backend_type, kwargs) for `make_backend` from project config.
 
-    Postgres needs a connection_string; path-based backends (memory, legacy
-    chromadb) need a path. Centralized so CLI and server agree.
+    Postgres needs a connection_string; the in-memory backend ignores its
+    `path` kwarg but accepts it for parity. Centralized so CLI and server
+    agree.
     """
     storage_cfg = cfg.get("storage", {})
     backend_type = storage_cfg.get("vector_backend", "postgres")

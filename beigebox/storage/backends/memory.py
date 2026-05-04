@@ -8,7 +8,7 @@ Not for production: forgets everything on restart and scales O(N) per query.
 For real workloads use PostgresBackend.
 
 Thread-safety: a single threading.Lock guards both the store and the detector
-state, matching the convention used by ChromaBackend / PostgresBackend.
+state, matching the convention used by PostgresBackend.
 """
 
 import logging
@@ -38,8 +38,8 @@ class MemoryBackend(VectorBackend):
             rag_detector: RAGPoisoningDetector instance (created if None).
             detection_mode: "warn", "quarantine", or "strict".
             **_unused: Accept and ignore extra kwargs (e.g. `path=`) so this
-                backend is a drop-in replacement for tests previously calling
-                `make_backend("chromadb", path=tmpdir)`.
+                backend is a drop-in replacement when callers pass a vector
+                store path that other backends use.
         """
         self._lock = threading.Lock()
         # id → (embedding: np.ndarray, document: str, metadata: dict)
@@ -118,7 +118,7 @@ class MemoryBackend(VectorBackend):
         """
         Nearest-neighbour similarity search via brute-force cosine distance.
 
-        Returns a dict matching the ChromaDB collection.query() shape:
+        Returns a dict matching the VectorBackend.query() shape:
             {"ids":       [[...]],
              "documents":  [[...]],
              "metadatas":  [[...]],

@@ -152,12 +152,13 @@ def _chunk(text: str, chunk_size: int, overlap: int) -> list[str]:
     return [c for c in chunks if c]
 
 
-# ── ChromaDB ingestion ────────────────────────────────────────────────────────
+# ── Vector ingestion ──────────────────────────────────────────────────────────
 
 def _ingest_chunks(chunks: list[str], source: str) -> int:
     """
-    Embed and upsert chunks into ChromaDB via VectorStore.store_message().
-    Returns number of chunks ingested. Silently skips if unavailable.
+    Embed and upsert chunks into the configured vector backend via
+    VectorStore.store_message(). Returns number of chunks ingested. Silently
+    skips if unavailable.
 
     Chunks are stored with:
       conversation_id = "doc:<source_hash>"  (groups chunks per document)
@@ -166,6 +167,7 @@ def _ingest_chunks(chunks: list[str], source: str) -> int:
     """
     try:
         from beigebox.config import get_config, get_storage_paths
+        from beigebox.storage.backends import build_backend_kwargs, make_backend
         from beigebox.storage.vector_store import VectorStore
 
         cfg              = get_config()
@@ -173,10 +175,12 @@ def _ingest_chunks(chunks: list[str], source: str) -> int:
         embedding_model  = cfg.get("embedding", {}).get("model", "nomic-embed-text")
         embedding_url    = cfg.get("backend", {}).get("url", "http://localhost:11434")
 
+        backend_type, backend_kwargs = build_backend_kwargs(cfg, vector_path)
+        backend = make_backend(backend_type, **backend_kwargs)
         store    = VectorStore(
             embedding_model=embedding_model,
             embedding_url=embedding_url,
-            chroma_path=vector_path,
+            backend=backend,
         )
         src_hash = hashlib.sha256(source.encode()).hexdigest()[:8]
         conv_id  = f"doc:{src_hash}"
@@ -193,7 +197,7 @@ def _ingest_chunks(chunks: list[str], source: str) -> int:
         return len(chunks)
 
     except Exception as e:
-        logger.debug("doc_parser: ChromaDB ingest skipped: %s", e)
+        logger.debug("doc_parser: vector ingest skipped: %s", e)
         return 0
 
 

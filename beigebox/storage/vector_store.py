@@ -5,9 +5,9 @@ Owns all embedding logic (calling Ollama's /api/embed endpoint).
 Delegates raw vector storage to a pluggable VectorBackend.
 
 The backend is configured via  storage.vector_backend  in config.yaml
-(default: "chromadb").  All callers outside this module are unchanged —
-they still instantiate VectorStore and call store_message / search /
-search_grouped / get_stats.
+(default: "postgres"; "memory" is available for tests/ephemeral runs).
+All callers outside this module are unchanged — they still instantiate
+VectorStore and call store_message / search / search_grouped / get_stats.
 
 To add a new vector database:
   1. Implement VectorBackend in beigebox/storage/backends/<n>.py
@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 
 import httpx
 
-from beigebox.storage.backends import VectorBackend, make_backend
+from beigebox.storage.backends import VectorBackend
 from beigebox.security.rag_poisoning_detector import RAGPoisoningDetector
 
 logger = logging.getLogger(__name__)
@@ -39,8 +39,6 @@ class VectorStore:
         embedding_url: str,
         # Backend wiring — callers pass these through from config
         backend: VectorBackend | None = None,
-        # Legacy convenience: accept chroma_path and build the default backend
-        chroma_path: str | None = None,
         poisoning_detector: RAGPoisoningDetector | None = None,
         quarantine = None,  # Optional QuarantineRepo for poisoning quarantine logging
     ):
@@ -49,15 +47,13 @@ class VectorStore:
         self.poisoning_detector = poisoning_detector
         self.quarantine = quarantine
 
-        if backend is not None:
-            self._backend = backend
-        elif chroma_path is not None:
-            # Legacy / convenience path: build ChromaBackend from path
-            self._backend = make_backend("chromadb", path=chroma_path)
-        else:
+        if backend is None:
             raise ValueError(
-                "VectorStore requires either a 'backend' instance or a 'chroma_path'."
+                "VectorStore requires a 'backend' instance. Build one with "
+                "beigebox.storage.backends.make_backend('postgres', ...) or "
+                "make_backend('memory') for tests."
             )
+        self._backend = backend
 
         logger.info(
             "VectorStore initialised (backend=%s, model=%s, quarantine=%s)",
@@ -265,15 +261,19 @@ class VectorStore:
 
         results = self._backend.query(embedding, n_results=n_results, where=where)
 
-        return [
-            {
+        out: list[dict] = []
+        for i in range(len(results["ids"][0])):
+            content = results["documents"][0][i]
+            metadata = results["metadatas"][0][i]
+            if not self._verify_doc_chunk(content, metadata):
+                continue  # dropped — wire event already emitted
+            out.append({
                 "id":       results["ids"][0][i],
-                "content":  results["documents"][0][i],
-                "metadata": results["metadatas"][0][i],
+                "content":  content,
+                "metadata": metadata,
                 "distance": results["distances"][0][i],
-            }
-            for i in range(len(results["ids"][0]))
-        ]
+            })
+        return out
 
     def search_grouped(
         self,
@@ -362,7 +362,7 @@ class VectorStore:
                 documents=[preview],
                 metadatas=[{
                     # source_type distinguishes tool results, document chunks, and
-                    # conversation messages within the shared ChromaDB collection.
+                    # conversation messages within the shared vector collection.
                     # Missing-key exclusion means older entries (no source_type)
                     # are simply excluded from filtered queries — no cleanup needed.
                     "source_type": "tool_result",
@@ -385,30 +385,81 @@ class VectorStore:
         blob_hash: str,
         text: str,
     ) -> None:
-        """Embed and store a document chunk."""
+        """Embed and store a document chunk.
+
+        Stores ``chunk_sha256`` (SHA-256 of the *full* chunk text) and
+        ``stored_text_sha256`` (SHA-256 of the truncated 400-char preview
+        actually persisted). The pair lets ``_verify_doc_chunk`` detect
+        retrieval-time tampering of the stored excerpt without needing the
+        original chunk text on hand.
+        """
         if not text.strip():
             return
         try:
+            import hashlib
+            stored_excerpt = text[:400]
+            full_sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+            stored_sha = hashlib.sha256(stored_excerpt.encode("utf-8")).hexdigest()
+
             embedding = self._get_embedding(text)
-            # ID uses blob_hash prefix (content-addressed) so the same file
-            # uploaded twice produces identical IDs → natural dedup at the
-            # ChromaDB level. chunk_index disambiguates chunks within one doc.
             entry_id = f"doc_{blob_hash[:16]}_{chunk_index}"
             self._backend.upsert(
                 ids=[entry_id],
                 embeddings=[embedding],
-                documents=[text[:400]],
+                documents=[stored_excerpt],
                 metadatas=[{
                     "source_type": "document",
                     "source_file": source_file,
                     "chunk_index": chunk_index,
                     "char_offset": char_offset,
                     "blob_hash": blob_hash,
+                    "chunk_sha256": full_sha,
+                    "stored_text_sha256": stored_sha,
                 }],
             )
             logger.debug("Stored document chunk %s[%d]", source_file, chunk_index)
         except Exception as e:
             logger.error("Failed to store document chunk %s[%d]: %s", source_file, chunk_index, e)
+
+    @staticmethod
+    def _verify_doc_chunk(content: str, metadata: dict) -> bool:
+        """Return False if the chunk's stored hash doesn't match its excerpt.
+
+        Only enforced for entries with ``source_type=document`` AND a stored
+        ``stored_text_sha256``. Older entries lack the field — passed through.
+        On mismatch, emits a ``rag_quarantine`` wire event so an operator can
+        triage. Caller decides whether to drop the result.
+        """
+        if metadata is None or metadata.get("source_type") != "document":
+            return True
+        expected = metadata.get("stored_text_sha256")
+        if not expected:
+            return True
+        import hashlib
+        actual = hashlib.sha256((content or "").encode("utf-8")).hexdigest()
+        if actual == expected:
+            return True
+        logger.warning(
+            "RAG chunk integrity mismatch: source=%s chunk_index=%s expected=%s... actual=%s...",
+            metadata.get("source_file"), metadata.get("chunk_index"),
+            expected[:8], actual[:8],
+        )
+        try:
+            from beigebox.wiretap import log_event
+            log_event(
+                event_type="rag_quarantine",
+                source="vector_store",
+                content=f"chunk hash mismatch for {metadata.get('source_file')}[{metadata.get('chunk_index')}]",
+                meta={
+                    "source_file": metadata.get("source_file"),
+                    "chunk_index": metadata.get("chunk_index"),
+                    "expected_sha256": expected,
+                    "actual_sha256": actual,
+                },
+            )
+        except Exception:  # noqa: BLE001 — wire log emission must never block retrieval
+            pass
+        return False
 
     def get_stats(self) -> dict:
         """Return collection stats."""

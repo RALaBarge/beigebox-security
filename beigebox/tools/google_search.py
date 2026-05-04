@@ -52,9 +52,9 @@ class GoogleSearchTool:
 
         # Real implementation using Google Custom Search JSON API
         try:
-            import requests
+            import httpx
 
-            resp = requests.get(
+            resp = httpx.get(
                 "https://www.googleapis.com/customsearch/v1",
                 params={
                     "key": self.api_key,

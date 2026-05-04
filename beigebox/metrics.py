@@ -2,8 +2,13 @@
 System metrics collection — CPU, RAM, GPU.
 All collection is best-effort; missing hardware or libraries produce None/[] rather than raising.
 
+Linux-only for direct collection: reads /proc/stat, /proc/meminfo, and
+/sys/class/thermal for CPU/RAM/temp; shells out to nvidia-smi for GPU stats.
+On non-Linux hosts (e.g. macOS) the /proc and /sys paths are absent — the
+collectors return Nones and an empty GPU list, matching prior behavior.
+
 Host-bridge mode (macOS): when running BeigeBox inside Docker on macOS, in-container
-psutil reports the Linux VM's stats, not the host Mac's. Set the env var
+metrics report the Linux VM's stats, not the host Mac's. Set the env var
 BEIGEBOX_HOST_METRICS_URL (or `metrics.host_metrics_url` in config.yaml) to a tiny
 host-side helper (~/.beigebox/host_metrics.py) and the collector will fetch real
 host stats from there instead. The helper runs as a LaunchAgent on the host.
@@ -14,6 +19,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import subprocess
 import time
 import urllib.request
 from typing import Any
@@ -31,80 +37,300 @@ _host_metrics_resolved: bool = False
 _host_metrics_failures: int = 0
 _HOST_METRICS_FAIL_THRESHOLD = 3  # back off after this many consecutive failures
 
+# CPU sampling state: stash the previous /proc/stat snapshot so successive
+# calls compute a delta without paying a 100ms blocking sleep every time.
+_cpu_prev_total: int | None = None
+_cpu_prev_idle: int | None = None
+
+
+# ---------------------------------------------------------------------------
+# CPU — /proc/stat
+# ---------------------------------------------------------------------------
+
+def _read_proc_stat_cpu() -> tuple[int, int] | None:
+    """Read first 'cpu' line of /proc/stat and return (total_jiffies, idle_jiffies).
+
+    Returns None if /proc/stat is unavailable (non-Linux host).
+    """
+    try:
+        with open("/proc/stat", "r") as f:
+            line = f.readline()
+    except OSError:
+        return None
+    if not line.startswith("cpu "):
+        return None
+    fields = line.split()
+    # Fields after 'cpu': user nice system idle iowait irq softirq steal guest guest_nice
+    try:
+        nums = [int(x) for x in fields[1:]]
+    except ValueError:
+        return None
+    if len(nums) < 4:
+        return None
+    total = sum(nums)
+    # idle = idle + iowait (psutil counts iowait as idle for cpu_percent).
+    idle = nums[3] + (nums[4] if len(nums) > 4 else 0)
+    return total, idle
+
+
+def _cpu_percent(interval: float = 0.1) -> float | None:
+    """Compute system-wide CPU utilization percent over `interval` seconds.
+
+    First call after import: takes a snapshot, sleeps `interval`, takes a
+    second snapshot, returns the delta-based percent. This matches
+    psutil.cpu_percent(interval=0.1) semantics — including the 100ms blocking
+    sleep that cpu_percent() does on the first call.
+    Subsequent calls reuse the previous snapshot if interval is 0, but for
+    parity with the previous behavior we always re-sample.
+    """
+    global _cpu_prev_total, _cpu_prev_idle
+    first = _read_proc_stat_cpu()
+    if first is None:
+        return None
+    if interval > 0:
+        time.sleep(interval)
+        second = _read_proc_stat_cpu()
+        if second is None:
+            return None
+    else:
+        # Use previous snapshot if available, else block briefly.
+        if _cpu_prev_total is None:
+            time.sleep(0.1)
+            second = _read_proc_stat_cpu()
+            if second is None:
+                return None
+        else:
+            second = first
+            first = (_cpu_prev_total, _cpu_prev_idle)
+
+    total_delta = second[0] - first[0]
+    idle_delta = second[1] - first[1]
+    _cpu_prev_total, _cpu_prev_idle = second
+    if total_delta <= 0:
+        return 0.0
+    busy = total_delta - idle_delta
+    return max(0.0, min(100.0, 100.0 * busy / total_delta))
+
+
+def _cpu_temp() -> float | None:
+    """Read CPU temperature from /sys/class/thermal/.
+
+    Walks thermal_zone* directories, prefers types matching common CPU
+    sensors (coretemp, k10temp, cpu_thermal, etc.) in the same priority
+    order the previous psutil.sensors_temperatures() code used.
+    """
+    base = "/sys/class/thermal"
+    if not os.path.isdir(base):
+        return None
+    preferred = ("coretemp", "k10temp", "acpitz", "acpi", "cpu_thermal", "x86_pkg_temp")
+    candidates: dict[str, list[float]] = {}
+    try:
+        zones = sorted(d for d in os.listdir(base) if d.startswith("thermal_zone"))
+    except OSError:
+        return None
+    for z in zones:
+        zpath = os.path.join(base, z)
+        try:
+            with open(os.path.join(zpath, "type"), "r") as f:
+                ztype = f.read().strip()
+            with open(os.path.join(zpath, "temp"), "r") as f:
+                # Value is in millidegrees Celsius.
+                temp_c = int(f.read().strip()) / 1000.0
+        except (OSError, ValueError):
+            continue
+        candidates.setdefault(ztype, []).append(temp_c)
+    for key in preferred:
+        if key in candidates and candidates[key]:
+            return round(candidates[key][0], 1)
+    # Fallback: first available zone (matches "any sensor better than none").
+    for zlist in candidates.values():
+        if zlist:
+            return round(zlist[0], 1)
+    return None
+
 
 def _collect_cpu() -> dict[str, Any]:
     """Collect CPU utilization and temperature."""
     try:
-        import psutil
-
-        pct = psutil.cpu_percent(interval=0.1)
-        # sensors_temperatures() is Linux-only; gracefully absent on macOS/Windows
-        temp = None
-        temps = getattr(psutil, "sensors_temperatures", lambda: {})()
-        for key in ("coretemp", "k10temp", "acpitz", "acpi", "cpu_thermal"):
-            entries = temps.get(key, [])
-            if entries:
-                temp = round(entries[0].current, 1)
-                break
-        return {"cpu_percent": round(pct, 1), "cpu_temp_c": temp}
+        pct = _cpu_percent(interval=0.1)
+        temp = _cpu_temp()
+        return {
+            "cpu_percent": round(pct, 1) if pct is not None else None,
+            "cpu_temp_c": temp,
+        }
     except Exception as e:
         logger.debug("CPU metrics failed: %s", e)
         return {"cpu_percent": None, "cpu_temp_c": None}
 
 
+# ---------------------------------------------------------------------------
+# RAM — /proc/meminfo
+# ---------------------------------------------------------------------------
+
+def _read_meminfo() -> dict[str, int] | None:
+    """Parse /proc/meminfo into a dict mapping field name -> bytes.
+
+    /proc/meminfo reports values in kB (kibibytes); we multiply by 1024 to
+    return raw bytes, matching psutil.virtual_memory()'s units.
+    """
+    info: dict[str, int] = {}
+    try:
+        with open("/proc/meminfo", "r") as f:
+            for line in f:
+                # Lines look like "MemTotal:       16384000 kB"
+                if ":" not in line:
+                    continue
+                key, _, rest = line.partition(":")
+                parts = rest.split()
+                if not parts:
+                    continue
+                try:
+                    val_kb = int(parts[0])
+                except ValueError:
+                    continue
+                # Most numeric fields are in kB; some (HugePages_Total etc.)
+                # are unit-less. Multiply by 1024 only when explicit kB suffix
+                # is present.
+                if len(parts) > 1 and parts[1].lower() == "kb":
+                    info[key] = val_kb * 1024
+                else:
+                    info[key] = val_kb
+    except OSError:
+        return None
+    return info
+
+
+def _virtual_memory() -> dict[str, Any] | None:
+    """Mimic psutil.virtual_memory() shape: total/available/used/free/percent.
+
+    `available` follows the kernel's MemAvailable hint when present, falling
+    back to MemFree+Buffers+Cached for older kernels. `percent` is the
+    used-as-fraction-of-total figure psutil reports (computed off available).
+    """
+    info = _read_meminfo()
+    if info is None:
+        return None
+    total = info.get("MemTotal")
+    if not total:
+        return None
+    if "MemAvailable" in info:
+        available = info["MemAvailable"]
+    else:
+        free = info.get("MemFree", 0)
+        buffers = info.get("Buffers", 0)
+        cached = info.get("Cached", 0)
+        available = free + buffers + cached
+    used = max(0, total - available)
+    percent = 100.0 * used / total if total > 0 else 0.0
+    return {
+        "total": total,
+        "available": available,
+        "used": used,
+        "free": info.get("MemFree", 0),
+        "percent": round(percent, 1),
+    }
+
+
 def _collect_ram() -> dict[str, Any]:
     """Collect system RAM utilization."""
     try:
-        import psutil
-
-        vm = psutil.virtual_memory()
+        vm = _virtual_memory()
+        if vm is None:
+            return {"ram_percent": None, "ram_used_mb": None, "ram_total_mb": None}
         return {
-            "ram_percent": round(vm.percent, 1),
-            "ram_used_mb": vm.used // (1024 * 1024),
-            "ram_total_mb": vm.total // (1024 * 1024),
+            "ram_percent": vm["percent"],
+            "ram_used_mb": vm["used"] // (1024 * 1024),
+            "ram_total_mb": vm["total"] // (1024 * 1024),
         }
     except Exception as e:
         logger.debug("RAM metrics failed: %s", e)
         return {"ram_percent": None, "ram_used_mb": None, "ram_total_mb": None}
 
 
-def _collect_gpus() -> list[dict[str, Any]]:
-    """Collect NVIDIA GPU metrics (utilization, memory, temperature)."""
-    gpus = []
-    try:
-        import pynvml
+# ---------------------------------------------------------------------------
+# GPU — nvidia-smi subprocess
+# ---------------------------------------------------------------------------
 
-        pynvml.nvmlInit()
-        count = pynvml.nvmlDeviceGetCount()
-        for i in range(count):
-            h = pynvml.nvmlDeviceGetHandleByIndex(i)
-            name = pynvml.nvmlDeviceGetName(h)
-            if isinstance(name, bytes):
-                name = name.decode()
-            util = pynvml.nvmlDeviceGetUtilizationRates(h)
-            mem = pynvml.nvmlDeviceGetMemoryInfo(h)
-            try:
-                temp = pynvml.nvmlDeviceGetTemperature(
-                    h, pynvml.NVML_TEMPERATURE_GPU
-                )
-            except Exception:
-                temp = None
-            gpus.append(
-                {
-                    "id": i,
-                    "name": name,
-                    "load_percent": round(util.gpu, 1),
-                    "memory_used_mb": mem.used // (1024 * 1024),
-                    "memory_total_mb": mem.total // (1024 * 1024),
-                    "temp_c": temp,
-                }
-            )
-    except ImportError:
-        pass  # pynvml not installed — no NVIDIA GPU data
+_NVSMI_QUERY = (
+    "index,name,memory.total,memory.used,memory.free,utilization.gpu,temperature.gpu"
+)
+
+
+def _collect_gpus() -> list[dict[str, Any]]:
+    """Collect NVIDIA GPU metrics via `nvidia-smi --query-gpu=...`.
+
+    Returns an empty list when nvidia-smi is missing, the driver is absent,
+    or the query times out — matching the previous pynvml behavior on a
+    GPU-less host.
+    """
+    gpus: list[dict[str, Any]] = []
+    try:
+        proc = subprocess.run(
+            [
+                "nvidia-smi",
+                f"--query-gpu={_NVSMI_QUERY}",
+                "--format=csv,noheader,nounits",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except FileNotFoundError:
+        # No NVIDIA driver / nvidia-smi not on PATH — silent, same as the
+        # previous `except ImportError: pass` branch on pynvml.
+        return gpus
+    except subprocess.TimeoutExpired:
+        logger.debug("nvidia-smi timed out")
+        return gpus
     except Exception as e:
-        logger.debug("GPU metrics failed: %s", e)
+        logger.debug("nvidia-smi exec failed: %s", e)
+        return gpus
+
+    if proc.returncode != 0:
+        # Driver mismatch / no GPUs — return empty, do not raise.
+        if proc.stderr:
+            logger.debug("nvidia-smi exit %d: %s", proc.returncode, proc.stderr.strip()[:200])
+        return gpus
+
+    # CSV with one row per GPU. Fields are MiB / % / °C respectively (nounits
+    # strips the suffixes). Empty / "[Not Supported]" cells become None.
+    for line in proc.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) < 7:
+            continue
+
+        def _to_int(s: str) -> int | None:
+            try:
+                return int(s)
+            except (ValueError, TypeError):
+                return None
+
+        idx = _to_int(parts[0])
+        name = parts[1]
+        mem_total = _to_int(parts[2])
+        mem_used = _to_int(parts[3])
+        # mem_free = _to_int(parts[4])  # noqa: not surfaced by previous code
+        util_gpu = _to_int(parts[5])
+        temp_c = _to_int(parts[6])
+
+        gpus.append({
+            "id": idx if idx is not None else 0,
+            "name": name,
+            "load_percent": float(util_gpu) if util_gpu is not None else None,
+            "memory_used_mb": mem_used if mem_used is not None else None,
+            "memory_total_mb": mem_total if mem_total is not None else None,
+            "temp_c": temp_c,
+        })
     return gpus
 
+
+# ---------------------------------------------------------------------------
+# Host-bridge fallback (macOS-in-Docker)
+# ---------------------------------------------------------------------------
 
 def _get_host_metrics_url() -> str | None:
     """
@@ -155,7 +381,7 @@ def _collect_via_host_bridge(url: str) -> dict[str, Any] | None:
         logger.debug("host metrics bridge fetch failed (attempt %d): %s",
                      _host_metrics_failures, e)
         if _host_metrics_failures >= _HOST_METRICS_FAIL_THRESHOLD:
-            logger.warning("host metrics bridge unreachable after %d attempts; falling back to in-container psutil",
+            logger.warning("host metrics bridge unreachable after %d attempts; falling back to in-container reads",
                            _HOST_METRICS_FAIL_THRESHOLD)
         return None
 
@@ -166,7 +392,7 @@ def collect_system_metrics() -> dict[str, Any]:
     Cached for _CACHE_TTL seconds to avoid repeated expensive calls.
 
     On macOS-in-Docker, prefers a host-side bridge (see module docstring) since
-    in-container psutil only sees the Linux VM, not the real Mac.
+    in-container reads of /proc/* only see the Linux VM, not the real Mac.
     """
     global _cache, _cache_ts
     now = time.monotonic()
@@ -180,14 +406,14 @@ def collect_system_metrics() -> dict[str, Any]:
             _cache = bridged
             _cache_ts = now
             return bridged
-        # bridge failure — fall through to in-container psutil
+        # bridge failure — fall through to in-container reads
 
     result = {
         **_collect_cpu(),
         **_collect_ram(),
         "gpus": _collect_gpus(),
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "source": "in-container psutil",
+        "source": "in-container /proc",
     }
     _cache = result
     _cache_ts = now
@@ -197,7 +423,7 @@ def collect_system_metrics() -> dict[str, Any]:
 async def collect_system_metrics_async() -> dict[str, Any]:
     """
     Run collect_system_metrics() in a thread pool to avoid blocking the event loop.
-    psutil.cpu_percent(interval=0.1) does a 100ms blocking sleep.
+    The CPU collector does a 100ms blocking sleep between /proc/stat snapshots.
     """
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, collect_system_metrics)

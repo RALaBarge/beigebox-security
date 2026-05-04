@@ -1577,9 +1577,27 @@ class CDPTool:
                    len(storage.get("sessionStorage", {})))
 
     async def _mimic_activate(self) -> str:
-        """Link user's Chrome cookies into CDP Chrome and inject headers."""
+        """Copy user's Chrome cookies into CDP Chrome and inject headers.
+
+        Mimic mode reads (and copies) credentials from the operator's real
+        Chrome profile — OAuth cookies, session tokens, the works. Even
+        though we copy rather than symlink, this is a high-trust action.
+        Gated behind ``tools.cdp.mimic.enabled: true`` (default false).
+        Operators must opt in explicitly per-deployment.
+        """
         import os
         from pathlib import Path
+
+        from beigebox.config import get_config
+        cdp_cfg = (get_config().get("tools") or {}).get("cdp") or {}
+        mimic_cfg = cdp_cfg.get("mimic") or {}
+        if not mimic_cfg.get("enabled", False):
+            return (
+                "Error: mimic mode is disabled. To enable, set "
+                "tools.cdp.mimic.enabled: true in config.yaml. "
+                "Mimic mode reads cookies from your real Chrome profile — "
+                "review the security implications before enabling."
+            )
 
         if self._mimic_active:
             return "Mimic mode already active."

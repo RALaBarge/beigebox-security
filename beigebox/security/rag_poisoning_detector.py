@@ -197,11 +197,11 @@ class RAGPoisoningDetector:
         confidence: float,
         reason: str,
         vector_id: str,
-        backend: str,                 # "memory" | "chroma" | "postgres"
+        backend: str,                 # "memory" | "postgres"
     ) -> None:
         """Best-effort wire emit for a poisoning detection.
 
-        Centralised so all three vector backends share one emit path
+        Centralised so every vector backend shares one emit path
         (was duplicated; see Grok review on 2026-04-26).
         """
         try:

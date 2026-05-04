@@ -5,18 +5,13 @@ httpx>=0.27.0
 pyyaml>=6.0
 pydantic>=2.4.0
 pydantic-settings>=2.0
-python-dotenv>=1.0
-itsdangerous>=2.1.0
 bcrypt>=4.0.0
 
-# Storage
-chromadb>=0.5.0
+# Storage (postgres via psycopg2-binary + pgvector)
+# Removed: chromadb — fully replaced by postgres backend.
 
-# Web scraping / search
-ddgs>=0.1
-beautifulsoup4>=4.12.0
-requests>=2.32.4
-lxml>=5.0
+# Web scraping / search are now stdlib-only (html.parser + httpx).
+# Removed: requests, beautifulsoup4, ddgs, lxml, itsdangerous, psutil, pynvml.
 
 # Credentials (agentauth — OS keychain credential management for agent frameworks)
 agentauth>=0.1.0
@@ -28,7 +23,7 @@ wasmtime
 pytest>=8.0
 pytest-asyncio>=0.24.0
 
-# Security scanning
-pip-audit>=2.7.0
-bandit>=1.7.0
-semgrep>=1.50.0
+# Security scanning tools (bandit, semgrep, pip-audit) are NOT in this
+# runtime list — they are CI-only and live in the `security` dependency
+# group in pyproject.toml. Install with: `uv sync --group security`
+# or `pip install -e .[security]` (after extras-mapped install).

@@ -198,6 +198,95 @@ class Proxy:
     def _build_captured_request(self, ctx, body, response):
         return build_captured_request(ctx, body, response)
 
+    @staticmethod
+    def _redact_sse_line(line: str, sr, model: str = "beigebox") -> list[str]:
+        """Run *line* (one SSE line) through *sr* (StreamingRedactor) and
+        return a list of SSE lines to forward to the client.
+
+        Behavior:
+          * Non-data lines (empty, comments, ``event:`` headers) pass through
+            unchanged.
+          * ``data: [DONE]`` triggers an automatic ``finalize()`` flush so
+            anything held back in the tail buffer surfaces as a synthetic
+            chunk RIGHT BEFORE the [DONE] marker. Without this the trailing
+            window would silently never reach the client.
+          * ``data: {json}`` lines have their assistant content delta
+            replaced by the redactor's safe-prefix. If the prefix is empty
+            (everything held back as buffered tail), the line is dropped
+            entirely — the held-back text will be flushed in the [DONE]
+            synthetic chunk.
+
+        Why this lives on the proxy: needs the same JSON envelope shape as
+        the upstream backend produced (model id, index, etc.) so the
+        rewritten chunk doesn't break clients that key off chunk metadata.
+        """
+        if sr is None or not line:
+            return [line] if line else []
+        # Pass through non-data lines and SSE control frames.
+        if not line.startswith("data: "):
+            return [line]
+        data_str = line[6:]
+        if data_str.strip() == "[DONE]":
+            # Flush the held-back tail as a synthetic content chunk just
+            # before [DONE]. Idempotent — finalize() returns "" on repeat.
+            tail_line = Proxy._flush_streaming_redactor(sr, model)
+            if tail_line:
+                return [tail_line, line]
+            return [line]
+        try:
+            chunk = json.loads(data_str)
+        except (json.JSONDecodeError, ValueError):
+            # Non-JSON data (some providers ship comments / pings); skip
+            # redaction and forward as-is rather than dropping the chunk.
+            return [line]
+
+        choices = chunk.get("choices") if isinstance(chunk, dict) else None
+        if not isinstance(choices, list) or not choices:
+            return [line]
+        choice = choices[0] if isinstance(choices[0], dict) else None
+        if choice is None:
+            return [line]
+        delta = choice.get("delta") if isinstance(choice.get("delta"), dict) else None
+        if delta is None:
+            # No delta to redact (e.g. final chunk with `message` block) —
+            # send through; final-shape blocks are rare in real streams and
+            # the post-stream block-pattern check still runs on the buffer.
+            return [line]
+        content = delta.get("content")
+        if not isinstance(content, str) or not content:
+            return [line]
+
+        emitted = sr.feed(content)
+        if not emitted:
+            # Whole content held back as tail — drop chunk; buffered text
+            # will appear in the finalize() synthetic chunk.
+            return []
+        delta["content"] = emitted
+        return [f"data: {json.dumps(chunk, ensure_ascii=False)}"]
+
+    @staticmethod
+    def _flush_streaming_redactor(sr, model: str) -> str | None:
+        """Build a synthetic SSE chunk carrying the StreamingRedactor's tail.
+
+        Returns the raw SSE line (no trailing newline) or None if the tail
+        is empty. The synthetic chunk uses the same minimal shape as our
+        existing block paths so it's safe to interleave with real upstream
+        chunks immediately before [DONE].
+        """
+        if sr is None:
+            return None
+        tail = sr.finalize()
+        if not tail:
+            return None
+        synthetic = json.dumps(
+            {
+                "choices": [{"delta": {"content": tail}, "index": 0}],
+                "model": model,
+            },
+            ensure_ascii=False,
+        )
+        return f"data: {synthetic}"
+
     def _capture_stream_response(
         self,
         ctx: CaptureContext,
@@ -977,6 +1066,18 @@ class Proxy:
         _t_backend = _time.monotonic()
         _first_chunk = True  # TTFT sentinel — cleared after the first yielded chunk
 
+        # Per-stream redactor — sliding-window wrapper that catches secrets
+        # split across SSE chunk boundaries. Disabled redactor → None and
+        # the helpers turn into passthroughs. Synthetic clients (no UI)
+        # also skip the redactor: their callers want raw upstream bytes.
+        _stream_redactor = None
+        if not is_synthetic:
+            try:
+                _stream_redactor = self.guardrails.streaming_output_redactor()
+            except Exception as _exc:  # noqa: BLE001
+                logger.warning("streaming redactor init failed: %s", _exc)
+                _stream_redactor = None
+
         if self.backend_router:
             # Stream via multi-backend router. The try/except tracks the
             # outcome (ok / client_disconnect / stream_aborted) so the
@@ -1007,19 +1108,26 @@ class Proxy:
                             except Exception as _exc:
                                 logger.warning("stream capture_request failed: %s", _exc)
                             _stream_req_captured = True
-                    yield line + "\n"
-                    # Parse to buffer content
+                    # Parse to buffer content (always — full_response is the
+                    # post-stream gold path for capture / logging / cache,
+                    # and we want the ORIGINAL upstream text there, not the
+                    # redacted view; redaction runs again on the assembled
+                    # text in check_output below for the legacy path).
                     if line.startswith("data: "):
                         data_str = line[6:]
-                        if data_str.strip() == "[DONE]":
-                            continue
-                        try:
-                            chunk = json.loads(data_str)
-                            nd = normalize_stream_delta(chunk)
-                            if nd.content_delta:
-                                full_response.append(nd.content_delta)
-                        except (json.JSONDecodeError, IndexError):
-                            pass
+                        if data_str.strip() != "[DONE]":
+                            try:
+                                _chunk_obj = json.loads(data_str)
+                                nd = normalize_stream_delta(_chunk_obj)
+                                if nd.content_delta:
+                                    full_response.append(nd.content_delta)
+                            except (json.JSONDecodeError, IndexError):
+                                pass
+                    # Streaming-redactor pass: rewrite delta.content with the
+                    # safe-prefix the sliding window has cleared. May drop
+                    # the chunk if all content is buffered as tail.
+                    for _emit in self._redact_sse_line(line, _stream_redactor, model):
+                        yield _emit + "\n"
             except (asyncio.CancelledError, GeneratorExit):
                 # Client closed the connection (or task was cancelled).
                 # Capture whatever we assembled and re-raise so the runtime
@@ -1073,19 +1181,21 @@ class Proxy:
                             if _first_chunk:
                                 _stages["ttft_ms"] = (_time.monotonic() - _t_backend) * 1000
                                 _first_chunk = False
-                            yield line + "\n"
-                            # Parse to buffer content
+                            # Buffer original content for post-stream paths
+                            # before any redaction rewrites the line.
                             if line.startswith("data: "):
                                 data_str = line[6:]
-                                if data_str.strip() == "[DONE]":
-                                    continue
-                                try:
-                                    chunk = json.loads(data_str)
-                                    nd = normalize_stream_delta(chunk)
-                                    if nd.content_delta:
-                                        full_response.append(nd.content_delta)
-                                except (json.JSONDecodeError, IndexError):
-                                    pass
+                                if data_str.strip() != "[DONE]":
+                                    try:
+                                        _chunk_obj = json.loads(data_str)
+                                        nd = normalize_stream_delta(_chunk_obj)
+                                        if nd.content_delta:
+                                            full_response.append(nd.content_delta)
+                                    except (json.JSONDecodeError, IndexError):
+                                        pass
+                            # Streaming-redactor pass.
+                            for _emit in self._redact_sse_line(line, _stream_redactor, model):
+                                yield _emit + "\n"
             except httpx.TimeoutException:
                 logger.error("Backend timeout after %ss for model '%s'", self.timeout, model)
                 err_chunk = json.dumps({
@@ -1118,6 +1228,14 @@ class Proxy:
         # Wall-clock stream duration
         _stages["backend"] = (_time.monotonic() - _t_backend) * 1000
         total_ms = (_time.monotonic() - _t0) * 1000
+
+        # Defensive flush — if upstream never emitted [DONE], the in-band
+        # flush in _redact_sse_line never fired. finalize() is idempotent,
+        # so duplicating it here is safe.
+        if _stream_redactor is not None:
+            _tail_line = self._flush_streaming_redactor(_stream_redactor, model)
+            if _tail_line:
+                yield _tail_line + "\n"
 
         # Inspector — finalize latency
         RequestInspector.finish(

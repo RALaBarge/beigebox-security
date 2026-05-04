@@ -60,6 +60,9 @@ async def startup(app: FastAPI) -> AppState:  # noqa: ARG001 — app reserved fo
     mcp = build_mcp(cfg, tool_registry=tools.tool_registry)
     security = build_security(cfg)
 
+    from beigebox.security.policy import PolicyEngine
+    policy_engine = PolicyEngine(cfg)
+
     proxy_bundle = await build_proxy(
         cfg,
         conversations=storage.conversations,
@@ -95,6 +98,7 @@ async def startup(app: FastAPI) -> AppState:  # noqa: ARG001 — app reserved fo
         # to None on AppState until their dedicated revival commit lands.
         injection_guard=security.injection_guard,
         rag_scanner=security.rag_scanner,
+        policy_engine=policy_engine,
         egress_hooks=proxy_bundle.egress_hooks,
     )
 

@@ -16,7 +16,6 @@ import time
 import yaml
 from pathlib import Path
 from typing import Optional
-from dotenv import load_dotenv
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 from beigebox.constants import DEFAULT_MODEL, DEFAULT_EMBEDDING_MODEL
@@ -172,7 +171,35 @@ def _validate_config(cfg: dict) -> None:
             loc = " → ".join(str(x) for x in err["loc"])
             _vlog.warning("config.yaml: %s: %s", loc, err["msg"])
 
-load_dotenv()
+def _load_dotenv_stdlib(path: "str | Path" = ".env") -> None:
+    """Minimal stdlib .env loader. Replaces python-dotenv.
+
+    Supports: KEY=VALUE lines, optional surrounding double or single quotes,
+    leading 'export ', '#' comments, blank lines. Does NOT support: variable
+    interpolation, multi-line values, escape sequences. Verified sufficient
+    for the .env files in this repo.
+    """
+    p = Path(path)
+    if not p.exists():
+        return
+    with open(p, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[7:].lstrip()
+            if "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            val = val.strip()
+            if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                val = val[1:-1]
+            os.environ.setdefault(key, val)
+
+
+_load_dotenv_stdlib()
 
 _CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
 # data/ is a Docker volume mount — settings written here survive container
@@ -297,7 +324,7 @@ def get_storage_paths(cfg: dict | None = None) -> tuple[str, str]:
 
     Legacy compatibility keys still accepted:
       - storage.sqlite_path
-      - storage.chroma_path
+      - storage.chroma_path  (legacy; vector backend is now postgres)
     """
     cfg = cfg or get_config()
     storage_cfg = cfg.get("storage", {})
@@ -309,8 +336,8 @@ def get_storage_paths(cfg: dict | None = None) -> tuple[str, str]:
     )
     vector_store_path = (
         storage_cfg.get("vector_store_path")
-        or storage_cfg.get("chroma_path")
-        or "./data/chroma"
+        or storage_cfg.get("chroma_path")  # legacy alias only — postgres uses a URL
+        or "./data/vectors"
     )
 
     return sqlite_path, vector_store_path

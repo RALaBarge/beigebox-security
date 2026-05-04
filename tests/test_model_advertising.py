@@ -6,11 +6,10 @@ Tests both advertise and hidden modes.
 import pytest
 from beigebox.capture import CaptureFanout
 from beigebox.proxy import Proxy
+from beigebox.storage.backends import make_backend
 from beigebox.storage.db import make_db
 from beigebox.storage.repos import make_conversation_repo
 from beigebox.storage.vector_store import VectorStore
-
-pytest.importorskip("chromadb", reason="chromadb not installed — skipping model advertising tests")
 
 
 @pytest.fixture
@@ -20,7 +19,7 @@ def mock_proxy(tmp_path):
     conversations = make_conversation_repo(db)
     conversations.create_tables()
     vector = VectorStore(
-        chroma_path=str(tmp_path / "chroma"),
+        backend=make_backend("memory"),
         embedding_model="nomic-embed-text",
         embedding_url="http://localhost:11434"
     )

@@ -15,7 +15,7 @@ WireLog) without booting FastAPI just to re-test the same forward call.
 Why not ``httpx.AsyncClient(app=app)``? The whole router shim does is
 ``return JSONResponse(await proxy.forward_chat_completion(body))`` plus
 auth/ACL — covered separately in test_auth.py. Hitting the FastAPI layer
-adds a chromadb dependency to startup and obscures which row in
+pulls in the full storage stack at startup and obscures which row in
 ``messages`` the assertion is checking. Keep the proxy contract honest;
 let the router test cover routing.
 """

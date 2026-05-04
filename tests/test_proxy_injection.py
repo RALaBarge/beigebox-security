@@ -16,9 +16,10 @@ from unittest.mock import patch
 # ─────────────────────────────────────────────────────────────────────────────
 # Generation Parameter Injection
 #
-# proxy.py can't be imported without chromadb, so we test the logic directly
-# by extracting the method body into a standalone helper that mirrors it exactly.
-# This tests the algorithm, not the wiring (wiring is covered by smoke.sh).
+# proxy.py pulls in the full storage stack at import time, so we test the
+# logic directly by extracting the method body into a standalone helper that
+# mirrors it exactly. This tests the algorithm, not the wiring (wiring is
+# covered by smoke.sh).
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _inject_generation_params(body: dict, runtime: dict) -> dict:

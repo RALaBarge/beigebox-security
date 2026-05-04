@@ -91,6 +91,15 @@ class Guardrails:
         in_cfg = gr_cfg.get("input", {})
         out_cfg = gr_cfg.get("output", {})
 
+        # Output redactor (secrets + entropy scan). Independent of guardrails.enabled
+        # so operators can run secret scrubbing without enabling block-pattern guard.
+        try:
+            from beigebox.security.output_redactor import OutputRedactor
+            self._output_redactor: OutputRedactor | None = OutputRedactor(cfg)
+        except Exception as exc:  # noqa: BLE001 — never let redactor init kill startup
+            logger.warning("OutputRedactor init failed: %s", exc)
+            self._output_redactor = None
+
         # Input settings
         self._block_keywords: list[str] = [k.lower() for k in in_cfg.get("block_keywords", [])]
         self._block_patterns_in: list[re.Pattern] = [
@@ -218,13 +227,56 @@ class Guardrails:
 
         return GuardrailResult.ok()
 
+    def streaming_output_redactor(self):
+        """Build a fresh :class:`StreamingRedactor` for a single SSE response.
+
+        Returns ``None`` when no redactor is available or it's disabled —
+        callers can then fast-path past the wrapper. Returned wrappers are
+        per-request (the underlying ``OutputRedactor`` is shared, but each
+        wrapper keeps its own tail buffer so concurrent streams don't
+        cross-contaminate).
+        """
+        if self._output_redactor is None or not self._output_redactor.enabled:
+            return None
+        try:
+            from beigebox.security.output_redactor import StreamingRedactor
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("StreamingRedactor import failed: %s", exc)
+            return None
+        return StreamingRedactor(self._output_redactor)
+
     # ── Output check / redaction ───────────────────────────────────────────
     def check_output(self, text: str) -> tuple[GuardrailResult, str]:
         """
         Check and optionally redact output text.
         Returns (GuardrailResult, processed_text).
         If allowed=False the caller should use the returned (blocked) text directly.
+
+        Order of operations:
+          1. Block-pattern check (entire response replaced if matched).
+          2. Secret/PII/entropy scrubber (``OutputRedactor``) — runs even when
+             ``guardrails.enabled`` is false, since secret leaks are catastrophic
+             and the redactor has its own opt-in flag.
+          3. Legacy in-class PII redaction (kept for backward compatibility).
         """
+        # Step 2 runs unconditionally if the redactor itself is enabled.
+        if self._output_redactor is not None and self._output_redactor.enabled and text:
+            res = self._output_redactor.redact(text)
+            text = res.text
+            for f in res.findings:
+                logger.warning(
+                    "OutputRedactor: redacted %d %s instance(s) (sample=%s)",
+                    f.count, f.label, f.sample,
+                )
+                try:
+                    log_error_event(
+                        "output_redactor",
+                        f"Redacted {f.count} {f.label} instance(s)",
+                        severity="warning",
+                    )
+                except Exception:
+                    pass
+
         if not self.enabled or not text:
             return GuardrailResult.ok(), text
 

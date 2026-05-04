@@ -266,12 +266,13 @@ Schema includes `misc1`, `misc2` TEXT spares for extensibility.
 ### Postgres + pgvector
 
 Stores embeddings for:
-- Semantic cache (request/response pairs)
 - Cross-session memory (the `memory` MCP tool / `bb sweep` CLI)
 - RAG document index
 
 (Migrated from ChromaDB in v3 work — `storage/backends/postgres.py` is the live
-backend; `chromadb` backend remains for ephemeral/in-memory tests.)
+backend. The `chromadb` backend was removed entirely in v3 for security
+reasons; only `memory` and `postgres` are in the registry. The earlier
+`SemanticCache` keyed on embeddings is also gone — see [V3.md](../V3.md).)
 
 ## Observability
 

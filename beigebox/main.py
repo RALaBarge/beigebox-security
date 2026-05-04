@@ -52,10 +52,15 @@ app = FastAPI(
 
 from beigebox.middleware import (  # noqa: E402
     ApiKeyMiddleware,
+    PolicyMiddleware,
     SecurityHeadersMiddleware,
     WebAuthMiddleware,
 )
 
+# FastAPI runs middleware in reverse-add order: last added wraps the others.
+# Headers should run last (so they decorate the final response). PolicyMiddleware
+# runs after auth so deny events have the principal name.
+app.add_middleware(PolicyMiddleware)
 app.add_middleware(ApiKeyMiddleware)
 app.add_middleware(WebAuthMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)

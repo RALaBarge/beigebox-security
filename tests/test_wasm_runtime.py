@@ -125,7 +125,6 @@ class TestWasmReloadEndpoint:
 
     @pytest.fixture
     def client(self, tmp_path):
-        pytest.importorskip("chromadb", reason="chromadb not installed")
         from fastapi.testclient import TestClient
         from beigebox import config as cfg_mod
         from unittest.mock import AsyncMock
@@ -134,7 +133,7 @@ class TestWasmReloadEndpoint:
             "backend": {"url": "http://localhost:11434", "default_model": "llama3.2", "timeout": 120},
             "server": {"host": "0.0.0.0", "port": 8000},
             "embedding": {"model": "nomic-embed-text", "backend_url": "http://localhost:11434"},
-            "storage": {"sqlite_path": str(tmp_path / "test.db"), "chroma_path": str(tmp_path / "chroma")},
+            "storage": {"sqlite_path": str(tmp_path / "test.db"), "vector_store_path": str(tmp_path / "vectors"), "vector_backend": "memory"},
             "tools": {"enabled": False},
             "decision_llm": {"enabled": False},
             "hooks": {"directory": str(tmp_path / "hooks")},
@@ -225,7 +224,6 @@ class TestConfigEndpointWasm:
 
     @pytest.fixture
     def client(self, tmp_path):
-        pytest.importorskip("chromadb", reason="chromadb not installed")
         from fastapi.testclient import TestClient
         from beigebox import config as cfg_mod
         from unittest.mock import AsyncMock
@@ -234,7 +232,7 @@ class TestConfigEndpointWasm:
             "backend": {"url": "http://localhost:11434", "default_model": "llama3.2", "timeout": 120},
             "server": {"host": "0.0.0.0", "port": 8000},
             "embedding": {"model": "nomic-embed-text", "backend_url": "http://localhost:11434"},
-            "storage": {"sqlite_path": str(tmp_path / "test.db"), "chroma_path": str(tmp_path / "chroma")},
+            "storage": {"sqlite_path": str(tmp_path / "test.db"), "vector_store_path": str(tmp_path / "vectors"), "vector_backend": "memory"},
             "tools": {"enabled": False},
             "decision_llm": {"enabled": False},
             "hooks": {"directory": str(tmp_path / "hooks")},

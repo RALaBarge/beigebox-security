@@ -40,7 +40,7 @@ def fake_config():
             "type": "sqlite",
             "path": ":memory:",
             "vector_store_path": ":memory:",
-            "vector_backend": "chromadb",
+            "vector_backend": "memory",
         },
         "embedding": {"model": "nomic-embed-text", "backend": "ollama"},
         "operator": {

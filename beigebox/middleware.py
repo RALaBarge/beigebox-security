@@ -225,7 +225,17 @@ class WebAuthMiddleware(BaseHTTPMiddleware):
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Attach security headers to every response."""
+    """Attach security headers to every response.
+
+    HSTS is config-gated — `security.hsts.enabled: true` in config.yaml enables
+    `Strict-Transport-Security`. Default off because:
+      - Browsers ignore HSTS over plain http:// (it's only honored on https://).
+      - But once a browser sees HSTS for a host, it pins it; an operator who
+        set HSTS during a TLS-terminated test and later switched back to plain
+        http:// would lock themselves out.
+    Operators running BeigeBox behind nginx/caddy with TLS should enable HSTS
+    explicitly (recommended).
+    """
 
     async def dispatch(self, request: Request, call_next) -> Response:
         response = await call_next(request)
@@ -233,6 +243,28 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+
+        sec_cfg = (get_config().get("security") or {})
+        hsts_cfg = sec_cfg.get("hsts") or {}
+        if hsts_cfg.get("enabled", False):
+            # Auto-suppress over plain http:// — this catches the operator
+            # who flips the flag locally before TLS is wired up. Browsers
+            # would ignore the header on http:// anyway, but skipping it on
+            # the response means we never advertise HSTS for a non-TLS host
+            # (avoids confusion in audit tooling). The check honors a trusted
+            # edge proxy's X-Forwarded-Proto first, then falls back to the
+            # request scheme directly.
+            forwarded_proto = request.headers.get("x-forwarded-proto", "").lower()
+            req_scheme = forwarded_proto or request.url.scheme.lower()
+            if req_scheme == "https":
+                max_age = int(hsts_cfg.get("max_age", 31536000))
+                parts = [f"max-age={max_age}"]
+                if hsts_cfg.get("include_subdomains", True):
+                    parts.append("includeSubDomains")
+                if hsts_cfg.get("preload", False):
+                    parts.append("preload")
+                response.headers["Strict-Transport-Security"] = "; ".join(parts)
+
         # CSP: self + blob: (audio/image preview) + no inline scripts except index.html
         # eval is blocked; data: URIs restricted to images only.
         response.headers["Content-Security-Policy"] = (
@@ -248,8 +280,133 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+def _resolve_client_ip(request: Request, trusted_proxies: set[str]) -> str | None:
+    """Return the real client IP, honoring X-Forwarded-For only from trusted proxies.
+
+    The remote address must be in ``trusted_proxies`` for the forwarded header
+    to be trusted. Otherwise we use ``request.client.host`` as the source of
+    truth — this prevents an arbitrary client from spoofing their rate-limit
+    bucket by setting ``X-Forwarded-For: <other ip>``.
+
+    Forwarded chain semantics: when the header is trusted, the *leftmost*
+    address (the original client) is taken. Some setups invert this; configure
+    your edge proxy to emit the chain in standard order.
+    """
+    direct = request.client.host if request.client else None
+    if direct and direct in trusted_proxies:
+        xff = request.headers.get("x-forwarded-for") or request.headers.get("x-real-ip")
+        if xff:
+            first = xff.split(",")[0].strip()
+            if first:
+                return first
+    return direct
+
+
+class PolicyMiddleware(BaseHTTPMiddleware):
+    """Per-route WAF-style policy enforcement.
+
+    Reads ``security.policies`` from config and enforces body size, content-
+    type allowlist, rate caps, message/attachment count, and tool-arg
+    nesting depth. See :mod:`beigebox.security.policy` for the DSL.
+
+    Order: runs *after* ApiKey/WebAuth so deny events have a principal in
+    request.state when available, but before the route handler so an
+    over-large body never reaches a parser.
+
+    Three hardening layers added beyond the original DSL:
+      1. **Content-Length pre-check** — reject before the body is buffered if
+         the declared length exceeds the rule's cap. Closes the obvious
+         "claim 1 GB body, force the proxy to buffer it" DoS.
+      2. **Trusted-proxy real-IP resolution** — only trust X-Forwarded-For /
+         X-Real-IP when the request comes from a configured edge proxy. See
+         ``security.policies.trusted_proxies`` (list of IPs).
+      3. **Body re-injection** — buffered body is fed back to downstream
+         handlers via ``request._receive`` so they don't have to know.
+    """
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        from beigebox.security.policy import PolicyEngine
+
+        st = maybe_state()
+        engine: PolicyEngine | None = getattr(st, "policy_engine", None) if st else None
+        if engine is None or not engine.enabled:
+            return await call_next(request)
+
+        path = request.url.path
+        method = request.method
+        content_type = request.headers.get("content-type", "")
+        client_ip = _resolve_client_ip(request, engine.trusted_proxies)
+
+        rule = engine.resolve(path, method)
+        max_body = rule.max_body_bytes
+
+        # Content-Length pre-check — refuse before buffering anything.
+        if max_body is not None:
+            try:
+                declared_len = int(request.headers.get("content-length") or "0")
+            except ValueError:
+                declared_len = 0
+            if declared_len > max_body:
+                _emit_auth_denied(
+                    "body_too_large", _principal_name(request), "policy", path, request,
+                )
+                return JSONResponse(
+                    {
+                        "error": {
+                            "message": (
+                                f"Request denied by policy '{rule.rule_id}': "
+                                f"declared body {declared_len} bytes exceeds {max_body}"
+                            ),
+                            "type": "policy_denied",
+                            "code": "body_too_large",
+                        }
+                    },
+                    status_code=413,
+                )
+
+        body = b""
+        if method in {"POST", "PUT", "PATCH"}:
+            body = await request.body()
+
+            async def _receive():
+                return {"type": "http.request", "body": body, "more_body": False}
+            request._receive = _receive  # type: ignore[attr-defined]
+
+        decision = engine.check(path, method, content_type, body, client_ip)
+        if not decision.allowed:
+            _emit_auth_denied(decision.code, _principal_name(request), "policy", path, request)
+            if decision.code == "rate_cap_exceeded":
+                status = 429
+            elif decision.code in (
+                "body_too_large",
+                "tool_args_too_large",
+                "tool_arg_string_too_long",
+            ):
+                status = 413
+            else:
+                status = 400
+            return JSONResponse(
+                {
+                    "error": {
+                        "message": f"Request denied by policy '{decision.rule_id}': {decision.reason}",
+                        "type": "policy_denied",
+                        "code": decision.code,
+                    }
+                },
+                status_code=status,
+            )
+
+        return await call_next(request)
+
+
+def _principal_name(request: Request) -> str:
+    principal = getattr(request.state, "auth_key", None)
+    return getattr(principal, "name", "unknown")
+
+
 __all__ = [
     "ApiKeyMiddleware",
     "WebAuthMiddleware",
     "SecurityHeadersMiddleware",
+    "PolicyMiddleware",
 ]

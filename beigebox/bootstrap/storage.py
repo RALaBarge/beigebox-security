@@ -4,7 +4,7 @@ Builds (in dependency order):
 
   - BaseDB shim shared by every per-entity repo
   - Five repos: api_keys, conversations, quarantine, users, wire_events
-  - Storage backend (sqlite|chroma|postgres) for the vector store
+  - Storage backend (memory|postgres) for the vector store
   - RAGPoisoningDetector (optional)
   - VectorStore (consumes backend + poisoning_detector + quarantine)
   - BlobStore (filesystem-only)

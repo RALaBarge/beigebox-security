@@ -70,8 +70,8 @@ AUTO_SUMMARIZATION_DEFAULT_KEEP_LAST = 8
 # Vector Store & Embeddings
 # ─────────────────────────────────────────────────────────────────────────────
 
-VECTOR_STORE_DEFAULT_PATH = "./data/chroma"
-VECTOR_BACKEND_DEFAULT = "chromadb"
+VECTOR_STORE_DEFAULT_PATH = "./data/vectors"
+VECTOR_BACKEND_DEFAULT = "postgres"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # API & HTTP

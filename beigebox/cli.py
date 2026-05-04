@@ -581,6 +581,200 @@ def cmd_quarantine_purge(args):
     print()
 
 
+_SECURITY_EVENT_TYPES = frozenset({
+    "auth_denied", "guardrail_block", "secret_redacted",
+    "output_redactor", "integrity_violation", "integrity_alert",
+    "honeypot_hit", "rag_quarantine", "anomaly_detected",
+})
+
+
+def _is_security_event(ev: dict) -> bool:
+    etype = ev.get("event_type") or ev.get("source") or ev.get("role")
+    return etype in _SECURITY_EVENT_TYPES
+
+
+def _format_security_event(ev: dict) -> str:
+    etype = ev.get("event_type") or ev.get("source") or ev.get("role") or "?"
+    ts = ev.get("ts") or ev.get("timestamp") or ""
+    if isinstance(ts, str) and len(ts) > 19:
+        ts = ts[:19]  # trim to seconds
+    meta = ev.get("meta") or {}
+    snippet = ev.get("content") or ""
+    if not snippet and meta:
+        import json as _j
+        snippet = _j.dumps(meta, separators=(",", ":"))
+    return f"  {ts}  [{etype:<22}] {snippet[:160]}"
+
+
+def _tail_security_events(log_path, last_n: int):
+    """Follow the wire log; emit each new security event as it lands."""
+    import json as _json
+    import time
+    from pathlib import Path
+
+    log_path = Path(log_path)
+    if not log_path.exists():
+        print(f"  ✗  No wire log found at {log_path}")
+        return
+
+    print(f"  ☎  Tapping {log_path} for security events (Ctrl+C to exit)\n")
+
+    # Show last N security events from history before following.
+    if last_n > 0:
+        recent: list[dict] = []
+        with open(log_path, "r", encoding="utf-8") as f:
+            for raw in f:
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    ev = _json.loads(raw)
+                except _json.JSONDecodeError:
+                    continue
+                if _is_security_event(ev):
+                    recent.append(ev)
+                    if len(recent) > last_n:
+                        recent.pop(0)
+        for ev in recent:
+            print(_format_security_event(ev))
+        if recent:
+            print()
+
+    # Follow.
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            f.seek(0, 2)
+            buf = ""
+            while True:
+                chunk = f.read()
+                if not chunk:
+                    time.sleep(0.5)
+                    continue
+                buf += chunk
+                while "\n" in buf:
+                    line, buf = buf.split("\n", 1)
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        ev = _json.loads(line)
+                    except _json.JSONDecodeError:
+                        continue
+                    if _is_security_event(ev):
+                        print(_format_security_event(ev), flush=True)
+    except KeyboardInterrupt:
+        print("\n  ☎  hung up.\n")
+
+
+def cmd_security_report(args):
+    """Daily security roll-up: auth denials, redactions, anomalies, integrity."""
+    import json as _json
+    from collections import Counter
+    from datetime import datetime, timedelta, timezone
+    from pathlib import Path
+
+    from beigebox.config import get_config
+
+    cfg = get_config()
+    log_path = args.log or cfg.get("wiretap", {}).get("path", "./data/wire.jsonl")
+    log_path = Path(log_path)
+
+    if getattr(args, "tail", False):
+        _tail_security_events(log_path, getattr(args, "last_n", 10))
+        return
+
+    days = max(1, int(args.days or 1))
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    interesting_events = _SECURITY_EVENT_TYPES
+
+    counts: Counter = Counter()
+    samples: dict[str, list[str]] = {}
+    total = 0
+
+    if log_path.exists():
+        with open(log_path, "r", encoding="utf-8") as f:
+            for raw in f:
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    ev = _json.loads(raw)
+                except _json.JSONDecodeError:
+                    continue
+                ts = ev.get("ts") or ev.get("timestamp")
+                if ts:
+                    try:
+                        when = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                        if when < cutoff:
+                            continue
+                    except ValueError:
+                        pass
+                etype = ev.get("event_type") or ev.get("source") or ev.get("role")
+                if etype not in interesting_events:
+                    continue
+                counts[etype] += 1
+                total += 1
+                if etype not in samples:
+                    samples[etype] = []
+                if len(samples[etype]) < 3:
+                    meta = ev.get("meta") or {}
+                    snippet = ev.get("content") or _json.dumps(meta)[:120]
+                    samples[etype].append(snippet[:120])
+
+    # Audit chain integrity
+    audit_path = args.audit_log
+    chain_ok = True
+    chain_issues: list[str] = []
+    chain_entries = 0
+    try:
+        from beigebox.security.memory_integrity import verify_audit_chain, _audit_path
+        chain_path = Path(audit_path) if audit_path else _audit_path()
+        if chain_path.exists():
+            chain_entries = sum(1 for _ in open(chain_path, "r", encoding="utf-8"))
+            chain_ok, chain_issues = verify_audit_chain(chain_path)
+    except Exception as exc:  # noqa: BLE001
+        chain_issues = [f"verify failed: {exc}"]
+        chain_ok = False
+
+    if args.json:
+        print(_json.dumps({
+            "since": cutoff.isoformat(),
+            "wire_log": str(log_path),
+            "events_total": total,
+            "events": dict(counts),
+            "audit_chain_path": str(chain_path) if 'chain_path' in dir() else None,
+            "audit_chain_entries": chain_entries,
+            "audit_chain_ok": chain_ok,
+            "audit_chain_issues": chain_issues,
+        }, indent=2))
+        return
+
+    print(f"\n  BeigeBox security report — last {days}d (since {cutoff.isoformat()})")
+    print(f"  Wire log: {log_path}{'  (missing)' if not log_path.exists() else ''}\n")
+    if not counts:
+        print("  No interesting security events recorded in window.\n")
+    else:
+        print(f"  {'Event':<24} {'Count':>8}")
+        print(f"  {'-'*24} {'-'*8}")
+        for ev_type, n in counts.most_common():
+            print(f"  {ev_type:<24} {n:>8}")
+        print(f"  {'-'*24} {'-'*8}")
+        print(f"  {'TOTAL':<24} {total:>8}\n")
+        print("  Recent samples:")
+        for ev_type, snippets in samples.items():
+            print(f"    {ev_type}:")
+            for s in snippets:
+                print(f"      • {s}")
+        print()
+
+    print(f"  Audit chain: {chain_entries} entries — {'OK' if chain_ok else 'FAILED'}")
+    if not chain_ok:
+        for issue in chain_issues[:5]:
+            print(f"    ! {issue}")
+    print()
+
+
 def cmd_tone(args):
     """Print the banner."""
     print(BANNER)
@@ -1296,6 +1490,25 @@ def main():
                  "Run a context optimization discovery experiment", cmd_experiment, setup_experiment)
 
     # quarantine / security / guard
+    # security-report / secrep / audit — daily roll-up of security events
+    def setup_security_report(p):
+        p.add_argument("--log", default=None,
+                       help="Path to wire.jsonl (default: from config)")
+        p.add_argument("--days", "-d", type=int, default=1,
+                       help="How many days back to summarize (default: 1)")
+        p.add_argument("--audit-log", default=None,
+                       help="Path to integrity audit chain (default: ~/.beigebox/integrity_audit.jsonl)")
+        p.add_argument("--json", action="store_true",
+                       help="Output JSON instead of a table")
+        p.add_argument("--tail", "-f", action="store_true",
+                       help="Follow the wire log and print each security event live (Ctrl+C to exit)")
+        p.add_argument("--last-n", type=int, default=10,
+                       help="In --tail mode, show this many recent security events before following")
+
+    _add_command(sub, ["security-report", "secrep", "audit"],
+                 "Daily security roll-up: auth denials, redactions, anomalies, integrity",
+                 cmd_security_report, setup_security_report)
+
     def setup_quarantine_list(p):
         p.add_argument("--filter", "-f", choices=["recent", "suspicious", "all"], default="all",
                        help="Filter by time (recent=24h) or confidence (suspicious>0.8)")

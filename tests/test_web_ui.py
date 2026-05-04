@@ -121,7 +121,6 @@ class TestUpdateRuntimeConfig:
 @pytest.fixture
 def client(tmp_path):
     """Create a test client with minimal mocked dependencies."""
-    pytest.importorskip("chromadb", reason="chromadb not installed")
     from fastapi.testclient import TestClient
     from beigebox import config as cfg_mod
 
@@ -130,7 +129,7 @@ def client(tmp_path):
         "backend": {"url": "http://localhost:11434", "default_model": "llama3.2", "timeout": 120},
         "server": {"host": "0.0.0.0", "port": 8000},
         "embedding": {"model": "nomic-embed-text", "backend_url": "http://localhost:11434"},
-        "storage": {"sqlite_path": str(tmp_path / "test.db"), "chroma_path": str(tmp_path / "chroma"), "log_conversations": True},
+        "storage": {"sqlite_path": str(tmp_path / "test.db"), "vector_store_path": str(tmp_path / "vectors"), "vector_backend": "memory", "log_conversations": True},
         "tools": {"enabled": False},
         "decision_llm": {"enabled": False},
         "hooks": {"directory": str(tmp_path / "hooks")},

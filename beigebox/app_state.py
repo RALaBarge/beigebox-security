@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from beigebox.security.honeypots import HoneypotManager
     from beigebox.security.enhanced_injection_guard import EnhancedInjectionGuard
     from beigebox.security.rag_content_scanner import RAGContentScanner
+    from beigebox.security.policy import PolicyEngine
 
 
 @dataclass
@@ -65,4 +66,5 @@ class AppState:
     honeypot_manager: HoneypotManager | None = None
     injection_guard: EnhancedInjectionGuard | None = None
     rag_scanner: RAGContentScanner | None = None
+    policy_engine: PolicyEngine | None = None
     egress_hooks: list[Any] = field(default_factory=list)  # list[EgressHook]

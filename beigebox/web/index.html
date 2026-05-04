@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BeigeBox — tap the line</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Fira+Code:wght@300;400;500&display=swap');
+<style>@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Fira+Code:wght@300;400;500&display=swap');
 
   /* ── Palette (matches TUI) ───────────────────────────────────────────── */
   :root {
@@ -25,9 +24,9 @@
     --fg-muted:      #4C5460;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
+body {
     font-family: 'Fira Code', 'Share Tech Mono', monospace;
     background: var(--bg);
     color: var(--fg);
@@ -39,7 +38,7 @@
     font-size: 13px;
   }
 
-  /* ── Header ──────────────────────────────────────────────────────────── */
+/* ── Header ──────────────────────────────────────────────────────────── */
   #header {
     background: var(--bg-panel);
     border-bottom: 1px solid var(--lavender-dim);
@@ -50,24 +49,27 @@
     height: 40px;
     flex-shrink: 0;
   }
-  #header .logo {
+
+#header .logo {
     font-family: 'VT323', monospace;
     font-size: 22px;
     color: var(--lavender);
     letter-spacing: 2px;
   }
-  #header .sub {
+
+#header .sub {
     color: var(--fg-muted);
     font-size: 11px;
     letter-spacing: 1px;
   }
-  #header .status-bar {
+
+#header .status-bar {
     display: flex;
     gap: 16px;
     align-items: center;
   }
 
-  /* ── Sub-nav (underline tabs) ───────────────────────────────────────── */
+/* ── Sub-nav (underline tabs) ───────────────────────────────────────── */
   .subnav {
     display: flex;
     border-bottom: 1px solid var(--bg-border);
@@ -75,7 +77,8 @@
     flex-shrink: 0;
     gap: 0;
   }
-  .subnav button {
+
+.subnav button {
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
@@ -86,14 +89,16 @@
     margin-bottom: -1px;
     letter-spacing: 0.3px;
   }
-  .subnav button:hover { color: var(--fg); }
-  .subnav button.subnav-active {
+
+.subnav button:hover { color: var(--fg); }
+
+.subnav button.subnav-active {
     color: var(--lavender);
     border-bottom-color: var(--lavender);
     font-weight: 600;
   }
 
-  /* ── Log ticker ──────────────────────────────────────────────────────── */
+/* ── Log ticker ──────────────────────────────────────────────────────── */
   #log-ticker {
     flex: 1;
     min-width: 0;
@@ -105,13 +110,15 @@
     display: flex;
     justify-content: center;
   }
-  #log-ticker-track {
+
+#log-ticker-track {
     display: flex;
     flex-direction: column;
     align-items: center;
     transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
   }
-  .log-tick {
+
+.log-tick {
     height: 18px;
     line-height: 18px;
     font-size: 10px;
@@ -124,39 +131,47 @@
     flex-shrink: 0;
     opacity: 0.85;
   }
-  .log-tick .tick-ev {
+
+.log-tick .tick-ev {
     color: var(--lavender);
     margin-right: 5px;
     opacity: 0.7;
   }
-  .log-tick .tick-src {
+
+.log-tick .tick-src {
     color: var(--fg-dim);
     margin-right: 5px;
     font-size: 9px;
     opacity: 0.55;
   }
 
-  .status-dot {
+.status-dot {
     width: 7px; height: 7px;
     border-radius: 50%;
     background: var(--fg-muted);
     display: inline-block;
     margin-right: 5px;
   }
-  .status-dot.ok  { background: var(--green); box-shadow: 0 0 6px var(--green); }
-  .status-dot.err { background: var(--red);   box-shadow: 0 0 6px var(--red);   }
-  .sys-m { font-size: 10px; color: var(--fg-muted); font-family: inherit; letter-spacing: 0.3px; min-width: 52px; display: inline-block; text-align: left; }
-  #sys-gpu { min-width: 80px; }
-  #clock { color: var(--fg-muted); font-size: 11px; }
 
-  /* ── Tabs ────────────────────────────────────────────────────────────── */
+.status-dot.ok  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+.status-dot.err { background: var(--red);   box-shadow: 0 0 6px var(--red);   }
+
+.sys-m { font-size: 10px; color: var(--fg-muted); font-family: inherit; letter-spacing: 0.3px; min-width: 52px; display: inline-block; text-align: left; }
+
+#sys-gpu { min-width: 80px; }
+
+#clock { color: var(--fg-muted); font-size: 11px; }
+
+/* ── Tabs ────────────────────────────────────────────────────────────── */
   #tabs {
     background: var(--bg-panel);
     border-bottom: 1px solid var(--bg-border);
     display: flex;
     flex-shrink: 0;
   }
-  .tab {
+
+.tab {
     padding: 8px 20px;
     cursor: pointer;
     color: var(--fg-dim);
@@ -166,43 +181,51 @@
     letter-spacing: 0.5px;
     user-select: none;
   }
-  .tab:hover { color: var(--fg); }
-  .tab.active {
+
+.tab:hover { color: var(--fg); }
+
+.tab.active {
     color: var(--lavender);
     border-bottom-color: var(--lavender);
     font-weight: 500;
   }
-  .tab .tab-key {
+
+.tab .tab-key {
     color: var(--fg-muted);
     font-size: 10px;
     margin-right: 5px;
   }
 
-  /* ── Main content area ───────────────────────────────────────────────── */
+/* ── Main content area ───────────────────────────────────────────────── */
   #content {
     flex: 1;
     overflow: hidden;
     display: flex;
     flex-direction: column;
   }
-  .panel {
+
+.panel {
     display: none;
     flex: 1;
     overflow: hidden;
     flex-direction: column;
   }
-  .panel.active { display: flex; }
 
-  .scroll-area {
+.panel.active { display: flex; }
+
+.scroll-area {
     flex: 1;
     overflow-y: auto;
     padding: 12px 16px;
   }
-  .scroll-area::-webkit-scrollbar { width: 4px; }
-  .scroll-area::-webkit-scrollbar-track { background: var(--bg); }
-  .scroll-area::-webkit-scrollbar-thumb { background: var(--bg-border); border-radius: 2px; }
 
-  /* ── Section headers ─────────────────────────────────────────────────── */
+.scroll-area::-webkit-scrollbar { width: 4px; }
+
+.scroll-area::-webkit-scrollbar-track { background: var(--bg); }
+
+.scroll-area::-webkit-scrollbar-thumb { background: var(--bg-border); border-radius: 2px; }
+
+/* ── Section headers ─────────────────────────────────────────────────── */
   .section-header {
     color: var(--green);
     font-size: 11px;
@@ -213,36 +236,46 @@
     border-bottom: 1px solid var(--lavender-dim);
     padding: 8px 0 4px;
   }
-  .section-header:first-child { margin-top: 0; border-top: none; padding-top: 0; }
-  details.cfg-section { margin-top: 10px; }
-  details.cfg-section > summary.section-header {
+
+.section-header:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+
+details.cfg-section { margin-top: 10px; }
+
+details.cfg-section > summary.section-header {
     cursor: pointer;
     list-style: none;
     user-select: none;
     margin-top: 0;
   }
-  details.cfg-section > summary.section-header::-webkit-details-marker { display: none; }
-  details.cfg-section > summary.section-header::before { content: '▸ '; opacity: 0.5; }
-  details.cfg-section[open] > summary.section-header::before { content: '▾ '; }
 
-  /* ── Grid cards ──────────────────────────────────────────────────────── */
+details.cfg-section > summary.section-header::-webkit-details-marker { display: none; }
+
+details.cfg-section > summary.section-header::before { content: '▸ '; opacity: 0.5; }
+
+details.cfg-section[open] > summary.section-header::before { content: '▾ '; }
+
+/* ── Grid cards ──────────────────────────────────────────────────────── */
   .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 8px;
     margin-bottom: 12px;
   }
-  .card {
+
+.card {
     background: var(--bg-panel);
     border: 1px solid var(--bg-border);
     padding: 10px 12px;
     border-radius: 2px;
   }
-  .card .card-label { color: var(--fg-muted); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
-  .card .card-value { color: var(--cyan); font-size: 18px; font-family: 'VT323', monospace; }
-  .card .card-sub   { color: var(--fg-dim); font-size: 10px; margin-top: 2px; }
 
-  /* ── KV rows ─────────────────────────────────────────────────────────── */
+.card .card-label { color: var(--fg-muted); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+
+.card .card-value { color: var(--cyan); font-size: 18px; font-family: 'VT323', monospace; }
+
+.card .card-sub   { color: var(--fg-dim); font-size: 10px; margin-top: 2px; }
+
+/* ── KV rows ─────────────────────────────────────────────────────────── */
   .kv-row {
     display: flex;
     gap: 8px;
@@ -251,9 +284,12 @@
     align-items: baseline;
     flex-wrap: wrap;
   }
-  .kv-key   { color: var(--cyan);   min-width: 180px; font-size: 12px; cursor: default; }
-  .kv-val   { color: var(--fg);     font-size: 12px; word-break: break-all; }
-  /* Config tab hover tooltips */
+
+.kv-key   { color: var(--cyan);   min-width: 180px; font-size: 12px; cursor: default; }
+
+.kv-val   { color: var(--fg);     font-size: 12px; word-break: break-all; }
+
+/* Config tab hover tooltips */
   #cfg-tooltip {
     position: fixed;
     z-index: 9999;
@@ -269,12 +305,16 @@
     box-shadow: 0 2px 8px rgba(0,0,0,.45);
     display: none;
   }
-  .kv-ok    { color: var(--green);  }
-  .kv-warn  { color: var(--yellow); }
-  .kv-err   { color: var(--red);    }
-  .kv-dim   { color: var(--fg-dim); }
 
-  /* ── Tag badges ──────────────────────────────────────────────────────── */
+.kv-ok    { color: var(--green);  }
+
+.kv-warn  { color: var(--yellow); }
+
+.kv-err   { color: var(--red);    }
+
+.kv-dim   { color: var(--fg-dim); }
+
+/* ── Tag badges ──────────────────────────────────────────────────────── */
   .badge {
     display: inline-block;
     padding: 1px 6px;
@@ -282,13 +322,18 @@
     font-size: 10px;
     letter-spacing: 0.5px;
   }
-  .badge-ok   { background: var(--green-dim);   color: var(--green);  }
-  .badge-warn { background: #3a3000;             color: var(--yellow); }
-  .badge-err  { background: #3a1010;             color: var(--red);    }
-  .badge-dim  { background: var(--bg-border);    color: var(--fg-dim); }
-  .badge-lav  { background: #3a2a3a;             color: var(--lavender); }
 
-  /* ── Refresh btn ─────────────────────────────────────────────────────── */
+.badge-ok   { background: var(--green-dim);   color: var(--green);  }
+
+.badge-warn { background: #3a3000;             color: var(--yellow); }
+
+.badge-err  { background: #3a1010;             color: var(--red);    }
+
+.badge-dim  { background: var(--bg-border);    color: var(--fg-dim); }
+
+.badge-lav  { background: #3a2a3a;             color: var(--lavender); }
+
+/* ── Refresh btn ─────────────────────────────────────────────────────── */
   .toolbar {
     padding: 6px 16px;
     background: var(--bg-panel);
@@ -298,7 +343,8 @@
     align-items: center;
     flex-shrink: 0;
   }
-  button, .btn {
+
+button, .btn {
     background: var(--bg-border);
     color: var(--fg-dim);
     border: 1px solid var(--fg-muted);
@@ -310,21 +356,25 @@
     border-radius: 2px;
     transition: all 0.15s;
   }
-  button:hover, .btn:hover {
+
+button:hover, .btn:hover {
     background: var(--bg-hover);
     color: var(--fg);
     border-color: var(--lavender);
   }
-  button.primary {
+
+button.primary {
     background: var(--lavender-dim);
     color: var(--bg);
     border-color: var(--lavender);
     font-weight: 500;
   }
-  button.primary:hover { background: var(--lavender); }
-  button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  input, select, textarea {
+button.primary:hover { background: var(--lavender); }
+
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+input, select, textarea {
     background: var(--bg);
     color: var(--fg);
     border: 1px solid var(--bg-border);
@@ -335,14 +385,18 @@
     outline: none;
     transition: border-color 0.15s;
   }
-  input:focus, select:focus, textarea:focus { border-color: var(--lavender-dim); }
-  input::placeholder { color: var(--fg-muted); }
 
-  .toolbar-label { color: var(--fg-dim); font-size: 11px; }
-  .toolbar-spacer { flex: 1; }
-  .last-updated { color: var(--fg-muted); font-size: 10px; }
+input:focus, select:focus, textarea:focus { border-color: var(--lavender-dim); }
 
-  /* ── Status subsystem table ──────────────────────────────────────────── */
+input::placeholder { color: var(--fg-muted); }
+
+.toolbar-label { color: var(--fg-dim); font-size: 11px; }
+
+.toolbar-spacer { flex: 1; }
+
+.last-updated { color: var(--fg-muted); font-size: 10px; }
+
+/* ── Status subsystem table ──────────────────────────────────────────── */
   .subsystem-row {
     display: flex;
     align-items: center;
@@ -350,10 +404,12 @@
     padding: 5px 0;
     border-bottom: 1px solid var(--bg-border);
   }
-  .subsystem-name { color: var(--fg); min-width: 160px; }
-  .subsystem-detail { color: var(--fg-dim); font-size: 11px; flex: 1; }
 
-  /* ── Chat panel ──────────────────────────────────────────────────────── */
+.subsystem-name { color: var(--fg); min-width: 160px; }
+
+.subsystem-detail { color: var(--fg-dim); font-size: 11px; flex: 1; }
+
+/* ── Chat panel ──────────────────────────────────────────────────────── */
   #chat-messages {
     flex: 1;
     overflow-y: auto;
@@ -362,59 +418,73 @@
     flex-direction: column;
     gap: 12px;
   }
-  #chat-messages::-webkit-scrollbar { width: 4px; }
-  #chat-messages::-webkit-scrollbar-thumb { background: var(--bg-border); }
 
-  .msg {
+#chat-messages::-webkit-scrollbar { width: 4px; }
+
+#chat-messages::-webkit-scrollbar-thumb { background: var(--bg-border); }
+
+.msg {
     display: flex;
     flex-direction: column;
     max-width: 85%;
     gap: 3px;
   }
-  .msg.user   { align-self: flex-end; align-items: flex-end; }
-  .msg.assistant { align-self: flex-start; }
-  .msg .bubble {
+
+.msg.user   { align-self: flex-end; align-items: flex-end; }
+
+.msg.assistant { align-self: flex-start; }
+
+.msg .bubble {
     padding: 8px 12px;
     border-radius: 2px;
     line-height: 1.5;
     white-space: pre-wrap;
     word-break: break-word;
   }
-  .msg.user .bubble {
+
+.msg.user .bubble {
     background: var(--lavender-dim);
     color: var(--bg);
     border-bottom-right-radius: 0;
   }
-  .msg.assistant .bubble {
+
+.msg.assistant .bubble {
     background: var(--bg-panel);
     border: 1px solid var(--bg-border);
     color: var(--fg);
     border-bottom-left-radius: 0;
   }
-  .msg .meta {
+
+.msg .meta {
     color: var(--fg-muted);
     font-size: 10px;
   }
-  .msg.assistant .meta { color: var(--lavender-dim); }
 
-  /* Reasoning / thinking block for reasoning models (o-series, DeepSeek-R1, etc.).
+.msg.assistant .meta { color: var(--lavender-dim); }
+
+/* Reasoning / thinking block for reasoning models (o-series, DeepSeek-R1, etc.).
      Stream handler accumulates delta.reasoning / reasoning_content / thinking
      into this block, rendered above the content inside the assistant bubble. */
   .msg.assistant .thinking-block {
     margin-bottom: 8px;
     font-size: 12px;
   }
-  .msg.assistant .thinking-block > summary {
+
+.msg.assistant .thinking-block > summary {
     cursor: pointer;
     color: var(--fg-muted);
     font-style: italic;
     user-select: none;
     list-style: none;
   }
-  .msg.assistant .thinking-block > summary::before { content: '▸ '; opacity: 0.6; }
-  .msg.assistant .thinking-block[open] > summary::before { content: '▾ '; opacity: 0.6; }
-  .msg.assistant .thinking-block > summary:hover { color: var(--lavender); }
-  .msg.assistant .thinking-block > .thinking-body {
+
+.msg.assistant .thinking-block > summary::before { content: '▸ '; opacity: 0.6; }
+
+.msg.assistant .thinking-block[open] > summary::before { content: '▾ '; opacity: 0.6; }
+
+.msg.assistant .thinking-block > summary:hover { color: var(--lavender); }
+
+.msg.assistant .thinking-block > .thinking-body {
     margin: 4px 0 0;
     padding: 6px 8px;
     background: var(--bg);
@@ -429,7 +499,7 @@
     overflow-y: auto;
   }
 
-  #chat-input-area {
+#chat-input-area {
     padding: 10px 16px;
     padding-bottom: max(10px, env(safe-area-inset-bottom));
     background: var(--bg-panel);
@@ -440,45 +510,7 @@
     flex-shrink: 0;
   }
 
-  /* ── Z-command help button ───────────────────────────────────────────── */
-  .z-help-wrap { position: relative; display: inline-flex; align-items: flex-end; }
-  #z-help-btn {
-    background: none;
-    border: 1px solid var(--bg-border);
-    color: var(--fg-muted);
-    font-size: 10px;
-    padding: 2px 5px;
-    border-radius: 3px;
-    cursor: default;
-    opacity: 0.5;
-    transition: opacity 0.15s;
-    white-space: nowrap;
-    margin-bottom: 2px;
-  }
-  .z-help-wrap:hover #z-help-btn { opacity: 1; }
-  .z-help-tip {
-    display: none;
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 0;
-    min-width: 280px;
-    background: var(--bg-panel);
-    border: 1px solid var(--bg-border);
-    border-radius: 4px;
-    padding: 10px 12px;
-    font-size: 11px;
-    color: var(--fg-dim);
-    white-space: pre;
-    line-height: 1.7;
-    pointer-events: none;
-    z-index: 200;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-  }
-  .z-help-wrap:hover .z-help-tip { display: block; }
-  .z-help-tip .zh-head { color: var(--fg-muted); font-size: 10px; opacity: 0.7; margin-bottom: 2px; }
-  .z-help-tip .zh-cmd  { color: var(--lavender); }
-  .z-help-tip .zh-sep  { color: var(--fg-muted); opacity: 0.4; }
-  #chat-input {
+#chat-input {
     flex: 1;
     resize: none;
     min-height: 38px;
@@ -486,29 +518,28 @@
     line-height: 1.5;
     padding: 8px 10px;
   }
-  #model-select { min-width: 180px; height: 38px; }
 
-  .typing-indicator {
+#model-select { min-width: 180px; height: 38px; }
+
+.typing-indicator {
     display: flex; gap: 4px; align-items: center; padding: 8px 12px;
     background: var(--bg-panel); border: 1px solid var(--bg-border);
     border-radius: 2px; align-self: flex-start;
   }
-  .typing-indicator span {
+
+.typing-indicator span {
     width: 5px; height: 5px; border-radius: 50%;
     background: var(--lavender-dim);
     animation: blink 1.2s infinite;
   }
-  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
 
-  .z-hint {
-    color: var(--fg-muted); font-size: 10px; padding: 2px 16px;
-    background: var(--bg-panel); border-top: 1px solid var(--bg-border);
-    flex-shrink: 0;
-  }
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
 
-  /* ── Conversations ────────────────────────────────────────────────────── */
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+
+/* ── Conversations ────────────────────────────────────────────────────── */
   .conv-row {
     padding: 6px 10px;
     border-bottom: 1px solid var(--bg-border);
@@ -517,83 +548,73 @@
     gap: 10px;
     align-items: baseline;
   }
-  .conv-row:hover { background: var(--bg-hover); }
-  .conv-id   { color: var(--lavender); font-size: 11px; min-width: 130px; }
-  .conv-preview { color: var(--fg-dim); font-size: 11px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .conv-meta { color: var(--fg-muted); font-size: 10px; }
-  .conv-score { color: var(--yellow); font-size: 10px; min-width: 50px; text-align: right; }
 
-  /* ── Operator ────────────────────────────────────────────────────────── */
+.conv-row:hover { background: var(--bg-hover); }
+
+.conv-id   { color: var(--lavender); font-size: 11px; min-width: 130px; }
+
+.conv-preview { color: var(--fg-dim); font-size: 11px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.conv-meta { color: var(--fg-muted); font-size: 10px; }
+
+.conv-score { color: var(--yellow); font-size: 10px; min-width: 50px; text-align: right; }
+
+/* ── Operator ────────────────────────────────────────────────────────── */
   #op-log {
     flex: 1; overflow-y: auto; padding: 12px 16px; font-size: 12px; line-height: 1.6;
   }
-  #op-log::-webkit-scrollbar { width: 4px; }
-  #op-log::-webkit-scrollbar-thumb { background: var(--bg-border); }
-  .op-query       { color: var(--cyan);    margin-bottom: 4px; }
-  .op-answer      { color: var(--fg);      white-space: pre-wrap; word-break: break-word; margin-bottom: 12px; }
-  .op-error       { color: var(--red);     margin-bottom: 12px; }
-  .op-score       { color: var(--lavender); font-size: 11px; margin: 6px 0 12px; opacity: 0.85; }
-  .op-score-flags { color: var(--yellow); }
-  .op-alt-plan    { border-left: 2px solid var(--lavender); margin: 8px 0 12px; padding-left: 8px; }
-  .op-alt-plan summary { color: var(--lavender); font-size: 11px; cursor: pointer; user-select: none; }
-  .op-alt-plan-body { color: var(--fg-dim); font-size: 12px; white-space: pre-wrap; margin-top: 6px; }
-  .op-code-block  { margin: 4px 0; border-radius: 2px; }
-  .op-code-block summary { padding: 4px 0; cursor: pointer; user-select: none; font-weight: 500; transition: color 0.15s; }
-  .op-code-block summary:hover { color: var(--yellow); }
-  .op-tool-call   { color: var(--fg-muted); margin: 4px 0; font-size: 11px; }
-  .op-tool-result { color: var(--green);    margin: 4px 0; font-size: 11px; padding: 4px 6px; background: rgba(163, 190, 140, 0.08); border-radius: 2px; }
-  .op-info        { color: var(--blue);    font-size: 11px; margin: 4px 0; font-style: italic; }
-  .op-pending     { color: var(--yellow);  font-style: italic; }
-  .op-sep         { border-top: 1px solid var(--bg-border); margin: 8px 0; }
-  .op-turn-sep    { color: var(--fg-muted); font-size: 0.75rem; text-align: center; margin: 6px 0; }
-  .op-tool-call   { color: var(--yellow);  font-size: 11px; margin: 3px 0; font-style: italic; }
-  .op-tool-result { color: var(--green);   font-size: 11px; margin: 3px 0 6px; }
-  #op-input-area {
+
+#op-log::-webkit-scrollbar { width: 4px; }
+
+#op-log::-webkit-scrollbar-thumb { background: var(--bg-border); }
+
+.op-query       { color: var(--cyan);    margin-bottom: 4px; }
+
+.op-answer      { color: var(--fg);      white-space: pre-wrap; word-break: break-word; margin-bottom: 12px; }
+
+.op-error       { color: var(--red);     margin-bottom: 12px; }
+
+.op-score       { color: var(--lavender); font-size: 11px; margin: 6px 0 12px; opacity: 0.85; }
+
+.op-score-flags { color: var(--yellow); }
+
+.op-alt-plan    { border-left: 2px solid var(--lavender); margin: 8px 0 12px; padding-left: 8px; }
+
+.op-alt-plan summary { color: var(--lavender); font-size: 11px; cursor: pointer; user-select: none; }
+
+.op-alt-plan-body { color: var(--fg-dim); font-size: 12px; white-space: pre-wrap; margin-top: 6px; }
+
+.op-code-block  { margin: 4px 0; border-radius: 2px; }
+
+.op-code-block summary { padding: 4px 0; cursor: pointer; user-select: none; font-weight: 500; transition: color 0.15s; }
+
+.op-code-block summary:hover { color: var(--yellow); }
+
+.op-tool-call   { color: var(--fg-muted); margin: 4px 0; font-size: 11px; }
+
+.op-tool-result { color: var(--green);    margin: 4px 0; font-size: 11px; padding: 4px 6px; background: rgba(163, 190, 140, 0.08); border-radius: 2px; }
+
+.op-info        { color: var(--blue);    font-size: 11px; margin: 4px 0; font-style: italic; }
+
+.op-pending     { color: var(--yellow);  font-style: italic; }
+
+.op-sep         { border-top: 1px solid var(--bg-border); margin: 8px 0; }
+
+.op-turn-sep    { color: var(--fg-muted); font-size: 0.75rem; text-align: center; margin: 6px 0; }
+
+.op-tool-call   { color: var(--yellow);  font-size: 11px; margin: 3px 0; font-style: italic; }
+
+.op-tool-result { color: var(--green);   font-size: 11px; margin: 3px 0 6px; }
+
+#op-input-area {
     padding: 10px 16px; background: var(--bg-panel);
     border-top: 1px solid var(--bg-border);
     display: flex; gap: 8px; flex-shrink: 0;
   }
-  #op-input { flex: 1; }
 
-  /* ── Council ─────────────────────────────────────────────────────────── */
-  #council-area { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-  #council-input-area {
-    padding:10px 16px; background:var(--bg-panel);
-    border-top:1px solid var(--bg-border);
-    display:flex; gap:8px; flex-shrink:0;
-  }
-  #council-input { flex:1; }
-  #council-proposal-area {
-    flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:10px;
-  }
-  .council-card {
-    background:var(--bg-panel); border:1px solid var(--bg-border);
-    border-radius:4px; padding:10px 12px; display:flex; flex-direction:column; gap:6px;
-  }
-  .council-card-header { display:flex; gap:8px; align-items:center; }
-  .council-card-name { font-size:12px; font-weight:600; color:var(--lavender); min-width:100px; }
-  .council-card-close { background:none; border:none; color:var(--fg-dim); font-size:14px; padding:0 2px; line-height:1; cursor:pointer; }
-  .council-card-close:hover { color:var(--red); }
-  .council-card-model { flex:1; height:24px; font-size:11px; padding:2px 6px;
-    background:var(--bg-input); border:1px solid var(--bg-border); color:var(--fg); border-radius:2px; }
-  .council-card-task { width:100%; height:44px; font-size:11px; padding:4px 8px; resize:vertical;
-    background:var(--bg-input); border:1px solid var(--bg-border); color:var(--fg);
-    border-radius:2px; font-family:inherit; line-height:1.4; }
-  .council-member-result {
-    border-left:3px solid var(--lavender); padding:6px 10px; margin:4px 0;
-    font-size:12px; white-space:pre-wrap; word-break:break-word;
-  }
-  .council-member-label { font-size:11px; color:var(--lavender); margin-bottom:4px; }
-  .council-member-running { color:var(--yellow); font-style:italic; font-size:11px; }
-  .council-synthesis {
-    border-left:3px solid var(--cyan); padding:8px 12px; margin-top:8px;
-    font-size:12px; white-space:pre-wrap; word-break:break-word; color:var(--fg);
-  }
-  .council-synthesis-label { font-size:11px; color:var(--cyan); margin-bottom:6px; font-weight:600; }
-  #council-engage-row { display:flex; gap:8px; align-items:center; padding:0 0 4px 0; }
-  #council-results { display:flex; flex-direction:column; gap:4px; }
+#op-input { flex: 1; }
 
-  /* ── Spinner ─────────────────────────────────────────────────────────── */
+/* ── Spinner ─────────────────────────────────────────────────────────── */
   .spinner {
     display: inline-block; width: 10px; height: 10px;
     border: 2px solid var(--bg-border);
@@ -602,9 +623,10 @@
     animation: spin 0.7s linear infinite;
     vertical-align: middle;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── π Vi mode pill (inline status bar) ─────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── π Vi mode pill (inline status bar) ─────────────────────────────── */
   #vi-pill {
     cursor: pointer;
     font-size: 11px;
@@ -615,10 +637,12 @@
     padding: 0 1px;
     line-height: 1;
   }
-  #vi-pill:hover { opacity: 0.85; color: var(--lavender); }
-  #vi-pill.active { opacity: 1; color: var(--lavender); }
 
-  /* ── Context token counter ───────────────────────────────────────────── */
+#vi-pill:hover { opacity: 0.85; color: var(--lavender); }
+
+#vi-pill.active { opacity: 1; color: var(--lavender); }
+
+/* ── Context token counter ───────────────────────────────────────────── */
   #ctx-usage {
     font-size: 10px;
     color: var(--fg-muted);
@@ -626,68 +650,91 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.2px;
   }
-  #ctx-usage.warn   { color: var(--yellow); opacity: 0.85; }
-  #ctx-usage.danger { color: var(--red);    opacity: 1;    }
 
-  /* ── Network Probe modal ─────────────────────────────────────────────── */
+#ctx-usage.warn   { color: var(--yellow); opacity: 0.85; }
+
+#ctx-usage.danger { color: var(--red);    opacity: 1;    }
+
+/* ── Network Probe modal ─────────────────────────────────────────────── */
   #probe-modal-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.6); z-index: 200;
     align-items: center; justify-content: center;
   }
-  #probe-modal-overlay.open { display: flex; }
-  #probe-modal {
+
+#probe-modal-overlay.open { display: flex; }
+
+#probe-modal {
     background: var(--bg-panel); border: 1px solid var(--bg-border);
     border-radius: 4px; width: 640px; max-width: 95vw; max-height: 85vh;
     display: flex; flex-direction: column; overflow: hidden;
   }
-  #probe-modal-header {
+
+#probe-modal-header {
     display: flex; align-items: center; padding: 10px 14px;
     border-bottom: 1px solid var(--bg-border); flex-shrink: 0; gap: 8px;
   }
-  #probe-modal-header h2 { font-size: 13px; font-weight: 600; color: var(--cyan); flex: 1; }
-  #probe-modal-body { padding: 12px 14px; overflow-y: auto; flex: 1; }
-  #probe-modal-body label { font-size: 11px; color: var(--fg-muted); display: block; margin-bottom: 3px; }
-  #probe-url-row { display: flex; gap: 6px; margin-bottom: 8px; }
-  #probe-method {
+
+#probe-modal-header h2 { font-size: 13px; font-weight: 600; color: var(--cyan); flex: 1; }
+
+#probe-modal-body { padding: 12px 14px; overflow-y: auto; flex: 1; }
+
+#probe-modal-body label { font-size: 11px; color: var(--fg-muted); display: block; margin-bottom: 3px; }
+
+#probe-url-row { display: flex; gap: 6px; margin-bottom: 8px; }
+
+#probe-method {
     background: var(--bg-input); border: 1px solid var(--bg-border);
     color: var(--fg); padding: 4px 6px; border-radius: 3px; font-size: 12px;
     font-family: inherit; width: 90px; flex-shrink: 0;
   }
-  #probe-url {
+
+#probe-url {
     flex: 1; background: var(--bg-input); border: 1px solid var(--bg-border);
     color: var(--fg); padding: 4px 8px; border-radius: 3px; font-size: 12px;
     font-family: inherit;
   }
-  #probe-presets { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
-  .probe-preset-btn {
+
+#probe-presets { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+
+.probe-preset-btn {
     background: var(--bg-input); border: 1px solid var(--bg-border);
     color: var(--fg-dim); padding: 2px 8px; border-radius: 2px;
     cursor: pointer; font-size: 10px; font-family: inherit;
   }
-  .probe-preset-btn:hover { border-color: var(--cyan); color: var(--cyan); }
-  #probe-headers, #probe-body-input {
+
+.probe-preset-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+#probe-headers, #probe-body-input {
     width: 100%; background: var(--bg-input); border: 1px solid var(--bg-border);
     color: var(--fg); padding: 6px 8px; border-radius: 3px; font-size: 11px;
     font-family: 'Fira Code', monospace; resize: vertical;
   }
-  #probe-send-row { display: flex; gap: 8px; align-items: center; margin: 10px 0 8px; }
-  #probe-timeout { width: 60px; }
-  #probe-result-area {
+
+#probe-send-row { display: flex; gap: 8px; align-items: center; margin: 10px 0 8px; }
+
+#probe-timeout { width: 60px; }
+
+#probe-result-area {
     border-top: 1px solid var(--bg-border); padding-top: 10px; margin-top: 4px;
   }
-  #probe-status-line { display: flex; gap: 10px; align-items: baseline; margin-bottom: 6px; }
-  .probe-ok   { color: var(--green); font-size: 15px; font-weight: 700; }
-  .probe-warn { color: var(--yellow); font-size: 15px; font-weight: 700; }
-  .probe-err  { color: var(--red); font-size: 15px; font-weight: 700; }
-  #probe-body-out {
+
+#probe-status-line { display: flex; gap: 10px; align-items: baseline; margin-bottom: 6px; }
+
+.probe-ok   { color: var(--green); font-size: 15px; font-weight: 700; }
+
+.probe-warn { color: var(--yellow); font-size: 15px; font-weight: 700; }
+
+.probe-err  { color: var(--red); font-size: 15px; font-weight: 700; }
+
+#probe-body-out {
     background: var(--bg); border: 1px solid var(--bg-border); border-radius: 3px;
     padding: 8px; font-size: 11px; font-family: 'Fira Code', monospace;
     white-space: pre-wrap; word-break: break-all; max-height: 260px;
     overflow-y: auto; color: var(--fg);
   }
 
-  /* ── Cost charts ─────────────────────────────────────────────────────── */
+/* ── Cost charts ─────────────────────────────────────────────────────── */
   .chart-wrap {
     background: var(--bg-panel);
     border: 1px solid var(--bg-border);
@@ -695,25 +742,28 @@
     padding: 10px 12px;
     margin-bottom: 10px;
   }
-  .chart-title {
+
+.chart-title {
     color: var(--fg-muted);
     font-size: 10px;
     letter-spacing: 1px;
     text-transform: uppercase;
     margin-bottom: 8px;
   }
-  canvas.bb-chart {
+
+canvas.bb-chart {
     display: block;
     width: 100%;
     image-rendering: pixelated;
   }
-  .cost-disabled {
+
+.cost-disabled {
     color: var(--fg-muted);
     font-size: 11px;
     padding: 8px 0 4px;
   }
 
-  /* ── Voice / Push-to-talk ────────────────────────────────────────────── */
+/* ── Voice / Push-to-talk ────────────────────────────────────────────── */
   #mic-btn {
     display: none; /* hidden until voice_enabled confirmed from server */
     background: var(--bg-panel);
@@ -728,117 +778,22 @@
     height: 100%;
     align-self: stretch;
   }
-  #mic-btn:hover { border-color: var(--lavender); color: var(--lavender); }
-  #mic-btn.recording {
+
+#mic-btn:hover { border-color: var(--lavender); color: var(--lavender); }
+
+#mic-btn.recording {
     border-color: var(--red);
     color: var(--red);
     background: #2a1010;
     animation: mic-pulse 1s infinite;
   }
-  @keyframes mic-pulse {
+
+@keyframes mic-pulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(191, 97, 106, 0.4); }
     50%       { box-shadow: 0 0 0 5px rgba(191, 97, 106, 0); }
   }
 
-  /* ── Voice/Vision panel ─────────────────────────────────────────────── */
-  #voice-container {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-  }
-  #voice-camera-row {
-    display: flex;
-    gap: 10px;
-    padding: 10px 14px;
-    align-items: flex-start;
-    flex-shrink: 0;
-    background: var(--bg-panel);
-    border-bottom: 1px solid var(--bg-border);
-  }
-  #voice-video {
-    width: 192px;
-    height: 144px;
-    object-fit: cover;
-    border: 1px solid var(--bg-border);
-    border-radius: 2px;
-    background: #0a0a0a;
-    flex-shrink: 0;
-  }
-  #voice-status-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 0;
-  }
-  #voice-status-badge {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-    padding: 3px 10px;
-    border-radius: 2px;
-    background: var(--bg-border);
-    color: var(--fg-dim);
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    width: fit-content;
-    transition: background 0.2s, color 0.2s;
-  }
-  #voice-status-badge.listening  { background: #162116; color: var(--green); }
-  #voice-status-badge.speaking   { background: #231313; color: var(--red); }
-  #voice-status-badge.thinking   { background: #161621; color: var(--lavender); }
-  #voice-status-badge.responding { background: #141e21; color: var(--cyan); }
-  #voice-status-badge.loading    { background: var(--bg-border); color: var(--fg-muted); }
-  #voice-vad-bar {
-    height: 3px;
-    background: var(--bg-border);
-    border-radius: 2px;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-  #voice-vad-fill {
-    height: 100%;
-    width: 0%;
-    background: var(--green);
-    transition: width 0.08s linear;
-  }
-  #voice-controls {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  #voice-transcript {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-height: 0;
-  }
-  .voice-turn { display: flex; flex-direction: column; gap: 2px; }
-  .voice-turn-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--fg-muted);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-  .voice-turn-label.user-lbl  { color: var(--cyan); }
-  .voice-turn-label.asst-lbl  { color: var(--lavender); }
-  .voice-turn-text {
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--fg);
-    padding: 3px 0;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .voice-turn-text.user-txt { color: var(--fg-dim); }
-
-  /* ── Multi-pane chat ─────────────────────────────────────────────────── */
+/* ── Multi-pane chat ─────────────────────────────────────────────────── */
   #chat-pane-container {
     flex: 1;
     display: flex;
@@ -846,7 +801,8 @@
     overflow: hidden;
     min-height: 0;
   }
-  .chat-pane {
+
+.chat-pane {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -855,7 +811,8 @@
     overflow: hidden;
     min-width: 0;
   }
-  .chat-pane-header {
+
+.chat-pane-header {
     background: var(--bg-panel);
     border-bottom: 1px solid var(--bg-border);
     padding: 4px 8px;
@@ -865,26 +822,30 @@
     flex-shrink: 0;
     font-size: 11px;
   }
-  .chat-pane-header select {
+
+.chat-pane-header select {
     font-size: 11px;
     height: 22px;
     padding: 1px 4px;
     flex: 1;
     min-width: 0;
   }
-  .chat-pane-header .pane-label {
+
+.chat-pane-header .pane-label {
     color: var(--lavender);
     font-size: 10px;
     letter-spacing: 0.5px;
     white-space: nowrap;
   }
-  .chat-pane-header button {
+
+.chat-pane-header button {
     padding: 1px 6px;
     font-size: 10px;
     height: 20px;
     line-height: 1;
   }
-  .chat-pane-messages {
+
+.chat-pane-messages {
     flex: 1;
     min-height: 0; /* iOS: without this, flex:1 ignores container height and pushes input off-screen */
     overflow-y: auto;
@@ -892,28 +853,36 @@
     padding: 8px 10px;
     font-size: 12px;
   }
-  .chat-pane-messages::-webkit-scrollbar { width: 4px; }
-  .chat-pane-messages::-webkit-scrollbar-thumb { background: var(--bg-border); }
-  .chat-pane-messages.drag-over { outline: 2px dashed var(--accent); outline-offset: -4px; background: rgba(255,255,255,0.03); }
 
-  /* ── Attachment pills ───────────────────────────────────────────────── */
+.chat-pane-messages::-webkit-scrollbar { width: 4px; }
+
+.chat-pane-messages::-webkit-scrollbar-thumb { background: var(--bg-border); }
+
+.chat-pane-messages.drag-over { outline: 2px dashed var(--accent); outline-offset: -4px; background: rgba(255,255,255,0.03); }
+
+/* ── Attachment pills ───────────────────────────────────────────────── */
   .pane-attachments {
     display: flex; flex-wrap: wrap; gap: 4px;
     padding: 4px 8px; min-height: 0;
     border-top: 1px solid var(--bg-border);
   }
-  .pane-attachments:empty { display: none; }
-  .attach-pill {
+
+.pane-attachments:empty { display: none; }
+
+.attach-pill {
     display: flex; align-items: center; gap: 4px;
     background: var(--bg-border); border-radius: 4px;
     padding: 2px 6px; font-size: 11px; color: var(--fg-muted);
     max-width: 180px; overflow: hidden;
   }
-  .attach-pill .pill-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .attach-pill .pill-rm { cursor: pointer; opacity: 0.6; flex-shrink: 0; }
-  .attach-pill .pill-rm:hover { opacity: 1; color: var(--fg); }
 
-  /* ── Pane settings drawer ────────────────────────────────────────────── */
+.attach-pill .pill-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.attach-pill .pill-rm { cursor: pointer; opacity: 0.6; flex-shrink: 0; }
+
+.attach-pill .pill-rm:hover { opacity: 1; color: var(--fg); }
+
+/* ── Pane settings drawer ────────────────────────────────────────────── */
   .pane-settings-drawer {
     display: none;
     background: var(--bg-panel);
@@ -922,33 +891,39 @@
     font-size: 11px;
     flex-shrink: 0;
   }
-  .pane-settings-drawer.open { display: block; }
-  .pane-cfg-row {
+
+.pane-settings-drawer.open { display: block; }
+
+.pane-cfg-row {
     display: flex;
     align-items: center;
     gap: 5px;
     margin-bottom: 5px;
     flex-wrap: wrap;
   }
-  .pane-cfg-pair {
+
+.pane-cfg-pair {
     display: flex;
     align-items: center;
     gap: 3px;
   }
-  .pane-cfg-pair label {
+
+.pane-cfg-pair label {
     color: var(--dim);
     font-size: 10px;
     white-space: nowrap;
     min-width: 48px;
     letter-spacing: 0.2px;
   }
-  .pane-cfg-pair input[type="number"] {
+
+.pane-cfg-pair input[type="number"] {
     width: 58px;
     padding: 1px 4px;
     font-size: 11px;
     height: 20px;
   }
-  .pane-settings-drawer textarea {
+
+.pane-settings-drawer textarea {
     width: 100%;
     box-sizing: border-box;
     font-size: 11px;
@@ -957,14 +932,15 @@
     padding: 3px 6px;
     margin-top: 2px;
   }
-  .pane-settings-drawer .pane-cfg-section-label {
+
+.pane-settings-drawer .pane-cfg-section-label {
     color: var(--dim);
     font-size: 10px;
     letter-spacing: 0.3px;
     margin-bottom: 2px;
   }
 
-  /* ── Chat page nav ───────────────────────────────────────────────────── */
+/* ── Chat page nav ───────────────────────────────────────────────────── */
   #chat-page-nav {
     display: flex;
     align-items: center;
@@ -972,75 +948,20 @@
     padding: 0 8px;
     flex-shrink: 0;
   }
-  #chat-page-nav button {
+
+#chat-page-nav button {
     padding: 2px 10px;
     font-size: 12px;
   }
-  #chat-page-indicator {
+
+#chat-page-indicator {
     color: var(--fg-muted);
     font-size: 11px;
     min-width: 60px;
     text-align: center;
   }
 
-  /* ── Harness tab ─────────────────────────────────────────────────────── */
-  #panel-harness {
-    flex-direction: column;
-  }
-  .harness-pane {
-    flex: 1 1 calc(50% - 4px);
-    min-width: 280px;
-    max-width: calc(50% - 2px);
-    min-height: 200px;
-    max-height: 50%;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--bg-border);
-    border-radius: 2px;
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-  .harness-pane-header {
-    background: var(--bg-panel);
-    border-bottom: 1px solid var(--bg-border);
-    padding: 4px 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-    font-size: 11px;
-  }
-  .harness-pane-header .target-label {
-    color: var(--cyan);
-    font-size: 11px;
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .harness-status {
-    font-size: 10px;
-    padding: 1px 5px;
-    border-radius: 2px;
-  }
-  .harness-status.pending { color: var(--yellow); }
-  .harness-status.done    { color: var(--green); }
-  .harness-status.error   { color: var(--red); }
-  .harness-pane-output {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 10px;
-    font-size: 12px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    word-break: break-word;
-    color: var(--fg);
-  }
-  .harness-pane-output::-webkit-scrollbar { width: 4px; }
-  .harness-pane-output::-webkit-scrollbar-thumb { background: var(--bg-border); }
-  .harness-pane-output.thinking { color: var(--yellow); font-style: italic; }
-
-  /* Round groups */
+/* Round groups */
   .round-group {
     width: 100%;
     border: 1px solid var(--bg-border);
@@ -1048,7 +969,8 @@
     margin-bottom: 6px;
     overflow: hidden;
   }
-  .round-group-header {
+
+.round-group-header {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1058,14 +980,22 @@
     user-select: none;
     border-bottom: 1px solid var(--bg-border);
   }
-  .round-group-header:hover { background: var(--bg-panel); }
-  .round-group-toggle { font-size: 9px; color: var(--fg-muted); width: 10px; }
-  .round-group.collapsed .round-group-toggle::before { content: '▶'; }
-  .round-group:not(.collapsed) .round-group-toggle::before { content: '▼'; }
-  .round-group-label { color: var(--yellow); font-size: 11px; font-weight: bold; flex: 1; letter-spacing: 0.05em; }
-  .round-group-count { color: var(--fg-muted); font-size: 10px; }
-  .round-group.collapsed .round-group-panes { display: none; }
-  .round-group-panes {
+
+.round-group-header:hover { background: var(--bg-panel); }
+
+.round-group-toggle { font-size: 9px; color: var(--fg-muted); width: 10px; }
+
+.round-group.collapsed .round-group-toggle::before { content: '▶'; }
+
+.round-group:not(.collapsed) .round-group-toggle::before { content: '▼'; }
+
+.round-group-label { color: var(--yellow); font-size: 11px; font-weight: bold; flex: 1; letter-spacing: 0.05em; }
+
+.round-group-count { color: var(--fg-muted); font-size: 10px; }
+
+.round-group.collapsed .round-group-panes { display: none; }
+
+.round-group-panes {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
@@ -1073,27 +1003,7 @@
     background: var(--bg);
   }
 
-  .harness-target-chip {
-    background: var(--bg-border);
-    border: 1px solid var(--bg-border);
-    border-radius: 2px;
-    padding: 2px 8px;
-    font-size: 11px;
-    color: var(--fg);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    cursor: default;
-  }
-  .harness-target-chip .remove-chip {
-    color: var(--fg-muted);
-    cursor: pointer;
-    font-size: 12px;
-    line-height: 1;
-  }
-  .harness-target-chip .remove-chip:hover { color: var(--red); }
-
-  /* ── Dashboard config drawer ─────────────────────────────────────────── */
+/* ── Dashboard config drawer ─────────────────────────────────────────── */
   #dash-config-drawer {
     position: absolute;
     top: 0; right: 0; bottom: 0;
@@ -1107,24 +1017,29 @@
     z-index: 10;
     overflow-y: auto;
   }
-  #dash-config-drawer.open {
+
+#dash-config-drawer.open {
     transform: translateX(0);
   }
-  #dash-config-overlay {
+
+#dash-config-overlay {
     position: absolute;
     inset: 0;
     background: rgba(0,0,0,0.35);
     display: none;
     z-index: 9;
   }
-  #dash-config-overlay.open {
+
+#dash-config-overlay.open {
     display: block;
   }
-  #panel-dashboard {
+
+#panel-dashboard {
     position: relative;
     overflow: hidden;
   }
-  #dash-config-drawer-header {
+
+#dash-config-drawer-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1136,20 +1051,24 @@
     font-weight: 600;
   }
 
-  /* ── Misc ────────────────────────────────────────────────────────────── */
+/* ── Misc ────────────────────────────────────────────────────────────── */
   .empty { color: var(--fg-muted); padding: 20px; text-align: center; font-size: 12px; }
-  .error-box {
+
+.error-box {
     background: #2a1010; border: 1px solid var(--red);
     color: var(--red); padding: 8px 12px; border-radius: 2px; margin: 8px 0; font-size: 11px;
   }
-  code {
+
+code {
     background: var(--bg-border); padding: 1px 5px; border-radius: 2px;
     font-family: 'Fira Code', monospace; font-size: 11px; color: var(--cyan);
   }
-  .mono { font-family: 'VT323', monospace; }
-  hr { border: none; border-top: 1px solid var(--bg-border); margin: 8px 0; }
 
-  /* ────────────────────────────────────────────────────────────────────────── */
+.mono { font-family: 'VT323', monospace; }
+
+hr { border: none; border-top: 1px solid var(--bg-border); margin: 8px 0; }
+
+/* ────────────────────────────────────────────────────────────────────────── */
   /* MOBILE RESPONSIVE DESIGN — 44px touch targets, single column, scrollable  */
   /* ────────────────────────────────────────────────────────────────────────── */
 
@@ -1184,7 +1103,7 @@
     .panel { flex: 1; }
   }
 
-  /* ── Mobile (max 767px) — Single column, stacked layout ───────────────── */
+/* ── Mobile (max 767px) — Single column, stacked layout ───────────────── */
   @media (max-width: 767px) {
     body { font-size: 13px; }
     
@@ -1286,9 +1205,6 @@
       flex-wrap: wrap;
       gap: 6px;
       padding: 10px 8px;
-    }
-    .z-help-wrap {
-      display: none; /* Hide on mobile for more input width */
     }
     #chat-input {
       flex: 1;
@@ -1494,34 +1410,6 @@
       font-weight: 500;
     }
     
-    /* Question bank */
-    .qbcat {
-      padding: 1px 8px; font-size: 10px; border-radius: 2px; cursor: pointer;
-      background: var(--bg-input); color: var(--fg-dim); border: 1px solid var(--bg-border);
-    }
-    .qbcat.active-cat { background: var(--yellow); color: #000; border-color: var(--yellow); }
-
-    /* Ensemble: single column cards */
-    #ensemble-panel { padding: 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-    .ensemble-result {
-      background: var(--bg-panel);
-      border: 1px solid var(--bg-border);
-      border-radius: 4px;
-      padding: 12px 10px;
-      margin-bottom: 8px;
-    }
-    .ensemble-model {
-      color: var(--lavender);
-      font-size: 11px;
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-    .ensemble-text {
-      color: var(--fg);
-      font-size: 12px;
-      line-height: 1.5;
-    }
-    
     /* Scrollbars: wider for touch */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -1532,7 +1420,7 @@
     ::-webkit-scrollbar-thumb:hover { background: var(--bg-hover); }
   }
 
-  /* ── Small mobile (max 480px) – Extra tight spacing ──────────────────── */
+/* ── Small mobile (max 480px) – Extra tight spacing ──────────────────── */
   @media (max-width: 480px) {
     body { font-size: 12px; }
     
@@ -1558,7 +1446,7 @@
     
   }
 
-  /* ── Landscape orientation (any device) ────────────────────────────── */
+/* ── Landscape orientation (any device) ────────────────────────────── */
   @media (orientation: landscape) and (max-height: 600px) {
     #header { height: 40px; }
     .tab { padding: 6px 12px; min-height: 40px; }
@@ -1576,93 +1464,108 @@
     
   }
 
-  /* ── Print styles ────────────────────────────────────────────────────── */
+/* ── Print styles ────────────────────────────────────────────────────── */
   @media print {
     #header, #tabs, #chat-input-area, .button-row { display: none; }
     body { background: white; color: black; }
     .msg { max-width: 100%; }
   }
 
-  /* ── Studio tab ──────────────────────────────────────────────────────── */
+/* ── Studio tab ──────────────────────────────────────────────────────── */
   #panel-studio { flex-direction: row; overflow: hidden; padding: 0; }
 
-  #studio-chat-col, #studio-ctx-col, #studio-controls-col {
+#studio-chat-col, #studio-ctx-col, #studio-controls-col {
     flex: 1; display: flex; flex-direction: column;
     min-width: 0; overflow: hidden;
     border-right: 1px solid var(--bg-border);
   }
-  #studio-controls-col { border-right: none; }
 
-  .studio-col-header {
+#studio-controls-col { border-right: none; }
+
+.studio-col-header {
     background: var(--bg-panel); border-bottom: 1px solid var(--bg-border);
     padding: 5px 10px; display: flex; align-items: center; gap: 8px;
     flex-shrink: 0; font-size: 11px;
   }
-  .studio-col-title {
+
+.studio-col-title {
     color: var(--lavender); font-size: 11px; font-weight: 600;
     letter-spacing: 0.5px; text-transform: uppercase; flex: 1;
   }
 
-  #studio-msgs {
+#studio-msgs {
     flex: 1; min-height: 0; overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding: 8px 10px; font-size: 12px;
     display: flex; flex-direction: column; gap: 8px;
   }
-  #studio-msgs::-webkit-scrollbar { width: 4px; }
-  #studio-msgs::-webkit-scrollbar-thumb { background: var(--bg-border); }
 
-  #studio-input-area {
+#studio-msgs::-webkit-scrollbar { width: 4px; }
+
+#studio-msgs::-webkit-scrollbar-thumb { background: var(--bg-border); }
+
+#studio-input-area {
     padding: 8px 10px; background: var(--bg-panel);
     border-top: 1px solid var(--bg-border);
     display: flex; gap: 6px; align-items: flex-end; flex-shrink: 0;
   }
-  #studio-input {
+
+#studio-input {
     flex: 1; resize: none; min-height: 36px; max-height: 100px;
     line-height: 1.5; padding: 6px 8px; font-size: 12px;
   }
 
-  #studio-ctx-col .scroll-area, #studio-controls-col .scroll-area {
+#studio-ctx-col .scroll-area, #studio-controls-col .scroll-area {
     flex: 1; min-height: 0; overflow-y: auto; padding: 10px;
   }
 
-  @keyframes studio-flash {
+@keyframes studio-flash {
     0%   { background: rgba(235, 203, 139, 0.2); }
     100% { background: transparent; }
   }
-  .studio-ctx-flash { animation: studio-flash 0.9s ease-out forwards; border-radius: 2px; }
 
-  .studio-ctx-card {
+.studio-ctx-flash { animation: studio-flash 0.9s ease-out forwards; border-radius: 2px; }
+
+.studio-ctx-card {
     background: var(--bg-panel); border: 1px solid var(--bg-border);
     border-radius: 2px; margin-bottom: 8px; overflow: hidden;
     resize: vertical; min-height: 60px; user-select: none;
   }
-  .studio-ctx-card.collapsed .studio-ctx-stats,
+
+.studio-ctx-card.collapsed .studio-ctx-stats,
   .studio-ctx-card.collapsed .studio-ctx-params,
   .studio-ctx-card.collapsed .studio-ctx-msgs { display: none; }
-  .studio-ctx-meta {
+
+.studio-ctx-meta {
     display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
     padding: 6px 8px; border-bottom: 1px solid var(--bg-border); background: var(--bg);
     cursor: pointer; user-select: none;
   }
-  .studio-ctx-stats {
+
+.studio-ctx-stats {
     padding: 4px 8px; font-size: 10px; color: var(--fg-muted);
     border-bottom: 1px solid var(--bg-border);
   }
-  .studio-ctx-params {
+
+.studio-ctx-params {
     padding: 4px 8px; font-size: 10px; color: var(--fg-dim);
     border-bottom: 1px solid var(--bg-border); display: flex; gap: 4px; flex-wrap: wrap;
   }
-  .studio-ctx-msgs { padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
-  .studio-ctx-msg-item {
+
+.studio-ctx-msgs { padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
+
+.studio-ctx-msg-item {
     font-size: 11px; display: flex; flex-direction: column; gap: 2px; padding: 2px 0;
   }
-  .studio-ctx-msg-row {
+
+.studio-ctx-msg-row {
     display: flex; align-items: center; gap: 6px; cursor: pointer;
     user-select: none;
   }
-  .studio-ctx-msg-row:hover { opacity: 0.8; }
-  .studio-ctx-msg-body {
+
+.studio-ctx-msg-row:hover { opacity: 0.8; }
+
+.studio-ctx-msg-body {
     display: none; padding: 6px 8px; font-size: 10px;
     white-space: pre-wrap; word-break: break-word;
     background: var(--bg); border: 1px solid var(--bg-border);
@@ -1670,149 +1573,209 @@
     max-height: 300px; overflow-y: auto; resize: vertical;
     margin-top: 2px;
   }
-  .studio-ctx-msg-body.open { display: block; }
-  /* Studio image attachment */
-  #studio-attach-pills { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 10px 0; min-height: 0; }
-  #studio-attach-pills:empty { display: none; }
 
-  /* ── Payload editor widget ───────────────────────────────────────────── */
+.studio-ctx-msg-body.open { display: block; }
+
+/* Studio image attachment */
+  #studio-attach-pills { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 10px 0; min-height: 0; }
+
+#studio-attach-pills:empty { display: none; }
+
+/* ── Payload editor widget ───────────────────────────────────────────── */
   .pe-section {
     border: 1px solid var(--bg-border); border-radius: 3px;
     margin-top: 10px; overflow: hidden; font-size: 11px;
   }
-  .pe-header {
+
+.pe-header {
     display: flex; align-items: center; gap: 6px;
     padding: 5px 8px; background: var(--bg); cursor: pointer;
     user-select: none; border-bottom: 1px solid var(--bg-border);
   }
-  .pe-header:hover { background: var(--bg-hover); }
-  .pe-header-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fg-dim); flex: 1; }
-  .pe-header-badges { display: flex; gap: 4px; align-items: center; }
-  .pe-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
-  .pe-body.pe-collapsed { display: none; }
-  .pe-json-view {
+
+.pe-header:hover { background: var(--bg-hover); }
+
+.pe-header-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fg-dim); flex: 1; }
+
+.pe-header-badges { display: flex; gap: 4px; align-items: center; }
+
+.pe-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+
+.pe-body.pe-collapsed { display: none; }
+
+.pe-json-view {
     font-family: 'Fira Code', monospace; font-size: 10px; color: var(--fg);
     background: var(--bg); border: 1px solid var(--bg-border); border-radius: 2px;
     padding: 6px; white-space: pre; overflow-x: auto; overflow-y: auto;
     max-height: 240px; line-height: 1.5;
   }
-  .pe-json-view .pe-key   { color: var(--lavender); }
-  .pe-json-view .pe-str   { color: var(--green); }
-  .pe-json-view .pe-num   { color: var(--cyan); }
-  .pe-json-view .pe-bool  { color: var(--yellow); }
-  .pe-json-view .pe-null  { color: var(--fg-muted); }
-  .pe-override-row { display: flex; align-items: center; gap: 6px; }
-  .pe-override-ta {
+
+.pe-json-view .pe-key   { color: var(--lavender); }
+
+.pe-json-view .pe-str   { color: var(--green); }
+
+.pe-json-view .pe-num   { color: var(--cyan); }
+
+.pe-json-view .pe-bool  { color: var(--yellow); }
+
+.pe-json-view .pe-null  { color: var(--fg-muted); }
+
+.pe-override-row { display: flex; align-items: center; gap: 6px; }
+
+.pe-override-ta {
     font-family: 'Fira Code', monospace; font-size: 10px; color: var(--fg);
     background: var(--bg-input,#1a1a1a); border: 1px solid var(--lavender);
     border-radius: 2px; padding: 6px; width: 100%; resize: vertical;
     min-height: 80px; line-height: 1.5;
   }
-  .pe-override-ta.pe-err { border-color: var(--red); }
-  .pe-override-ta:disabled { border-color: var(--bg-border); opacity: 0.5; }
-  .pe-status { font-size: 10px; padding: 2px 0; }
-  .pe-status.ok  { color: var(--green); }
-  .pe-status.err { color: var(--red); }
-  .pe-status.dim { color: var(--fg-muted); }
-  .pe-btn-row { display: flex; gap: 6px; }
 
-  .studio-ctrl-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
-  .studio-ctrl-label {
+.pe-override-ta.pe-err { border-color: var(--red); }
+
+.pe-override-ta:disabled { border-color: var(--bg-border); opacity: 0.5; }
+
+.pe-status { font-size: 10px; padding: 2px 0; }
+
+.pe-status.ok  { color: var(--green); }
+
+.pe-status.err { color: var(--red); }
+
+.pe-status.dim { color: var(--fg-muted); }
+
+.pe-btn-row { display: flex; gap: 6px; }
+
+.studio-ctrl-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+
+.studio-ctrl-label {
     color: var(--fg-dim); font-size: 10px; text-transform: uppercase;
     letter-spacing: 0.5px; display: flex; align-items: center; justify-content: space-between;
   }
-  .studio-ctrl-badge {
+
+.studio-ctrl-badge {
     color: var(--cyan); font-size: 11px; font-family: 'Fira Code', monospace;
     text-transform: none; letter-spacing: 0;
   }
-  #studio-temp, #studio-topp { width: 100%; cursor: pointer; accent-color: var(--lavender); }
 
-  #studio-mobile-subnav { display: none; }
+#studio-temp, #studio-topp { width: 100%; cursor: pointer; accent-color: var(--lavender); }
 
-  @media (max-width: 767px) {
-    #panel-studio { flex-direction: column; }
-    #studio-chat-col, #studio-ctx-col, #studio-controls-col {
+#studio-mobile-subnav { display: none; }
+
+@media (max-width: 767px) {
+#panel-studio { flex-direction: column; }
+
+#studio-chat-col, #studio-ctx-col, #studio-controls-col {
       display: none; flex: 1; border-right: none; border-bottom: 1px solid var(--bg-border);
     }
-    #studio-chat-col.studio-mobile-active,
+
+#studio-chat-col.studio-mobile-active,
     #studio-ctx-col.studio-mobile-active,
     #studio-controls-col.studio-mobile-active { display: flex; }
-    #studio-mobile-subnav { display: flex; border-bottom: 1px solid var(--bg-border); flex-shrink: 0; }
-  }
-  @media (min-width: 768px) {
-    #studio-chat-col, #studio-ctx-col, #studio-controls-col { display: flex !important; }
-    #studio-mobile-subnav { display: none !important; }
+
+#studio-mobile-subnav { display: flex; border-bottom: 1px solid var(--bg-border); flex-shrink: 0; }
+
   }
 
-  /* ── Studio runs drawer ──────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+#studio-chat-col, #studio-ctx-col, #studio-controls-col { display: flex !important; }
+
+#studio-mobile-subnav { display: none !important; }
+
+  }
+
+/* ── Studio runs drawer ──────────────────────────────────────────────────── */
   #studio-chat-col { position: relative; }
-  #studio-runs-drawer {
+
+#studio-runs-drawer {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     background: var(--bg); z-index: 10;
     display: none; flex-direction: column;
   }
-  #studio-runs-drawer.open { display: flex; }
-  #studio-runs-list {
+
+#studio-runs-drawer.open { display: flex; }
+
+#studio-runs-list {
     flex: 1; min-height: 0; overflow-y: auto;
     padding: 8px; display: flex; flex-direction: column; gap: 4px;
   }
-  .studio-run-item {
+
+.studio-run-item {
     padding: 6px 8px; border: 1px solid var(--bg-border); border-radius: 2px;
     display: flex; flex-direction: column; gap: 3px; cursor: pointer;
     transition: background 0.1s;
   }
-  .studio-run-item:hover { background: var(--bg-hover); }
-  .studio-run-label { font-size: 11px; color: var(--fg); }
-  .studio-run-meta { font-size: 10px; color: var(--fg-muted); display: flex; gap: 6px; }
-  #studio-run-badge {
+
+.studio-run-item:hover { background: var(--bg-hover); }
+
+.studio-run-label { font-size: 11px; color: var(--fg); }
+
+.studio-run-meta { font-size: 10px; color: var(--fg-muted); display: flex; gap: 6px; }
+
+#studio-run-badge {
     font-size: 10px; color: var(--cyan); padding: 1px 4px;
     border: 1px solid var(--cyan); border-radius: 2px;
   }
-  #studio-run-badge:empty { display: none; }
-  #studio-msgs .meta { display: flex; align-items: center; gap: 4px; }
-  .studio-edit-btn {
+
+#studio-run-badge:empty { display: none; }
+
+#studio-msgs .meta { display: flex; align-items: center; gap: 4px; }
+
+.studio-edit-btn {
     font-size: 9px; padding: 1px 5px; margin-left: auto;
     color: var(--fg-muted); background: transparent;
     border: 1px solid var(--bg-border); border-radius: 2px; cursor: pointer;
     opacity: 0; transition: opacity 0.15s; flex-shrink: 0;
   }
-  .msg:hover .studio-edit-btn { opacity: 1; }
-  .studio-edit-area {
+
+.msg:hover .studio-edit-btn { opacity: 1; }
+
+.studio-edit-area {
     width: 100%; resize: vertical; font-family: inherit; font-size: 12px;
     background: var(--bg-input,#1e1e1e); border: 1px solid var(--lavender); color: var(--fg);
     border-radius: 2px; padding: 6px; min-height: 60px; margin-top: 4px; display: block;
   }
-  .studio-fork-btn {
+
+.studio-fork-btn {
     font-size: 9px; padding: 1px 5px; line-height: 14px;
     color: var(--cyan); background: transparent; border: 1px solid var(--cyan);
     border-radius: 2px; cursor: pointer; flex-shrink: 0;
   }
-  /* ── Active Models (SAM) panel ──────────────────────────────────────── */
+
+/* ── Active Models (SAM) panel ──────────────────────────────────────── */
   #studio-active-models { display: flex; flex-direction: column; gap: 0; margin-bottom: 8px; }
-  .sam-header {
+
+.sam-header {
     display: flex; align-items: center; justify-content: space-between;
     cursor: pointer; user-select: none; padding: 1px 0 3px;
   }
-  .sam-header:hover { color: var(--fg); }
-  .sam-list { display: flex; flex-direction: column; gap: 5px; padding: 5px 0 2px; }
-  .sam-card {
+
+.sam-header:hover { color: var(--fg); }
+
+.sam-list { display: flex; flex-direction: column; gap: 5px; padding: 5px 0 2px; }
+
+.sam-card {
     display: flex; align-items: center; gap: 8px;
     background: var(--bg-panel,#1a1a1a); border: 1px solid var(--bg-border);
     border-radius: 4px; padding: 5px 8px; font-size: 11px; min-height: 36px;
   }
-  .sam-card-name {
+
+.sam-card-name {
     flex: 1; font-family: monospace; color: var(--fg);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .sam-card-meta { color: var(--fg-muted); font-size: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-  .sam-icon-wrap { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
-  .sam-model-letter {
+
+.sam-card-meta { color: var(--fg-muted); font-size: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+
+.sam-icon-wrap { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
+
+.sam-model-letter {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
     font-size: 10px; font-weight: bold; color: var(--lavender); font-family: monospace; z-index: 2;
   }
-  .sam-empty { color: var(--fg-muted); font-size: 10px; padding: 2px 0; }
-  .sam-divider { border: none; border-top: 1px solid var(--bg-border); margin: 4px 0 10px; }
-  /* Device selector */
+
+.sam-empty { color: var(--fg-muted); font-size: 10px; padding: 2px 0; }
+
+.sam-divider { border: none; border-top: 1px solid var(--bg-border); margin: 4px 0 10px; }
+
+/* Device selector */
   #studio-device { width: 100%; }
 </style>
 </head>
@@ -2873,10 +2836,6 @@ async function launchCDP() {
 // Z-command tooltip removed in v3 — the agentic routing layer (z-commands +
 // hybrid routing) was deleted. The element is hidden if it still exists in
 // the DOM; the function is kept as a no-op so legacy onload calls don't error.
-async function loadZHelp() {
-  const tip = document.getElementById('z-help-tip');
-  if (tip) tip.style.display = 'none';
-}
 
 // ── Clock ───────────────────────────────────────────────────────────────────
 function updateClock() {
@@ -2973,18 +2932,6 @@ updateClock();
 }
 
 // ── Tab switching ───────────────────────────────────────────────────────────
-function switchChatSub(sub) {
-  const isAgent = sub === 'agent';
-  const isVoice = sub === 'voice';
-  const isDirect = !isAgent && !isVoice;
-  document.getElementById('chat-sub-direct').style.display = isDirect ? 'flex' : 'none';
-  document.getElementById('chat-sub-agent').style.display  = isAgent  ? 'flex' : 'none';
-  document.getElementById('chat-sub-voice').style.display  = isVoice  ? 'flex' : 'none';
-  document.getElementById('chat-sub-direct-btn').classList.toggle('subnav-active', isDirect);
-  document.getElementById('chat-sub-agent-btn').classList.toggle('subnav-active',  isAgent);
-  document.getElementById('chat-sub-voice-btn').classList.toggle('subnav-active',  isVoice);
-  if (isVoice) { _voiceTabOpened(); }
-}
 
 function switchTapSub(sub) {
   const isEvents    = sub === 'events';
@@ -2999,341 +2946,26 @@ function switchTapSub(sub) {
   if (isInspector) loadInspector();
 }
 
-function switchLabSub(sub) {
-  document.getElementById('lab-experiments').style.display = sub === 'experiments' ? 'flex' : 'none';
-  document.getElementById('lab-bench').style.display       = sub === 'bench'       ? 'flex' : 'none';
-  document.getElementById('lab-eval').style.display        = sub === 'eval'        ? 'flex' : 'none';
-  document.getElementById('lab-dgm').style.display         = sub === 'dgm'         ? 'flex' : 'none';
-  document.getElementById('lab-sub-exp-btn').classList.toggle('subnav-active',   sub === 'experiments');
-  document.getElementById('lab-sub-bench-btn').classList.toggle('subnav-active', sub === 'bench');
-  document.getElementById('lab-sub-eval-btn').classList.toggle('subnav-active',  sub === 'eval');
-  document.getElementById('lab-sub-dgm-btn').classList.toggle('subnav-active',   sub === 'dgm');
-  if (sub === 'bench') loadBenchModels();
-  if (sub === 'eval')  loadEvalSuites();
-  if (sub === 'dgm')   dgmInitModels();
-}
 
 // ── DGM (Darwin Gödel Machine) ───────────────────────────────────────────────
 let _dgmAbort = null;
 let _dgmLastRunId = null;
 
-async function dgmInitModels() {
-  // Populate judge/probe model selectors from Ollama tags (same pattern as other pickers)
-  const judgeEl = document.getElementById('dgm-judge-model');
-  const probeEl = document.getElementById('dgm-probe-model');
-  if (judgeEl.dataset.loaded) return;
-  try {
-    const data = await api('/api/tags');
-    const models = (data.models || []).map(m => m.name || m).filter(Boolean);
-    const opts = models.map(m => `<option value="${m}">${m}</option>`).join('');
-    judgeEl.innerHTML = '<option value="">routing model (default)</option>' + opts;
-    probeEl.innerHTML = '<option value="">config default</option>' + opts;
-    judgeEl.dataset.loaded = '1';
-  } catch(_) {}
-}
 
-async function dgmRun() {
-  const iterations       = parseInt(document.getElementById('dgm-iterations').value)  || 20;
-  const rotationInterval = parseInt(document.getElementById('dgm-rotation').value)    || 5;
-  const threshold        = parseFloat(document.getElementById('dgm-threshold').value) || 0.65;
-  const nProbes          = parseInt(document.getElementById('dgm-probes').value)      || 3;
-  const patienceRaw      = document.getElementById('dgm-patience').value.trim();
-  const patience         = patienceRaw ? parseInt(patienceRaw) : undefined;
-  const goal             = document.getElementById('dgm-goal').value.trim();
-  const judgeModel       = document.getElementById('dgm-judge-model').value;
-  const probeModel       = document.getElementById('dgm-probe-model').value;
-  const startRubric      = document.getElementById('dgm-start-rubric').value;
 
-  const out      = document.getElementById('dgm-output');
-  const runBtn   = document.getElementById('dgm-run-btn');
-  const stopBtn  = document.getElementById('dgm-stop-btn');
-  const revertBtn= document.getElementById('dgm-revert-btn');
-  const stats    = document.getElementById('dgm-stats-bar');
 
-  out.innerHTML = '';
-  stats.style.display = 'flex';
-  runBtn.style.display = 'none';
-  stopBtn.style.display = '';
-  revertBtn.style.display = 'none';
 
-  let keptCount = 0, revertedCount = 0;
 
-  function appendLine(html) {
-    rafAppend(out, `<div style="padding:2px 0;border-bottom:1px solid var(--bg-border);">${html}</div>`);
-  }
 
-  const body = { iterations, rotation_interval: rotationInterval, confidence_threshold: threshold, n_probes: nProbes };
-  if (patience !== undefined) body.patience = patience;
-  if (goal) body.goal = goal;
-  if (judgeModel) body.judge_model = judgeModel;
-  if (probeModel) body.probe_model = probeModel;
-  if (startRubric) body.start_rubric = startRubric;
 
-  _dgmAbort = new AbortController();
-  try {
-    const resp = await fetch('/api/v1/dgm/run', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: _dgmAbort.signal,
-    });
 
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({ error: resp.statusText }));
-      appendLine(`<span style="color:var(--red)">Error: ${err.error || resp.statusText}</span>`);
-      return;
-    }
 
-    const reader = resp.body.getReader();
-    const dec = new TextDecoder();
-    let buf = '';
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop();
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        let ev;
-        try { ev = JSON.parse(line.slice(6)); } catch { continue; }
 
-        const t = ev.type;
-        if (t === 'start') {
-          _dgmLastRunId = ev.run_id;
-          document.getElementById('dgm-run-id-label').textContent = `run ${ev.run_id}`;
-          let info = `${ev.iterations} iter · rotate/${ev.rotation_interval} · thresh ${ev.threshold} · patience ${ev.patience}`;
-          if (ev.goal) info += ` · goal: "${ev.goal}"`;
-          if (ev.judge_model) info += ` · judge: ${ev.judge_model}`;
-          if (ev.probe_model) info += ` · probe: ${ev.probe_model}`;
-          appendLine(`<span style="color:var(--cyan)">▶ DGM run <b>${ev.run_id}</b> started — ${info}</span>`);
-
-        } else if (t === 'iteration_start') {
-          document.getElementById('dgm-stat-iter').textContent   = `${ev.iteration}/${ev.total}`;
-          document.getElementById('dgm-stat-rubric').textContent = ev.rubric;
-          document.getElementById('dgm-stat-rotate').textContent = `${ev.rotate_in}`;
-
-        } else if (t === 'probes') {
-          const src = ev.probes[0]?.source === 'fallback' ? ' <span style="color:var(--fg-muted)">(fallback)</span>' : '';
-          const previews = ev.probes.map(p => `<span style="color:var(--fg-muted)">"${p.request.substring(0,60).replace(/</g,'&lt;')}…"</span>`).join(' / ');
-          appendLine(`<span style="color:var(--bg-border)">[${ev.iteration}] Probes${src}: ${previews}</span>`);
-
-        } else if (t === 'proposal') {
-          if (ev.proposal_type === 'file') {
-            appendLine(`<span style="color:var(--fg-dim)">[${ev.iteration}] Propose file: <b style="color:var(--yellow)">${ev.path}</b> (${ev.content_len} chars) &nbsp;<span style="color:var(--fg-muted)">${ev.reasoning}</span></span>`);
-          } else {
-            appendLine(`<span style="color:var(--fg-dim)">[${ev.iteration}] Propose: <b style="color:var(--yellow)">${ev.key}</b> → <b>${JSON.stringify(ev.value)}</b> &nbsp;<span style="color:var(--fg-muted)">${ev.reasoning}</span></span>`);
-          }
-
-        } else if (t === 'patch_failed') {
-          appendLine(`<span style="color:var(--red)">[${ev.iteration}] Patch failed: ${ev.key} — ${ev.error}</span>`);
-
-        } else if (t === 'kept') {
-          keptCount++;
-          document.getElementById('dgm-stat-kept').textContent = keptCount;
-          if (ev.proposal_type === 'file') {
-            appendLine(`<span style="color:var(--green)">✓ KEPT file &nbsp;<b>${ev.path}</b> (${ev.content_len} chars) &nbsp;[${ev.rubric}] conf=${ev.confidence.toFixed(2)}: ${ev.reasoning} → archived to workspace/out/</span>`);
-          } else {
-            const oldVal = ev.old_value !== undefined ? ` (was ${JSON.stringify(ev.old_value)})` : '';
-            appendLine(`<span style="color:var(--green)">✓ KEPT &nbsp;<b>${ev.key}</b>=${JSON.stringify(ev.value)}${oldVal} &nbsp;[${ev.rubric}] conf=${ev.confidence.toFixed(2)}: ${ev.reasoning}</span>`);
-          }
-          dgmUpdateKeepRate(keptCount, keptCount + revertedCount);
-
-        } else if (t === 'reverted') {
-          revertedCount++;
-          document.getElementById('dgm-stat-reverted').textContent = revertedCount;
-          if (ev.proposal_type === 'file') {
-            appendLine(`<span style="color:var(--red)">✗ REVERTED file <b>${ev.path}</b> [${ev.rubric}] conf=${ev.confidence.toFixed(2)} winner=${ev.winner}</span>`);
-          } else {
-            appendLine(`<span style="color:var(--red)">✗ REVERTED <b>${ev.key}</b> [${ev.rubric}] conf=${ev.confidence.toFixed(2)} winner=${ev.winner}</span>`);
-          }
-          dgmUpdateKeepRate(keptCount, keptCount + revertedCount);
-
-        } else if (t === 'rubric_rotated') {
-          appendLine(`<span style="color:var(--cyan)">↻ Rubric rotated → <b>${ev.new_rubric}</b></span>`);
-          document.getElementById('dgm-stat-rubric').textContent = ev.new_rubric;
-
-        } else if (t === 'early_stop') {
-          appendLine(`<span style="color:var(--yellow)">⏹ Early stop: ${ev.reason}</span>`);
-
-        } else if (t === 'complete') {
-          appendLine(`<span style="color:var(--cyan)">✓ Done: <b>${ev.kept}/${ev.iterations_run}</b> kept (${(ev.keep_rate*100).toFixed(0)}%) in ${(ev.total_ms/1000).toFixed(1)}s</span>`);
-          document.getElementById('dgm-stat-keeprate').textContent = `${(ev.keep_rate*100).toFixed(0)}%`;
-          if (ev.kept > 0) revertBtn.style.display = '';
-
-        } else if (t === 'error') {
-          appendLine(`<span style="color:var(--red)">Error: ${ev.message}</span>`);
-        }
-      }
-    }
-  } catch (e) {
-    if (e.name !== 'AbortError') appendLine(`<span style="color:var(--red)">Stream error: ${e.message}</span>`);
-  } finally {
-    runBtn.style.display = '';
-    stopBtn.style.display = 'none';
-    _dgmAbort = null;
-  }
-}
-
-function dgmUpdateKeepRate(kept, total) {
-  if (!total) return;
-  document.getElementById('dgm-stat-keeprate').textContent = `${Math.round(100*kept/total)}%`;
-}
-
-function dgmStop() {
-  if (_dgmAbort) { _dgmAbort.abort(); _dgmAbort = null; }
-}
-
-function dgmClear() {
-  dgmStop();
-  _dgmLastRunId = null;
-  document.getElementById('dgm-output').innerHTML = '<div class="empty">Configure parameters and click Run DGM.</div>';
-  document.getElementById('dgm-stats-bar').style.display = 'none';
-  document.getElementById('dgm-revert-btn').style.display = 'none';
-  document.getElementById('dgm-run-id-label').textContent = '';
-}
-
-async function dgmRevertLast() {
-  if (!_dgmLastRunId) {
-    alert('No run to revert. Run ID is only available in the current session.');
-    return;
-  }
-  if (!confirm(`Revert all config changes made by run ${_dgmLastRunId}?\n\nThis will restore runtime_config.yaml to its state before the run.`)) return;
-  try {
-    const r = await fetch('/api/v1/dgm/revert', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ run_id: _dgmLastRunId }),
-    });
-    const data = await r.json();
-    if (data.ok) {
-      const out = document.getElementById('dgm-output');
-      rafAppend(out, `<div style="padding:2px 0;color:var(--yellow)">↺ Reverted run ${_dgmLastRunId} — runtime config restored to pre-run state.</div>`);
-      document.getElementById('dgm-revert-btn').style.display = 'none';
-    } else {
-      alert(`Revert failed: ${data.error}`);
-    }
-  } catch(e) {
-    alert(`Revert error: ${e.message}`);
-  }
-}
-
-function dgmToggleGoal() {
-  const row = document.getElementById('dgm-goal-row');
-  const btn = document.getElementById('dgm-goal-toggle');
-  const show = row.style.display === 'none';
-  row.style.display = show ? '' : 'none';
-  btn.textContent = show ? 'Goal ▴' : 'Goal ▾';
-}
-
-function dgmToggleHistory() {
-  const panel = document.getElementById('dgm-history-panel');
-  const btn = document.getElementById('dgm-history-toggle');
-  const show = panel.style.display === 'none';
-  panel.style.display = show ? 'flex' : 'none';
-  btn.textContent = show ? 'History ▴' : 'History ▾';
-  if (show) dgmLoadHistory();
-}
-
-function dgmToggleConfig() {
-  const row = document.getElementById('dgm-config-row');
-  const btn = document.getElementById('dgm-config-toggle');
-  const show = row.style.display === 'none';
-  row.style.display = show ? '' : 'none';
-  btn.textContent = show ? 'Config ▴' : 'Config ▾';
-  if (show) dgmLoadConfig();
-}
-
-async function dgmLoadHistory() {
-  const list = document.getElementById('dgm-history-list');
-  list.innerHTML = '<div class="empty">Loading…</div>';
-  try {
-    const data = await api('/api/v1/dgm/history');
-    const runs = data.runs || [];
-    if (!runs.length) { list.innerHTML = '<div class="empty">No runs recorded (resets on server restart).</div>'; return; }
-    list.innerHTML = runs.map(r => {
-      const ts = r.timestamp ? new Date(r.timestamp * 1000).toLocaleTimeString() : '—';
-      const kr = r.keep_rate !== undefined ? `${(r.keep_rate*100).toFixed(0)}%` : '—';
-      const goal = r.goal ? `<div style="color:var(--fg-muted);font-size:10px;margin-top:2px">"${r.goal.substring(0,60)}"</div>` : '';
-      const canRevert = r.run_id ? `<button onclick="dgmRevertRunId('${r.run_id}')" style="font-size:10px;padding:1px 5px;margin-top:3px">↺ Revert</button>` : '';
-      return `<div style="padding:6px 0;border-bottom:1px solid var(--bg-border)">
-        <div style="display:flex;justify-content:space-between">
-          <b style="color:var(--cyan)">${r.run_id}</b>
-          <span style="color:var(--fg-muted)">${ts}</span>
-        </div>
-        <div>${r.kept}/${r.iterations_run} kept · <span style="color:var(--green)">${kr}</span> · ${(r.total_ms/1000).toFixed(1)}s</div>
-        ${goal}
-        ${canRevert}
-      </div>`;
-    }).join('');
-  } catch(e) {
-    list.innerHTML = `<div class="empty" style="color:var(--red)">Error: ${e.message}</div>`;
-  }
-}
-
-async function dgmRevertRunId(runId) {
-  if (!confirm(`Revert all config changes from run ${runId}?`)) return;
-  try {
-    const r = await fetch('/api/v1/dgm/revert', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ run_id: runId }),
-    });
-    const data = await r.json();
-    if (data.ok) {
-      const out = document.getElementById('dgm-output');
-      rafAppend(out, `<div style="padding:2px 0;color:var(--yellow)">↺ Reverted run ${runId}.</div>`);
-      dgmLoadHistory();
-    } else {
-      alert(`Revert failed: ${data.error}`);
-    }
-  } catch(e) { alert(`Error: ${e.message}`); }
-}
-
-async function dgmLoadConfig() {
-  const el = document.getElementById('dgm-config-list');
-  el.innerHTML = '<span style="color:var(--fg-muted)">Loading…</span>';
-  try {
-    const data = await api('/api/v1/dgm/config');
-    const cfg = data.config || {};
-    const keys = Object.keys(cfg).sort();
-    if (!keys.length) { el.innerHTML = '<span style="color:var(--fg-muted)">Empty.</span>'; return; }
-    el.innerHTML = keys.map(k => {
-      const v = cfg[k];
-      const vStr = v === null || v === undefined ? '<span style="color:var(--fg-muted)">unset</span>' : `<b>${JSON.stringify(v)}</b>`;
-      return `<span style="background:var(--bg-panel);border:1px solid var(--bg-border);border-radius:3px;padding:2px 6px;white-space:nowrap" title="${k}">
-        <span style="color:var(--fg-muted);font-size:10px">${k.split('.').pop()}</span> ${vStr}
-      </span>`;
-    }).join('');
-  } catch(e) {
-    el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`;
-  }
-}
 
 // ── Bench ────────────────────────────────────────────────────────────────────
 let _benchRunning = false;
 
-async function loadBenchModels() {
-  const list = document.getElementById('bench-model-list');
-  // Skip if already populated
-  if (list.querySelectorAll('.bench-model-cb').length > 0) return;
-  try {
-    const data = await api('/api/tags');
-    const models = (data.models || []).map(m => m.name || m).filter(Boolean);
-    if (!models.length) {
-      list.innerHTML = '<div class="empty" style="font-size:11px">No local models found.</div>';
-      return;
-    }
-    list.innerHTML = models.map(m => `
-      <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer">
-        <input type="checkbox" class="bench-model-cb" value="${m}" style="cursor:pointer">
-        <span style="word-break:break-all">${m}</span>
-      </label>`).join('');
-  } catch(e) {
-    list.innerHTML = `<div class="empty" style="font-size:11px">Error loading models: ${e.message}</div>`;
-  }
-}
 
 function resetBench() {
   _benchRunning = false;
@@ -4031,30 +3663,6 @@ async function saveToolboxCurrent() {
 // ── Eval ─────────────────────────────────────────────────────────────────────
 let _evalAbort = null;
 
-async function loadEvalSuites() {
-  const sel = document.getElementById('eval-suite-select');
-  if (sel.dataset.loaded) return;
-  try {
-    const suites = await api('/api/v1/eval/suites').then(r => r.json());
-    sel.innerHTML = suites.length
-      ? suites.map(s => `<option value="${s.path}">${s.label}</option>`).join('')
-      : '<option value="">No suites found</option>';
-    sel.dataset.loaded = '1';
-    onEvalSuiteChange();
-  } catch(e) { sel.innerHTML = '<option value="">Error loading suites</option>'; }
-
-  // Populate model picker
-  const msel = document.getElementById('eval-model-select');
-  if (!msel.dataset.loaded) {
-    try {
-      const r = await fetch('/api/tags'); // Ollama tags via proxy passthrough
-      const tags = r.ok ? (await r.json()).models || [] : [];
-      msel.innerHTML = '<option value="">default model</option>' +
-        tags.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
-      msel.dataset.loaded = '1';
-    } catch(_) {}
-  }
-}
 
 function onEvalSuiteChange() {
   const sel = document.getElementById('eval-suite-select');
@@ -4062,95 +3670,6 @@ function onEvalSuiteChange() {
   document.getElementById('eval-progress').textContent = label ? `suite: ${label}` : '';
 }
 
-async function runEval() {
-  const suite = document.getElementById('eval-suite-select').value;
-  if (!suite) return;
-  const model = document.getElementById('eval-model-select').value;
-
-  document.getElementById('eval-run-btn').style.display  = 'none';
-  document.getElementById('eval-stop-btn').style.display = '';
-  document.getElementById('eval-summary').style.display  = 'none';
-
-  const body = document.getElementById('eval-results');
-  body.innerHTML = '';
-
-  _evalAbort = new AbortController();
-
-  let total = 0, passed = 0, scoreSum = 0, count = 0;
-
-  try {
-    const resp = await fetch('/api/v1/eval/run', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ suite, model, base_url: window.location.origin }),
-      signal: _evalAbort.signal,
-    });
-
-    const reader = resp.body.getReader();
-    const dec = new TextDecoder();
-    let buf = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop();
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        let ev;
-        try { ev = JSON.parse(line.slice(6)); } catch(_) { continue; }
-
-        if (ev.event === 'start') {
-          total = ev.total;
-          document.getElementById('eval-progress').textContent =
-            `0 / ${total} · suite: ${ev.suite}${ev.model ? ' · ' + ev.model : ''}`;
-
-        } else if (ev.event === 'result') {
-          count++;
-          scoreSum += ev.score || 0;
-          if (ev.ok) passed++;
-          document.getElementById('eval-progress').textContent =
-            `${count} / ${total} · ${passed} passed`;
-
-          const color = ev.ok ? 'var(--green)' : (ev.error ? 'var(--yellow)' : 'var(--red)');
-          const icon  = ev.ok ? '✓' : (ev.error ? '⚠' : '✗');
-          const row = document.createElement('div');
-          row.style.cssText = 'display:flex;gap:8px;padding:3px 12px;border-bottom:1px solid var(--bg-border);align-items:baseline;font-family:monospace';
-          row.innerHTML =
-            `<span style="color:${color};width:14px;flex-shrink:0">${icon}</span>` +
-            `<span style="color:var(--fg-muted);width:28px;flex-shrink:0;text-align:right">${count}</span>` +
-            `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg)" title="${esc(ev.case_id)}">${esc(ev.case_id)}</span>` +
-            `<span style="color:var(--fg-muted);flex-shrink:0">${(ev.score*100).toFixed(0)}%</span>` +
-            `<span style="color:var(--fg-muted);flex-shrink:0;width:54px;text-align:right">${ev.latency_ms ? ev.latency_ms.toFixed(0)+'ms' : ''}</span>` +
-            `<span style="color:${color};flex-shrink:0;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(ev.reason||ev.error||'')}">${esc(ev.reason||ev.error||'')}</span>`;
-          body.appendChild(row);
-          body.scrollTop = body.scrollHeight;
-
-        } else if (ev.event === 'done') {
-          const avgScore = count ? (scoreSum / count * 100).toFixed(1) : '0';
-          const sumEl = document.getElementById('eval-summary');
-          sumEl.style.display = 'flex';
-          document.getElementById('eval-summary-suite').textContent = suite.split('/').pop();
-          document.getElementById('eval-summary-pass').textContent  = `✓ ${ev.passed} passed`;
-          document.getElementById('eval-summary-fail').textContent  = ev.failed ? `✗ ${ev.failed} failed` : '';
-          document.getElementById('eval-summary-score').textContent = `avg score ${avgScore}%`;
-          document.getElementById('eval-progress').textContent = `Done · ${ev.passed}/${ev.total} passed`;
-
-        } else if (ev.event === 'error') {
-          body.innerHTML += `<div style="padding:8px 12px;color:var(--red)">${esc(ev.message)}</div>`;
-        }
-      }
-    }
-  } catch(e) {
-    if (e.name !== 'AbortError')
-      body.innerHTML += `<div style="padding:8px 12px;color:var(--red)">Stream error: ${esc(String(e))}</div>`;
-  }
-
-  document.getElementById('eval-run-btn').style.display  = '';
-  document.getElementById('eval-stop-btn').style.display = 'none';
-  _evalAbort = null;
-}
 
 function stopEval() {
   if (_evalAbort) { _evalAbort.abort(); _evalAbort = null; }
@@ -5174,7 +4693,6 @@ function renderChatPanes() {
         <span class="pane-label">#${pane.id}</span>
         <select class="pane-target-sel" data-pane="${pane.id}" onchange="setPaneTarget(${pane.id}, this.value)">
           <option value="">default model</option>
-          <option value="@op" ${pane.target==='@op'?'selected':''}>@operator</option>
         </select>
         <button id="pane-cfg-btn-${pane.id}" onclick="togglePaneSettings(${pane.id})"
           title="Pane settings" style="opacity:${cfgActive?'1':'0.45'};color:${openPaneSettings.has(pane.id)?'var(--accent)':''}">⚙</button>
@@ -5223,41 +4741,28 @@ function updateChatPageNav() {
 
 async function loadModelsForPanes() {
   let models = [];
-  let deviceSuffix = '';  // Device indicator for local models (e.g., " [CPU]" or " [GPU]")
+  let deviceSuffix = '';
 
   try {
     const d = await api('/v1/models');
     models = (d.data || d.models || []).map(m => m.id || m.name || m);
     allModels = models.map(id => ({id}));
 
-    // Fetch backend config to get device preference for local models
+    // Optional [CPU]/[GPU] suffix for ollama-backed models
     try {
       const cfg = await api('/api/v1/config');
-      const backends = cfg.backends || [];
-      const ollamaBackend = backends.find(b => b.provider === 'ollama');
+      const ollamaBackend = (cfg.backends || []).find(b => b.provider === 'ollama');
       if (ollamaBackend && ollamaBackend.device_preference) {
-        const device = ollamaBackend.device_preference.toUpperCase();
-        deviceSuffix = ` [${device}]`;
+        deviceSuffix = ` [${ollamaBackend.device_preference.toUpperCase()}]`;
       }
-    } catch(e) {
-      // If we can't fetch config, just skip the device indicator
-    }
-
-    // Populate council proposer model dropdown + store for council card selects
-    _availModels = models;
-    const councilSel = document.getElementById('council-op-model');
-    if (councilSel) {
-      councilSel.innerHTML = '<option value="">— operator default —</option>'
-        + models.map(m => `<option value="${esc(m)}">${esc(m + deviceSuffix)}</option>`).join('');
-    }
-  } catch {}
+    } catch (e) {}
+  } catch (e) {}
 
   document.querySelectorAll('.pane-target-sel').forEach(sel => {
     const paneId = parseInt(sel.dataset.pane);
     const pane = chatPanes.find(p => p.id === paneId);
-    // Keep existing op option, add models
     const curVal = pane ? pane.target : '';
-    sel.innerHTML = `<option value="">default model</option><option value="@op" ${curVal==='@op'?'selected':''}>@operator</option>`;
+    sel.innerHTML = `<option value="">default model</option>`;
     models.forEach(id => {
       const opt = document.createElement('option');
       opt.value = id; opt.textContent = id + deviceSuffix;
@@ -5265,85 +4770,6 @@ async function loadModelsForPanes() {
       sel.appendChild(opt);
     });
   });
-
-  // (Operator target dropdown removed in v3 alongside the Operator class.)
-
-  // Also populate harness orch add-select and master model select
-  const orchAddSel = document.getElementById('harness-orch-add-select');
-  if (orchAddSel) {
-    orchAddSel.innerHTML = `<option value="">＋ add target</option><option value="operator">operator</option>`;
-    models.forEach(id => {
-      const opt = document.createElement('option');
-      opt.value = 'model:' + id; opt.textContent = id + deviceSuffix;
-      orchAddSel.appendChild(opt);
-    });
-  }
-  const orchModelSel = document.getElementById('harness-orch-model');
-  if (orchModelSel) {
-    const cur = orchModelSel.value;
-    orchModelSel.innerHTML = `<option value="">— use operator default —</option>`;
-    models.forEach(id => {
-      const opt = document.createElement('option');
-      opt.value = id; opt.textContent = id + deviceSuffix;
-      if (id === cur) opt.selected = true;
-      orchModelSel.appendChild(opt);
-    });
-  }
-
-  // Also populate ensemble judge selector
-  const ensJudgeSel = document.getElementById('harness-ensemble-judge');
-  if (ensJudgeSel) {
-    const cur = ensJudgeSel.value;
-    ensJudgeSel.innerHTML = `<option value="">— use operator default —</option>`;
-    models.forEach(id => {
-      const opt = document.createElement('option');
-      opt.value = id; opt.textContent = id + deviceSuffix;
-      if (id === cur) opt.selected = true;
-      ensJudgeSel.appendChild(opt);
-    });
-  }
-
-  // Wiggam officer add-select
-  const wiggamOfficerSel = document.getElementById('harness-wiggam-add-officer');
-  if (wiggamOfficerSel) {
-    wiggamOfficerSel.innerHTML = '<option value="">＋ add officer</option>';
-    models.forEach(id => {
-      const opt = document.createElement('option');
-      opt.value = id; opt.textContent = id;
-      wiggamOfficerSel.appendChild(opt);
-    });
-  }
-
-  // Ralph model select
-  const ralphModelSel = document.getElementById('harness-ralph-model');
-  if (ralphModelSel) {
-    const cur = ralphModelSel.value;
-    ralphModelSel.innerHTML = `<option value="">— operator default —</option>`;
-    models.forEach(id => {
-      const opt = document.createElement('option');
-      opt.value = id; opt.textContent = id;
-      if (id === cur) opt.selected = true;
-      ralphModelSel.appendChild(opt);
-    });
-  }
-
-  // Agentic model select
-  const agenticModelSel = document.getElementById('harness-agentic-model');
-  if (agenticModelSel) {
-    const cur = agenticModelSel.value;
-    agenticModelSel.innerHTML = `<option value="">— operator default —</option>`;
-    models.forEach(id => {
-      const opt = document.createElement('option');
-      opt.value = id; opt.textContent = id;
-      if (id === cur) opt.selected = true;
-      agenticModelSel.appendChild(opt);
-    });
-  }
-
-  // Refresh ensemble checklist if it's currently visible
-  if (harnessMode === 'ensemble') harnessEnsemblePopulateModels();
-  // Refresh council model pool if council mode is active
-  councilPopulateModels();  // formerly gated on _opMode
 }
 
 // Track which pane drawers are open across re-renders
@@ -6034,21 +5460,6 @@ let _isRecording = false;
 let _voiceEnabled = false;
 let _voiceHotkey = '';
 
-function enableVoiceUI(hotkey) {
-  _voiceEnabled = true;
-  _voiceHotkey = hotkey || '';
-  const btn = document.getElementById('mic-btn');
-  if (btn) btn.style.display = 'flex';
-  if (_voiceHotkey) {
-    document.addEventListener('keydown', e => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      if (e.key === _voiceHotkey) {
-        e.preventDefault();
-        if (_isRecording) stopRecording(); else startRecording();
-      }
-    });
-  }
-}
 
 async function startRecording() {
   if (_isRecording) return;
@@ -6149,11 +5560,6 @@ let _voiceTtsQueue     = [];      // serial sentence queue
 let _voiceTtsDraining  = false;   // drain loop running
 
 // Auth header — mirrors window._bbApiKey pattern used throughout the app
-function _voiceAuthHeader() {
-  return window._bbApiKey
-    ? { 'Authorization': `Bearer ${window._bbApiKey}` }
-    : { 'Authorization': 'Bearer beigebox' };
-}
 
 function _loadScript(src) {
   return new Promise((resolve, reject) => {
@@ -6177,129 +5583,9 @@ async function _loadVadLib() {
   _vadLibReady = true;
 }
 
-async function _voiceTabOpened() {
-  // Populate model selector once
-  const sel = document.getElementById('voice-model');
-  if (sel && sel.options.length <= 1) {
-    try {
-      const data = await fetch(BASE + '/v1/models').then(r => r.json());
-      (data.data || []).forEach(m => {
-        const o = document.createElement('option');
-        o.value = m.id; o.textContent = m.id;
-        sel.appendChild(o);
-      });
-    } catch {}
-  }
-  // Show unconfigured warning if voice services not enabled
-  const startBtn = document.getElementById('voice-start-btn');
-  const errEl    = document.getElementById('voice-error');
-  if (startBtn && errEl) {
-    try {
-      const cfg = await fetch(BASE + '/api/v1/config').then(r => r.json());
-      if (!cfg.features?.voice && !cfg.voice?.stt_url) {
-        errEl.textContent = 'Voice services not configured — enable features_voice and set stt_url in Settings.';
-        errEl.style.display = '';
-        startBtn.disabled = true;
-      } else {
-        errEl.style.display = 'none';
-        startBtn.disabled = false;
-      }
-    } catch {}
-  }
-}
 
-async function voiceStart() {
-  if (_voiceActive) return;  // double-start guard
-  const errEl = document.getElementById('voice-error');
-  if (errEl) errEl.style.display = 'none';
 
-  // Microphone requires a secure context (HTTPS or localhost).
-  // Mobile Chrome does not grant the localhost exemption that desktop does.
-  if (!window.isSecureContext || !navigator.mediaDevices) {
-    _voiceError('Microphone requires HTTPS. Open BeigeBox via https:// or use localhost on desktop.');
-    return;
-  }
 
-  _voiceSetStatus('loading', '◌ loading…');
-  try {
-    await _loadVadLib();
-  } catch(e) {
-    _voiceError('VAD library failed to load. Check network connection.');
-    _voiceSetStatus('', '● idle');
-    return;
-  }
-
-  _voiceActive = true;
-  document.getElementById('voice-start-btn').style.display = 'none';
-  document.getElementById('voice-stop-btn').style.display  = '';
-
-  try {
-    _vadMic = await window.vad.MicVAD.new({
-      positiveSpeechThreshold: 0.8,
-      negativeSpeechThreshold: 0.35,
-      preSpeechPadFrames: 10,
-      minSpeechFrames: 4,
-      onSpeechStart: () => {
-        if (!_voiceActive) return;
-        _voiceSetStatus('speaking', '◉ speaking');
-        // Barge-in: cancel TTS queue + in-flight LLM stream
-        _voiceTtsQueue = [];
-        _voiceTtsStop();
-        if (_voiceAbort) { _voiceAbort.abort(); _voiceAbort = null; }
-      },
-      onSpeechEnd: async (audio) => {
-        if (!_voiceActive || _voiceTurnInFlight) return;  // concurrent-turn guard
-        _voiceTurnInFlight = true;
-        _voiceSetStatus('thinking', '◎ thinking…');
-        try { await _voiceTurn(audio); } finally { _voiceTurnInFlight = false; }
-        if (_voiceActive) _voiceSetStatus('listening', '● listening');
-      },
-    });
-    _vadMic.start();
-    _voiceSetStatus('listening', '● listening');
-  } catch(e) {
-    _voiceError('Mic access denied or VAD init failed: ' + (e.message || e));
-    voiceStop();
-  }
-}
-
-function voiceStop() {
-  _voiceActive       = false;
-  _voiceTurnInFlight = false;
-  _voiceTtsQueue     = [];
-  if (_vadMic) { try { _vadMic.destroy(); } catch {} _vadMic = null; }
-  if (_voiceAbort) { _voiceAbort.abort(); _voiceAbort = null; }
-  _voiceTtsStop();
-  document.getElementById('voice-start-btn').style.display = '';
-  document.getElementById('voice-stop-btn').style.display  = 'none';
-  _voiceSetStatus('', '● idle');
-}
-
-async function voiceToggleCamera() {
-  if (_cameraOn) {
-    if (_cameraStream) { _cameraStream.getTracks().forEach(t => t.stop()); _cameraStream = null; }
-    const v = document.getElementById('voice-video');
-    if (v) v.srcObject = null;
-    _cameraOn = false;
-    const btn = document.getElementById('voice-camera-toggle');
-    if (btn) btn.textContent = '📷 off';
-  } else {
-    if (!window.isSecureContext || !navigator.mediaDevices) {
-      _voiceError('Camera requires HTTPS. Open BeigeBox via https:// or use localhost on desktop.');
-      return;
-    }
-    try {
-      _cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
-      const v = document.getElementById('voice-video');
-      if (v) v.srcObject = _cameraStream;
-      _cameraOn = true;
-      const btn = document.getElementById('voice-camera-toggle');
-      if (btn) btn.textContent = '📷 on';
-    } catch(e) {
-      _voiceError('Camera access denied: ' + (e.message || e));
-    }
-  }
-}
 
 function _captureFrame() {
   if (!_cameraOn) return null;
@@ -6330,194 +5616,20 @@ function _pcmToWav(pcm, sr) {
   return new Blob([buf], { type: 'audio/wav' });
 }
 
-async function _voiceTurn(audio) {
-  // 1. STT via Whisper
-  const wav  = _pcmToWav(audio, 16000);
-  const form = new FormData();
-  form.append('file', wav, 'speech.wav');
-  form.append('model', 'whisper-1');
-  let transcript;
-  try {
-    const r = await fetch(BASE + '/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: _voiceAuthHeader(),
-      body: form,
-    });
-    if (!r.ok) throw new Error(`STT ${r.status}`);
-    transcript = ((await r.json()).text || '').trim();
-  } catch(e) {
-    _voiceError('STT error: ' + (e.message || e));
-    return;
-  }
-  if (!transcript) return;
-
-  // 2. Show user turn
-  _voiceAppendTurn('user', transcript);
-
-  // 3. Build user content — vision if camera active
-  const frameB64    = _captureFrame();
-  const userContent = frameB64
-    ? [ { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${frameB64}` } },
-        { type: 'text', text: transcript } ]
-    : transcript;
-
-  // 4. Cap history: keep last N turns, strip images from older entries
-  _voiceHistory.push({ role: 'user', content: userContent });
-  if (_voiceHistory.length > _VOICE_HISTORY_MAX) {
-    _voiceHistory = _voiceHistory.slice(-_VOICE_HISTORY_MAX);
-  }
-  // Strip image_url from turns not in the last 2 (saves context window)
-  const historyForRequest = _voiceHistory.map((m, i, arr) => {
-    if (i < arr.length - 2 && Array.isArray(m.content)) {
-      return { ...m, content: m.content.filter(c => c.type !== 'image_url') };
-    }
-    return m;
-  });
-
-  const msgs = [
-    { role: 'system', content: 'You are a helpful voice assistant. Keep responses concise (1-3 sentences) and conversational.' },
-    ...historyForRequest,
-  ];
-
-  // 5. Stream LLM response
-  const model = document.getElementById('voice-model')?.value || undefined;
-  _voiceAbort  = new AbortController();
-  let fullText  = '';
-  let sentBuf   = '';
-  const turnEl  = _voiceAppendTurn('assistant', '');
-  const textEl  = turnEl?.querySelector('.voice-turn-text');
-  _voiceSetStatus('responding', '▶ responding…');
-
-  try {
-    const resp = await fetch(BASE + '/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ..._voiceAuthHeader() },
-      body: JSON.stringify({ ...(model ? { model } : {}), messages: msgs, stream: true }),
-      signal: _voiceAbort.signal,
-    });
-    if (!resp.ok) throw new Error(`LLM ${resp.status}`);
-
-    const reader = resp.body.getReader();
-    const dec    = new TextDecoder();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      for (const line of dec.decode(value, { stream: true }).split('\n')) {
-        if (!line.startsWith('data: ')) continue;
-        const raw = line.slice(6);
-        if (raw === '[DONE]') break;
-        try {
-          const delta = JSON.parse(raw).choices?.[0]?.delta?.content || '';
-          if (!delta) continue;
-          fullText += delta;
-          sentBuf  += delta;
-          if (textEl) textEl.textContent = fullText;
-          // Enqueue at sentence boundary (serial drain prevents overlapping audio)
-          const m = sentBuf.match(/^(.*?[.!?])\s+/);
-          if (m) {
-            _voiceTtsEnqueue(m[1].trim());
-            sentBuf = sentBuf.slice(m[0].length);
-          }
-        } catch {}
-      }
-    }
-    // Flush remainder
-    if (sentBuf.trim()) _voiceTtsEnqueue(sentBuf.trim());
-  } catch(e) {
-    if (e.name !== 'AbortError') _voiceError('LLM error: ' + (e.message || e));
-  }
-
-  if (fullText) _voiceHistory.push({ role: 'assistant', content: fullText });
-  _voiceAbort = null;
-}
 
 // ── TTS playback — serial queue ───────────────────────────────────────────────
 // Sentences are enqueued and drained one-at-a-time so they play in order.
 // Barge-in clears _voiceTtsQueue + stops the current source before enqueueing.
 
-function _voiceTtsCtxGet() {
-  if (!_voiceTtsCtx) _voiceTtsCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (_voiceTtsCtx.state === 'suspended') _voiceTtsCtx.resume();
-  return _voiceTtsCtx;
-}
 
-function _voiceTtsStop() {
-  if (_voiceTtsSrc) { try { _voiceTtsSrc.stop(); } catch {} _voiceTtsSrc = null; }
-}
 
-function _voiceTtsEnqueue(text) {
-  if (!text?.trim()) return;
-  _voiceTtsQueue.push(text);
-  if (!_voiceTtsDraining) _voiceTtsDrain();
-}
 
-async function _voiceTtsDrain() {
-  _voiceTtsDraining = true;
-  while (_voiceTtsQueue.length > 0) {
-    const text = _voiceTtsQueue.shift();
-    await _voiceTtsPlayOne(text);
-  }
-  _voiceTtsDraining = false;
-}
 
-async function _voiceTtsPlayOne(text) {
-  if (!text?.trim()) return;
-  const voice = document.getElementById('voice-tts-voice')?.value || 'af_bella';
-  try {
-    const resp = await fetch(BASE + '/v1/audio/speech', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ..._voiceAuthHeader() },
-      body: JSON.stringify({ model: 'kokoro', input: text, voice, speed: 1.0 }),
-    });
-    if (!resp.ok) return;
-    const ctx   = _voiceTtsCtxGet();
-    const audio = await ctx.decodeAudioData(await resp.arrayBuffer());
-    await new Promise(resolve => {
-      _voiceTtsStop();
-      const src  = ctx.createBufferSource();
-      src.buffer = audio;
-      src.connect(ctx.destination);
-      src.onended = () => { _voiceTtsSrc = null; resolve(); };
-      _voiceTtsSrc = src;
-      src.start(0);
-    });
-  } catch {}
-}
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
-function _voiceSetStatus(cls, label) {
-  const el = document.getElementById('voice-status-badge');
-  if (!el) return;
-  el.className = cls || '';
-  el.textContent = label;
-}
 
-function _voiceError(msg) {
-  const el = document.getElementById('voice-error');
-  if (el) { el.textContent = msg; el.style.display = ''; }
-  console.error('[Voice]', msg);
-}
 
-function _voiceAppendTurn(role, text) {
-  const c = document.getElementById('voice-transcript');
-  if (!c) return null;
-  const d      = document.createElement('div');
-  d.className  = 'voice-turn';
-  const isUser = role === 'user';
-  // Use esc() to prevent XSS from STT transcripts or model output
-  d.innerHTML  =
-    `<div class="voice-turn-label ${isUser ? 'user-lbl' : 'asst-lbl'}">${isUser ? 'you' : 'assistant'}</div>` +
-    `<div class="voice-turn-text ${isUser ? 'user-txt' : ''}">${esc(text)}</div>`;
-  c.appendChild(d);
-  c.scrollTop = c.scrollHeight;
-  return d;
-}
 
-function voiceClearTranscript() {
-  const c = document.getElementById('voice-transcript');
-  if (c) c.innerHTML = '';
-  _voiceHistory = [];
-}
 
 // ── End Voice/Vision ──────────────────────────────────────────────────────────
 
@@ -7296,7 +6408,6 @@ function _formatOutput(text) {
   return html || esc(text);
 }
 
-function opClear() { councilClear(); }
 
 
 // ── Council mode ──────────────────────────────────────────────────────────────
@@ -7305,306 +6416,22 @@ let _councilRunning    = false;
 let _availModels       = [];   // populated when models are loaded
 let councilAllowedModels = new Set();
 
-function councilPopulateModels() {
-  const listEl = document.getElementById('council-model-list');
-  if (!listEl) return;
-  listEl.innerHTML = '';
-  (allModels || []).forEach(m => {
-    const chip = document.createElement('label');
-    chip.style.cssText = 'display:flex;align-items:center;gap:4px;padding:2px 8px;border:1px solid var(--bg-border);border-radius:3px;cursor:pointer;font-size:11px;background:var(--bg-input);white-space:nowrap';
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.value = m.id;
-    cb.checked = councilAllowedModels.has(m.id);
-    cb.onchange = () => {
-      if (cb.checked) councilAllowedModels.add(m.id);
-      else councilAllowedModels.delete(m.id);
-      chip.style.borderColor = cb.checked ? 'var(--lavender)' : 'var(--bg-border)';
-    };
-    if (cb.checked) chip.style.borderColor = 'var(--lavender)';
-    chip.appendChild(cb);
-    chip.appendChild(document.createTextNode(' ' + m.id));
-    listEl.appendChild(chip);
-  });
-}
 
-function councilClear() {
-  document.getElementById('council-proposal-area').innerHTML = '';
-  document.getElementById('council-input').value = '';
-  _councilRunId   = null;
-  _councilRunning = false;
-  const btn = document.getElementById('council-propose-btn');
-  if (btn) { btn.textContent = 'Propose'; btn.disabled = false; }
-}
 
-async function councilPropose() {
-  const input = document.getElementById('council-input');
-  const query = input.value.trim();
-  if (!query || _councilRunning) return;
 
-  const area  = document.getElementById('council-proposal-area');
-  const btn   = document.getElementById('council-propose-btn');
-  const model = document.getElementById('council-op-model')?.value || '';
 
-  btn.disabled = true;
-  btn.textContent = '⟳ Proposing…';
-  area.innerHTML  = '<div class="op-pending" style="padding:12px 0">⟳ Operator is assembling a council…</div>';
 
-  try {
-    const body = { query };
-    if (model) body.model = model;
-    if (councilAllowedModels.size > 0) body.allowed_models = [...councilAllowedModels];
-    const d = await api('/api/v1/council/propose', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(body),
-    });
-
-    if (d.error) throw new Error(d.error);
-    _councilRunId = d.run_id;
-    _renderCouncilCards(area, d.council);
-    btn.textContent = 'Re-propose';
-    btn.disabled    = false;
-
-  } catch(e) {
-    area.innerHTML = `<div class="op-error">✗ ${esc(e.message)}</div>`;
-    btn.textContent = 'Propose';
-    btn.disabled    = false;
-  }
-}
-
-function _renderCouncilCards(area, council) {
-  // Build model options HTML — restrict to allowed pool if any are selected
-  const modelsToShow = councilAllowedModels.size > 0
-    ? _availModels.filter(m => councilAllowedModels.has(m))
-    : _availModels;
-  const modelOpts = modelsToShow.map(m =>
-    `<option value="${esc(m)}">${esc(m)}</option>`
-  ).join('');
-
-  let html = '<div id="council-engage-row">'
-           + `<span style="font-size:11px;color:var(--fg-muted)">Review and adjust the council, then engage.</span>`
-           + '<span style="flex:1"></span>'
-           + `<button onclick="councilAddCard()" title="Add a specialist" `
-           + `style="background:none;border:1px solid var(--bg-border);color:var(--fg-dim);padding:2px 8px;border-radius:2px;cursor:pointer;font-size:12px">＋ Add</button>`
-           + '<button id="council-kill-btn" onclick="councilKill()" title="Abort running council" '
-           + 'style="display:none;background:var(--red);color:#fff;border:none;padding:2px 10px;border-radius:2px;cursor:pointer;font-size:12px">■ Stop</button>'
-           + '<button class="primary" onclick="councilEngage()" id="council-engage-btn" '
-           + 'style="background:var(--lavender);color:#000">⚖ Engage Council</button>'
-           + '</div>';
-
-  html += '<div id="council-cards">';
-  council.forEach((m, i) => {
-    html += `
-    <div class="council-card" data-idx="${i}">
-      <div class="council-card-header">
-        <span class="council-card-name">${esc(m.name)}</span>
-        <select class="council-card-model" id="council-model-${i}">
-          ${modelOpts}
-        </select>
-        <button class="council-card-close" onclick="this.closest('.council-card').remove()" title="Remove specialist">✕</button>
-      </div>
-      <textarea class="council-card-task" id="council-task-${i}">${esc(m.task)}</textarea>
-    </div>`;
-  });
-  html += '</div><div id="council-results"></div>';
-
-  area.innerHTML = html;
-
-  // Set selected model for each card
-  council.forEach((m, i) => {
-    const sel = document.getElementById(`council-model-${i}`);
-    if (sel) {
-      // Try exact match first, then partial
-      const opt = [...sel.options].find(o => o.value === m.model)
-               || [...sel.options].find(o => o.value.includes(m.model) || m.model.includes(o.value));
-      if (opt) sel.value = opt.value;
-    }
-  });
-}
-
-function _councilGetCards() {
-  const council = [];
-  document.querySelectorAll('.council-card').forEach((card, i) => {
-    const name  = card.querySelector('.council-card-name')?.textContent?.trim() || `Specialist ${i+1}`;
-    const model = card.querySelector('.council-card-model')?.value || '';
-    const task  = card.querySelector('.council-card-task')?.value?.trim() || '';
-    if (model && task) council.push({ name, model, task });
-  });
-  return council;
-}
-
-function councilAddCard() {
-  const cardsEl = document.getElementById('council-cards');
-  if (!cardsEl) return;
-  const idx = cardsEl.querySelectorAll('.council-card').length;
-  const modelsToShow = councilAllowedModels.size > 0
-    ? _availModels.filter(m => councilAllowedModels.has(m))
-    : _availModels;
-  const modelOpts = modelsToShow.map(m =>
-    `<option value="${esc(m)}">${esc(m)}</option>`
-  ).join('');
-  cardsEl.insertAdjacentHTML('beforeend', `
-    <div class="council-card" data-idx="${idx}">
-      <div class="council-card-header">
-        <span class="council-card-name" contenteditable="true" style="outline:none;min-width:80px">Specialist ${idx+1}</span>
-        <select class="council-card-model" id="council-model-${idx}">${modelOpts}</select>
-        <button class="council-card-close" onclick="this.closest('.council-card').remove()" title="Remove specialist">✕</button>
-      </div>
-      <textarea class="council-card-task" id="council-task-${idx}" placeholder="Describe this specialist's angle…"></textarea>
-    </div>`);
-}
 
 let _councilAbort = null;
 
-function councilKill() {
-  if (_councilAbort) { _councilAbort.abort(); _councilAbort = null; }
-}
 
-async function councilEngage() {
-  if (!_councilRunId || _councilRunning) return;
-  const council = _councilGetCards();
-  if (!council.length) return;
-
-  _councilRunning = true;
-  _councilAbort   = new AbortController();
-  const engageBtn  = document.getElementById('council-engage-btn');
-  const proposeBtn = document.getElementById('council-propose-btn');
-  const killBtn    = document.getElementById('council-kill-btn');
-  if (engageBtn)  { engageBtn.disabled = true; engageBtn.textContent = '⟳ Running…'; }
-  if (proposeBtn) { proposeBtn.disabled = true; }
-  if (killBtn)    { killBtn.style.display = ''; }
-
-  // Collapse proposal cards once engaged — results take over the space
-  const cardsEl = document.getElementById('council-cards');
-  if (cardsEl) cardsEl.style.display = 'none';
-
-  const results = document.getElementById('council-results');
-  results.innerHTML = '';
-
-  // Status placeholders per member
-  const memberEls = {};
-  council.forEach(m => {
-    const id = `cr-${m.name.replace(/\s+/g,'-')}`;
-    memberEls[m.name] = id;
-    results.insertAdjacentHTML('beforeend', `
-      <div class="council-member-result" id="${id}">
-        <div class="council-member-label">⚖ ${esc(m.name)} <span style="color:var(--fg-muted);font-size:10px">(${esc(m.model)})</span></div>
-        <span class="council-member-running">⟳ thinking…</span>
-      </div>`);
-  });
-
-  // Synthesis placeholder
-  results.insertAdjacentHTML('beforeend', `
-    <div class="council-synthesis" id="council-synthesis-el" style="display:none">
-      <div class="council-synthesis-label">◈ Commander Synthesis</div>
-      <span class="council-member-running">⟳ synthesising…</span>
-    </div>`);
-
-  results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-  try {
-    const resp = await fetch(`/api/v1/council/${_councilRunId}/engage`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', ...(window._bbApiKey ? {'Authorization':`Bearer ${window._bbApiKey}`} : {}) },
-      body:    JSON.stringify({ council }),
-      signal:  _councilAbort.signal,
-    });
-
-    const reader = resp.body.getReader();
-    const dec    = new TextDecoder();
-    let   buf    = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop();
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        let evt;
-        try { evt = JSON.parse(line.slice(6)); } catch { continue; }
-
-        if (evt.type === 'member_done') {
-          const el = document.getElementById(memberEls[evt.name]);
-          if (el) {
-            el.querySelector('.council-member-running')?.remove();
-            el.insertAdjacentHTML('beforeend',
-              `<div style="white-space:pre-wrap;word-break:break-word">${esc(evt.result)}</div>`);
-          }
-        } else if (evt.type === 'member_error') {
-          const el = document.getElementById(memberEls[evt.name]);
-          if (el) {
-            el.querySelector('.council-member-running')?.remove();
-            el.insertAdjacentHTML('beforeend',
-              `<div style="color:var(--red)">✗ ${esc(evt.error)}</div>`);
-          }
-        } else if (evt.type === 'synthesizing') {
-          const el = document.getElementById('council-synthesis-el');
-          if (el) el.style.display = '';
-        } else if (evt.type === 'synthesis') {
-          const el = document.getElementById('council-synthesis-el');
-          if (el) {
-            el.querySelector('.council-member-running')?.remove();
-            el.insertAdjacentHTML('beforeend',
-              `<div>${esc(evt.result)}</div>`);
-          }
-        } else if (evt.type === 'saved') {
-          results.insertAdjacentHTML('beforeend',
-            `<div style="font-size:10px;color:var(--fg-muted);margin-top:4px">💾 ${esc(evt.path)}</div>`);
-        } else if (evt.type === 'error') {
-          results.insertAdjacentHTML('beforeend',
-            `<div class="op-error">✗ ${esc(evt.message)}</div>`);
-        }
-      }
-    }
-  } catch(e) {
-    if (e.name !== 'AbortError') {
-      results.insertAdjacentHTML('beforeend',
-        `<div class="op-error">✗ ${esc(e.message)}</div>`);
-    }
-  }
-
-  _councilRunning = false;
-  _councilAbort   = null;
-  if (engageBtn)  { engageBtn.disabled = false; engageBtn.textContent = '⚖ Engage Again'; }
-  if (proposeBtn) { proposeBtn.disabled = false; }
-  if (killBtn)    { killBtn.style.display = 'none'; }
-}
 
 // ── 7. Harness — parallel agent runner ────────────────────────────────────────
 // ── Orchestrated layout splitter (draggable divider) ─────────────────────────
 let orchSplitterActive = false;
 let orchSplitterStartY = 0;
 
-function startOrchSplitterDrag(event) {
-  event.preventDefault();
-  orchSplitterActive = true;
-  orchSplitterStartY = event.clientY;
-  document.addEventListener('mousemove', orchSplitterDrag);
-  document.addEventListener('mouseup', endOrchSplitterDrag);
-}
 
-function orchSplitterDrag(event) {
-  if (!orchSplitterActive) return;
-  const layout = document.getElementById('harness-orch-layout');
-  const masterPane = document.getElementById('harness-master-pane');
-  if (!layout || !masterPane) return;
-
-  const deltaY = event.clientY - orchSplitterStartY;
-  const containerHeight = layout.offsetHeight;
-  const currentHeight = masterPane.offsetHeight;
-  const newHeight = currentHeight + deltaY;
-
-  // Minimum 80px for master pane, maximum 80% of container
-  const minHeight = 80;
-  const maxHeight = containerHeight * 0.8;
-  const constrainedHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
-
-  masterPane.style.height = constrainedHeight + 'px';
-  orchSplitterStartY = event.clientY;
-}
 
 function endOrchSplitterDrag(event) {
   orchSplitterActive = false;
@@ -7616,33 +6443,7 @@ function endOrchSplitterDrag(event) {
 let ralphSplitterActive = false;
 let ralphSplitterStartY = 0;
 
-function startRalphSplitterDrag(event) {
-  event.preventDefault();
-  ralphSplitterActive = true;
-  ralphSplitterStartY = event.clientY;
-  document.addEventListener('mousemove', ralphSplitterDrag);
-  document.addEventListener('mouseup', endRalphSplitterDrag);
-}
 
-function ralphSplitterDrag(event) {
-  if (!ralphSplitterActive) return;
-  const layout = document.getElementById('harness-ralph-layout');
-  const logPane = document.getElementById('harness-ralph-log-pane');
-  if (!layout || !logPane) return;
-
-  const deltaY = event.clientY - ralphSplitterStartY;
-  const containerHeight = layout.offsetHeight;
-  const currentHeight = logPane.offsetHeight;
-  const newHeight = currentHeight + deltaY;
-
-  // Minimum 60px for log pane, maximum 80% of container
-  const minHeight = 60;
-  const maxHeight = containerHeight * 0.8;
-  const constrainedHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
-
-  logPane.style.height = constrainedHeight + 'px';
-  ralphSplitterStartY = event.clientY;
-}
 
 function endRalphSplitterDrag(event) {
   ralphSplitterActive = false;
@@ -7655,56 +6456,10 @@ let harnessMode = "ensemble";
 let harnessOrchTargets = []; // targets the master can use: [{id, key, label}]
 let harnessOrchTargetSeq = 0;
 
-function setHarnessMode(mode) {
-  // Orchestrated + Agentic modes removed in v3 (their endpoints are gone).
-  // Coerce any historical 'orchestrated' / 'agentic' state to 'ensemble'.
-  if (mode === 'orchestrated' || mode === 'agentic') mode = 'ensemble';
-  harnessMode = mode;
-
-  const ensBtn   = document.getElementById('harness-mode-ensemble');
-  const ralphBtn = document.getElementById('harness-mode-ralph');
-  for (const [btn, active] of [[ensBtn, mode === 'ensemble'],
-                                [ralphBtn, mode === 'ralph']]) {
-    if (!btn) continue;
-    btn.style.background = active ? 'var(--lavender)' : 'var(--bg-input)';
-    btn.style.color      = active ? '#000'            : 'var(--fg-dim)';
-  }
-  const ensCtl   = document.getElementById('harness-ensemble-controls');
-  const ralphCtl = document.getElementById('harness-ralph-controls');
-  if (ensCtl)   ensCtl.style.display   = mode === 'ensemble' ? 'flex' : 'none';
-  if (ralphCtl) ralphCtl.style.display = mode === 'ralph'    ? 'flex' : 'none';
-  const ralphCfg = document.getElementById('harness-ralph-config');
-  if (ralphCfg) ralphCfg.style.display = mode === 'ralph' ? 'flex' : 'none';
-  if (mode === 'ensemble') harnessEnsemblePopulateModels();
-  document.activeElement?.blur();
-}
 // ── Orchestrated target pool ──────────────────────────────────────────────────
 
-function harnessOrchAddTarget() {
-  const sel = document.getElementById('harness-orch-add-select');
-  const val = sel.value;
-  if (!val) return;
-  const label = val === 'operator' ? 'operator' : val.startsWith('model:') ? val.slice(6) : val;
-  harnessOrchTargets.push({ id: harnessOrchTargetSeq++, key: val, label });
-  sel.value = '';
-  renderOrchTargetChips();
-}
 
-function harnessOrchRemoveTarget(id) {
-  harnessOrchTargets = harnessOrchTargets.filter(t => t.id !== id);
-  renderOrchTargetChips();
-}
 
-function renderOrchTargetChips() {
-  const el = document.getElementById('harness-orch-target-chips');
-  if (!el) return;
-  el.innerHTML = harnessOrchTargets.map(t =>
-    `<div class="harness-target-chip" style="font-size:11px;padding:1px 6px">
-      <span>${esc(t.label)}</span>
-      <span class="remove-chip" onclick="harnessOrchRemoveTarget(${t.id})">✕</span>
-    </div>`
-  ).join('') || '<span style="color:var(--fg-muted);font-size:11px">No targets set — master will use all available models.</span>';
-}
 
 // ── Orchestrated run ──────────────────────────────────────────────────────────
 
@@ -7772,203 +6527,13 @@ function toggleRoundGroup(round) {
 
 let _ralphAbort = null;
 
-function harnessRalphPopulateModel() {
-  const sel = document.getElementById('harness-ralph-model');
-  if (!sel || sel.options.length > 1) return;
-  (window._cachedModels || []).forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.id; opt.textContent = m.id;
-    sel.appendChild(opt);
-  });
-}
 
-function harnessRalphClear() {
-  if (_ralphAbort) { _ralphAbort.abort(); _ralphAbort = null; }
-  const log = document.getElementById('harness-ralph-log-body');
-  if (log) log.innerHTML = '<span style="color:var(--fg-muted)">Configure spec and test command, then run.</span>';
-  const grid = document.getElementById('harness-ralph-grid');
-  if (grid) grid.innerHTML = '<div class="empty">Iteration agent output will appear here.</div>';
-  const runBtn  = document.getElementById('harness-ralph-run-btn');
-  const stopBtn = document.getElementById('harness-ralph-stop-btn');
-  if (runBtn)  { runBtn.disabled = false; runBtn.style.display = ''; }
-  if (stopBtn) stopBtn.style.display = 'none';
-}
 
-function harnessRalphStop() {
-  if (_ralphAbort) { _ralphAbort.abort(); _ralphAbort = null; }
-  const runBtn  = document.getElementById('harness-ralph-run-btn');
-  const stopBtn = document.getElementById('harness-ralph-stop-btn');
-  if (runBtn)  { runBtn.disabled = false; runBtn.style.display = ''; }
-  if (stopBtn) stopBtn.style.display = 'none';
-  const log = document.getElementById('harness-ralph-log-body');
-  if (log) log.innerHTML += `<div style="color:var(--yellow);margin-top:4px">◼ Stopped by user.</div>`;
-}
 
 // ── Agentic mode — sequential multi-turn operator run ─────────────────────────
 
 let _agenticAbort = null;
 
-async function harnessRalphRun() {
-  const specPath   = (document.getElementById('harness-ralph-spec-path')?.value || '').trim();
-  const specInline = (document.getElementById('harness-ralph-spec-inline')?.value || '').trim();
-  const testCmd    = (document.getElementById('harness-ralph-test-cmd')?.value || '').trim();
-  const workDir    = (document.getElementById('harness-ralph-work-dir')?.value || '').trim();
-  const maxIter    = parseInt(document.getElementById('harness-ralph-max-iter')?.value || '20');
-  const model      = document.getElementById('harness-ralph-model')?.value || null;
-
-  if (!specPath && !specInline) {
-    alert('Set a PROMPT.md path or paste a spec in the textarea.');
-    return;
-  }
-
-  const logBody = document.getElementById('harness-ralph-log-body');
-  const grid    = document.getElementById('harness-ralph-grid');
-  const runBtn  = document.getElementById('harness-ralph-run-btn');
-  const stopBtn = document.getElementById('harness-ralph-stop-btn');
-
-  logBody.innerHTML = `<div style="color:var(--green);font-size:11px">⚡ Ralph starting — max ${maxIter} iterations</div>
-    <div style="font-size:11px;color:var(--fg-muted)">Spec: ${esc(specPath || '(inline)')}  ·  Test: ${esc(testCmd || '(none)')}</div>`;
-  grid.innerHTML = '';
-  runBtn.disabled = true; runBtn.style.display = 'none';
-  stopBtn.style.display = '';
-
-  _ralphAbort = new AbortController();
-
-  // Per-iteration pane helpers
-  const iterPanes = {};
-  function getOrCreateIterPane(iter) {
-    if (iterPanes[iter]) return iterPanes[iter];
-    const el = document.createElement('div');
-    el.className = 'harness-pane';
-    el.style.cssText = 'min-width:300px;flex:1 1 300px';
-    el.innerHTML = `
-      <div class="harness-pane-header">
-        <span class="target-label">Iteration ${iter}</span>
-        <span class="harness-status pending" id="ralph-pane-status-${iter}">⟳ running…</span>
-      </div>
-      <div class="harness-pane-output thinking" id="ralph-pane-out-${iter}">waiting…</div>`;
-    grid.appendChild(el);
-    iterPanes[iter] = el;
-    return el;
-  }
-
-  function appendLog(html) {
-    logBody.innerHTML += html;
-    logBody.scrollTop = logBody.scrollHeight;
-  }
-
-  try {
-    const resp = await fetch(BASE + '/api/v1/harness/ralph', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        spec_path:      specPath || null,
-        spec_inline:    specInline || null,
-        test_cmd:       testCmd,
-        working_dir:    workDir || null,
-        max_iterations: maxIter,
-        model:          model || null,
-      }),
-      signal: _ralphAbort.signal,
-    });
-
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      appendLog(`<div class="error-box">Error: ${esc(err.error || resp.statusText)}</div>`);
-      runBtn.disabled = false; runBtn.style.display = ''; stopBtn.style.display = 'none';
-      return;
-    }
-
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = '';
-    let currentIter = 0;
-    let currentOutput = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop();
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const raw = line.slice(6).trim();
-        if (raw === '[DONE]') break;
-        let ev;
-        try { ev = JSON.parse(raw); } catch { continue; }
-
-        switch (ev.type) {
-          case 'iteration_start':
-            currentIter = ev.iteration;
-            currentOutput = '';
-            getOrCreateIterPane(currentIter);
-            appendLog(`<div style="margin-top:6px;color:var(--green);font-size:11px">▶ Iteration ${ev.iteration} / ${maxIter}</div>`);
-            break;
-
-          case 'agent_chunk': {
-            currentOutput += ev.chunk;
-            const outEl = document.getElementById(`ralph-pane-out-${ev.iteration}`);
-            if (outEl) { outEl.className = 'harness-pane-output thinking'; outEl.innerHTML = _formatOutput(currentOutput); outEl.scrollTop = outEl.scrollHeight; }
-            break;
-          }
-
-          case 'agent_done': {
-            const outEl = document.getElementById(`ralph-pane-out-${ev.iteration}`);
-            const stEl  = document.getElementById(`ralph-pane-status-${ev.iteration}`);
-            if (outEl) { outEl.className = 'harness-pane-output'; outEl.innerHTML = _formatOutput(ev.response); }
-            if (stEl)  { stEl.className = 'harness-status'; stEl.textContent = `${ev.latency_ms}ms`; }
-            break;
-          }
-
-          case 'test_run':
-            appendLog(`<div style="font-size:11px;color:var(--fg-muted);margin-left:8px">  → running tests…</div>`);
-            break;
-
-          case 'test_result': {
-            const icon  = ev.passed ? '✓' : '✗';
-            const color = ev.passed ? 'var(--green)' : 'var(--red)';
-            const label = ev.passed ? 'PASS' : `FAIL (exit ${ev.exit_code})`;
-            appendLog(`<div style="margin-left:8px;color:${color};font-size:11px">${icon} Tests: ${label}</div>`);
-            if (!ev.passed && (ev.stdout || ev.stderr)) {
-              const out = (ev.stderr || ev.stdout || '').slice(-400);
-              appendLog(`<div style="margin:2px 8px 4px;padding:4px 6px;background:var(--bg-deep);font-size:10px;font-family:monospace;white-space:pre-wrap;color:var(--red)">${esc(out)}</div>`);
-            }
-            const stEl = document.getElementById(`ralph-pane-status-${ev.iteration}`);
-            if (stEl) { stEl.className = `harness-status ${ev.passed ? 'done' : 'error'}`; stEl.textContent = ev.passed ? '✓ pass' : '✗ fail'; }
-            break;
-          }
-
-          case 'injected':
-            appendLog(`<div style="padding:2px 8px;border-left:2px solid var(--green);font-size:11px;color:var(--green)">↗ Sign applied: ${esc(ev.message)}</div>`);
-            break;
-
-          case 'finish': {
-            const passedColor = ev.passed ? 'var(--green)' : 'var(--yellow)';
-            const passedLabel = ev.passed ? '✓ Tests passed' : '✗ Cap reached without passing';
-            appendLog(`<div style="margin-top:10px;border-top:2px solid ${passedColor};padding-top:8px;color:${passedColor};font-size:11px">${passedLabel} · ${ev.iterations} iteration${ev.iterations !== 1 ? 's' : ''}</div>`);
-            runBtn.disabled = false; runBtn.style.display = ''; stopBtn.style.display = 'none';
-            _ralphAbort = null;
-            break;
-          }
-
-          case 'error':
-            appendLog(`<div class="error-box" style="margin-top:6px">${esc(ev.message)}</div>`);
-            runBtn.disabled = false; runBtn.style.display = ''; stopBtn.style.display = 'none';
-            _ralphAbort = null;
-            break;
-        }
-      }
-    }
-  } catch(e) {
-    if (e.name !== 'AbortError') {
-      appendLog(`<div class="error-box">${esc(e.message)}</div>`);
-    }
-    runBtn.disabled = false; runBtn.style.display = ''; stopBtn.style.display = 'none';
-    _ralphAbort = null;
-  }
-}
 
 // ── 7d. Wiggam Planner ────────────────────────────────────────────────────────
 
@@ -7977,362 +6542,17 @@ let _wiggamOfficerSeq = 0;
 let _wiggamApprovedSpec = null;   // {spec_md, test_cmd} set when plan approved
 let _wiggamAbort = null;
 
-function wiggamAddOfficer() {
-  const sel = document.getElementById('harness-wiggam-add-officer');
-  const model = sel.value;
-  if (!model) return;
-  const id = _wiggamOfficerSeq++;
-  _wiggamOfficers.push({ id, model });
-  sel.value = '';
-  renderWiggamOfficers();
-}
 
-function wiggamRemoveOfficer(id) {
-  _wiggamOfficers = _wiggamOfficers.filter(o => o.id !== id);
-  renderWiggamOfficers();
-}
 
-function renderWiggamOfficers() {
-  const el = document.getElementById('harness-wiggam-officer-list');
-  if (!el) return;
-  if (!_wiggamOfficers.length) {
-    el.innerHTML = '<span style="font-size:10px;color:var(--fg-muted)">(uses Wiggam model if none selected)</span>';
-    return;
-  }
-  el.innerHTML = _wiggamOfficers.map(o =>
-    `<div class="harness-target-chip" style="font-size:10px;padding:1px 5px">
-      <span>${esc(o.model)}</span>
-      <span class="remove-chip" onclick="wiggamRemoveOfficer(${o.id})">✕</span>
-    </div>`
-  ).join('');
-}
 
-async function harnessWiggamPlan() {
-  // Goal comes from the inline spec textarea or a description
-  const goal = (document.getElementById('harness-ralph-spec-inline')?.value || '').trim()
-    || (document.getElementById('harness-ralph-spec-path')?.value || '').trim();
-  if (!goal) {
-    alert('Paste your goal / high-level description in the spec textarea first.');
-    return;
-  }
 
-  const wiggamModel = document.getElementById('harness-ralph-model')?.value || null;
-  const officerModels = _wiggamOfficers.map(o => o.model);
-  const maxRounds = parseInt(document.getElementById('harness-wiggam-rounds')?.value || '3');
-
-  const panel = document.getElementById('harness-wiggam-panel');
-  const body  = document.getElementById('harness-wiggam-body');
-  const status = document.getElementById('harness-wiggam-status');
-  const approveBtn = document.getElementById('harness-wiggam-approve-btn');
-  const planBtn = document.getElementById('harness-wiggam-btn');
-
-  panel.style.display = 'flex';
-  panel.style.flexDirection = 'column';
-  body.innerHTML = '';
-  approveBtn.style.display = 'none';
-  status.textContent = 'Wiggam is thinking…';
-  planBtn.disabled = true;
-  _wiggamApprovedSpec = null;
-
-  let lastFinish = null;
-
-  function appendW(html) {
-    body.innerHTML += html;
-    body.scrollTop = body.scrollHeight;
-  }
-
-  _wiggamAbort = new AbortController();
-
-  try {
-    const resp = await fetch(BASE + '/api/v1/harness/wiggam', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        goal,
-        wiggam_model:   wiggamModel || null,
-        officer_models: officerModels.length ? officerModels : null,
-        max_rounds:     maxRounds,
-      }),
-      signal: _wiggamAbort.signal,
-    });
-
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      appendW(`<div class="error-box">Error: ${esc(err.error || resp.statusText)}</div>`);
-      planBtn.disabled = false;
-      return;
-    }
-
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop();
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const raw = line.slice(6).trim();
-        if (raw === '[DONE]') break;
-        let ev;
-        try { ev = JSON.parse(raw); } catch { continue; }
-
-        switch (ev.type) {
-          case 'start':
-            appendW(`<div style="color:var(--yellow);font-size:11px;margin-bottom:6px">
-              🚔 Wiggam: <em>${esc(wiggamModel || 'default')}</em>
-              · Officers: ${(officerModels.length ? officerModels : ['same']).map(esc).join(', ')}
-              · Max rounds: ${maxRounds}
-            </div>`);
-            break;
-
-          case 'wiggam_plan': {
-            const taskRows = (ev.tasks || []).map(t =>
-              `<tr>
-                <td style="padding:2px 6px;color:var(--lavender);white-space:nowrap">${esc(t.task_id)}</td>
-                <td style="padding:2px 6px">${esc(t.title)}</td>
-                <td style="padding:2px 6px;color:var(--fg-muted);font-size:10px">${esc(t.acceptance_criterion||'')}</td>
-              </tr>`).join('');
-            appendW(`
-              <div style="margin-top:8px;border-top:1px solid var(--bg-border);padding-top:6px">
-                <span style="color:var(--yellow);font-size:10px">ROUND ${ev.round} — WIGGAM'S PLAN</span>
-                <div style="font-size:11px;color:var(--fg-dim);margin:3px 0;font-style:italic">${esc(ev.reasoning||'')}</div>
-                <table style="width:100%;border-collapse:collapse;font-size:11px;margin:4px 0">${taskRows}</table>
-                <div style="font-size:10px;color:var(--fg-muted)">Test cmd: <code>${esc(ev.test_cmd||'(none)')}</code></div>
-              </div>`);
-            status.textContent = `Round ${ev.round} — officers deliberating…`;
-            break;
-          }
-
-          case 'officer_vote': {
-            const failing = (ev.votes||[]).filter(v => !v.simple_enough);
-            const icon = failing.length === 0 ? '✓' : '✗';
-            const color = failing.length === 0 ? 'var(--green)' : 'var(--red)';
-            appendW(`
-              <div style="margin:3px 0 3px 12px;font-size:11px">
-                <span style="color:${color}">${icon}</span>
-                <span style="color:var(--fg-muted)">${esc(ev.officer_model)}: </span>
-                <em style="font-size:10px">${esc(ev.overall_feedback||'')}</em>
-                ${failing.map(v => `<div style="margin-left:12px;font-size:10px;color:var(--red)">✗ ${esc(v.task_id)}: ${esc(v.reason||'')}</div>`).join('')}
-              </div>`);
-            break;
-          }
-
-          case 'consensus': {
-            const color = ev.passed ? 'var(--green)' : 'var(--yellow)';
-            const label = ev.passed
-              ? `✓ Consensus — all ${ev.task_count} tasks approved`
-              : `✗ No consensus — ${ev.failing_tasks.length} task(s) need breaking down: ${ev.failing_tasks.join(', ')}`;
-            appendW(`<div style="margin:4px 0;padding:3px 8px;border-left:3px solid ${color};font-size:11px;color:${color}">${label}</div>`);
-            break;
-          }
-
-          case 'finish':
-            lastFinish = ev;
-            const finColor = ev.consensus ? 'var(--green)' : 'var(--yellow)';
-            const finLabel = ev.consensus
-              ? `✓ Plan agreed in ${ev.rounds} round(s)`
-              : `⚠ Round cap — plan is best effort (${ev.rounds} rounds)`;
-            appendW(`
-              <div style="margin-top:10px;border-top:2px solid ${finColor};padding-top:8px">
-                <span style="color:${finColor};font-size:11px">${finLabel}</span>
-                <div style="margin-top:6px;padding:6px 8px;background:var(--bg-panel);border-radius:3px;font-size:11px;font-family:monospace;white-space:pre-wrap;max-height:180px;overflow-y:auto">${esc(ev.spec_md||'')}</div>
-              </div>`);
-            status.textContent = ev.consensus ? '✓ Done' : '⚠ Capped';
-            _wiggamApprovedSpec = { spec_md: ev.spec_md, test_cmd: ev.test_cmd };
-            approveBtn.style.display = '';
-            break;
-
-          case 'error':
-            appendW(`<div class="error-box" style="margin-top:6px">${esc(ev.message)}</div>`);
-            break;
-        }
-      }
-    }
-  } catch(e) {
-    if (e.name !== 'AbortError') appendW(`<div class="error-box">${esc(e.message)}</div>`);
-  } finally {
-    planBtn.disabled = false;
-    _wiggamAbort = null;
-  }
-}
-
-function wiggamApproveAndRun() {
-  if (!_wiggamApprovedSpec) return;
-  // Populate the Ralph inline spec + test command, then run
-  const specEl = document.getElementById('harness-ralph-spec-inline');
-  const testEl = document.getElementById('harness-ralph-test-cmd');
-  if (specEl) specEl.value = _wiggamApprovedSpec.spec_md;
-  if (testEl && _wiggamApprovedSpec.test_cmd) testEl.value = _wiggamApprovedSpec.test_cmd;
-  // Hide planning panel
-  document.getElementById('harness-wiggam-panel').style.display = 'none';
-  // Fire Ralph
-  harnessRalphRun();
-}
 
 // ── 7b. Ensemble Voting (Harness mode) ────────────────────────────────────────
 let ensembleSelectedModels = new Set();
 let _ensState = null; // persists round 1 results for challenge round
 
-function harnessEnsemblePopulateModels() {
-  const listEl = document.getElementById('harness-ensemble-model-list');
-  const judgeEl = document.getElementById('harness-ensemble-judge');
-  if (!listEl || !judgeEl) return;
 
-  listEl.innerHTML = '';
-  judgeEl.innerHTML = '<option value="">— use operator default —</option>';
 
-  (allModels || []).forEach(m => {
-    // Checkbox chip
-    const chip = document.createElement('label');
-    chip.style.cssText = 'display:flex;align-items:center;gap:4px;padding:2px 8px;border:1px solid var(--bg-border);border-radius:3px;cursor:pointer;font-size:11px;background:var(--bg-input);white-space:nowrap';
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.value = m.id;
-    cb.checked = ensembleSelectedModels.has(m.id);
-    cb.onchange = () => {
-      if (cb.checked) ensembleSelectedModels.add(m.id);
-      else ensembleSelectedModels.delete(m.id);
-      chip.style.borderColor = cb.checked ? 'var(--yellow)' : 'var(--bg-border)';
-    };
-    if (cb.checked) chip.style.borderColor = 'var(--yellow)';
-    chip.appendChild(cb);
-    chip.appendChild(document.createTextNode(' ' + m.id));
-    listEl.appendChild(chip);
-
-    // Judge selector
-    const opt = document.createElement('option');
-    opt.value = m.id;
-    opt.textContent = m.id;
-    judgeEl.appendChild(opt);
-  });
-}
-
-async function harnessEnsembleRun() {
-  const prompt = document.getElementById('harness-prompt').value.trim();
-  if (!prompt) { alert('Enter a prompt first'); return; }
-  if (ensembleSelectedModels.size < 2) { alert('Select at least 2 models'); return; }
-
-  const judgeModel = document.getElementById('harness-ensemble-judge').value;
-  const grid = document.getElementById('harness-ensemble-grid');
-  if (!grid) return;
-
-  const models = [...ensembleSelectedModels];
-  grid.innerHTML = `<div style="padding:12px;color:var(--fg-muted);font-size:12px">⏳ Querying ${models.length} models…</div>`;
-
-  const runBtn = document.getElementById('harness-ensemble-run-btn');
-  if (runBtn) { runBtn.disabled = true; runBtn.textContent = '⏳ Running…'; }
-
-  // Create placeholder cards for each model
-  const cards = {};
-  const cardHasTokens = {};
-  grid.innerHTML = '';
-  models.forEach(model => {
-    const card = document.createElement('div');
-    card.style.cssText = 'flex:1;min-width:260px;max-width:460px;border:1px solid var(--bg-border);border-radius:3px;padding:10px;background:var(--bg-panel)';
-    card.innerHTML = `<div style="font-size:10px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${esc(model)}</div>
-      <div class="card-body" style="font-size:12px;line-height:1.6;color:var(--fg-dim)">waiting…</div>`;
-    grid.appendChild(card);
-    cards[model] = card;
-  });
-
-  // Winner banner placeholder
-  const banner = document.createElement('div');
-  banner.id = 'ens-result-banner';
-  banner.style.cssText = 'width:100%;padding:10px 14px;border:1px solid var(--bg-border);border-radius:3px;background:var(--bg-deep);font-size:12px';
-  banner.innerHTML = '<span style="color:var(--fg-muted)">Waiting for judge…</span>';
-  grid.insertBefore(banner, grid.firstChild);
-
-  try {
-    const resp = await fetch('/api/v1/ensemble', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ models, judge_model: judgeModel || undefined, prompt }),
-    });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop();
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        try {
-          const ev = JSON.parse(line.slice(6));
-          if (ev.type === 'token' && cards[ev.model]) {
-            const body = cards[ev.model].querySelector('.card-body');
-            if (!cardHasTokens[ev.model]) {
-              body.textContent = '';
-              body.style.color = 'var(--fg)';
-              cardHasTokens[ev.model] = true;
-            }
-            body.textContent += ev.token;
-          } else if (ev.type === 'result' && cards[ev.model]) {
-            const body = cards[ev.model].querySelector('.card-body');
-            if (!cardHasTokens[ev.model]) {
-              body.style.color = 'var(--fg)';
-              body.textContent = ev.response;
-            }
-            cards[ev.model].querySelector('div').style.color = 'var(--lavender)';
-          } else if (ev.type === 'judge_token') {
-            // Show judge typing in the banner
-            if (!banner.dataset.judging) {
-              banner.innerHTML = '<span style="color:var(--yellow);font-size:10px;text-transform:uppercase;letter-spacing:1px">⚖ Judging… </span><span id="ens-judge-text" style="font-size:11px;color:var(--fg-dim)"></span>';
-              banner.dataset.judging = '1';
-            }
-            const judgeText = banner.querySelector('#ens-judge-text');
-            if (judgeText) judgeText.textContent += ev.token;
-          } else if (ev.type === 'evaluate') {
-            // Capture round 1 state so challenge round can use it
-            _ensState = { prompt, judgeModel: judgeModel || '', responses: ev.all_responses, cards, r1Winner: '' };
-          } else if (ev.type === 'finish') {
-            delete banner.dataset.judging;
-            if (_ensState) _ensState.r1Winner = ev.winner;
-            banner.innerHTML = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-                <span style="color:var(--green);font-weight:bold">🏆 Winner: ${esc(ev.winner)}</span>
-                <button onclick="harnessEnsembleChallenge()" id="ens-challenge-btn"
-                  style="padding:1px 10px;font-size:10px;background:var(--yellow);color:#000;border:none;border-radius:2px;cursor:pointer"
-                  title="Ask all models to verify their answer — reveals which models self-correct">⚡ Challenge</button>
-              </div>
-              <div style="font-size:11px;color:var(--fg-dim);white-space:pre-wrap">${esc(ev.verdict || '')}</div>`;
-            if (cards[ev.winner]) {
-              cards[ev.winner].style.borderColor = 'var(--green)';
-              cards[ev.winner].style.borderWidth = '2px';
-            }
-            // Render markdown in all card bodies now that responses are complete
-            Object.values(cards).forEach(card => {
-              const body = card.querySelector('.card-body');
-              if (body && body.textContent) body.innerHTML = _formatOutput(body.textContent);
-            });
-          } else if (ev.type === 'error') {
-            banner.innerHTML = `<div class="error-box">Error: ${esc(ev.message)}</div>`;
-          }
-        } catch {}
-      }
-    }
-  } catch (e) {
-    banner.innerHTML = `<div class="error-box">Error: ${esc(e.message)}</div>`;
-  } finally {
-    if (runBtn) { runBtn.disabled = false; runBtn.textContent = '▶ Run Ensemble'; }
-  }
-}
-
-function harnessEnsembleClear() {
-  ensembleSelectedModels.clear();
-  const grid = document.getElementById('harness-ensemble-grid');
-  if (grid) grid.innerHTML = '<div class="empty">Select models, enter a prompt, and run ensemble.</div>';
-  harnessEnsemblePopulateModels();
-}
 
 // ── 7c. Question Bank ─────────────────────────────────────────────────────────
 let _qbankCat  = 'all';
@@ -8430,105 +6650,6 @@ const _ENS_CHALLENGE_MSG = 'Verify your answer. Walk through your reasoning step
 
 function _ensModelId(model) { return model.replace(/[^a-zA-Z0-9]/g, '_'); }
 
-async function harnessEnsembleChallenge() {
-  if (!_ensState) return;
-  const { prompt, judgeModel, responses, cards, r1Winner } = _ensState;
-
-  const btn = document.getElementById('ens-challenge-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Challenging…'; }
-
-  const banner = document.getElementById('ens-result-banner');
-
-  // Append challenge section to each model card
-  responses.forEach(({ model }) => {
-    const card = cards[model];
-    if (!card) return;
-    const sec = document.createElement('div');
-    sec.style.cssText = 'margin-top:10px;padding-top:8px;border-top:1px dashed var(--bg-border)';
-    sec.innerHTML = `<div style="font-size:9px;color:var(--yellow);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">⚡ challenge round</div>` +
-      `<div id="ens-r2-${_ensModelId(model)}" style="font-size:12px;line-height:1.6;color:var(--fg-dim)">…</div>`;
-    card.appendChild(sec);
-  });
-
-  if (banner) banner.innerHTML = '<span style="color:var(--yellow);font-size:11px">⚡ Challenge round running…</span>';
-
-  // Stream all challenge responses in parallel
-  let round2;
-  try {
-    round2 = await Promise.all(
-      responses.map(({ model, response }) => _ensChallengeModel(model, prompt, response))
-    );
-  } catch (e) {
-    if (banner) banner.innerHTML = `<div class="error-box">Challenge failed: ${esc(e.message)}</div>`;
-    if (btn) { btn.disabled = false; btn.textContent = '⚡ Challenge'; }
-    return;
-  }
-
-  // Stream judge verdict for round 2
-  if (banner) banner.innerHTML =
-    '<span style="color:var(--yellow);font-size:10px;text-transform:uppercase;letter-spacing:1px">⚖ Judging… </span>' +
-    '<span id="ens-r2-judge-text" style="font-size:11px;color:var(--fg-dim)"></span>';
-
-  const modelsList   = round2.map(r => r.model).join(', ');
-  const respText     = round2.map(r => `[${r.model}]:\n${r.response}`).join('\n\n');
-  const judgeContent = `Original question: ${prompt}\n\nChallenge round — each model was asked to verify its answer:\n${respText}\n\nWhich model gave the best response in this challenge round? Choose from: ${modelsList}`;
-
-  let rawVerdict = '';
-  try {
-    const jResp = await fetch('/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer beigebox' },
-      body: JSON.stringify({
-        model: judgeModel || '',
-        messages: [
-          { role: 'system', content: 'You are an expert evaluator. Respond ONLY with valid JSON: {"winner":"<model_name>","reasoning":"<brief explanation>"}' },
-          { role: 'user',   content: judgeContent },
-        ],
-        temperature: 0.2, stream: true, keep_alive: -1,
-      }),
-    });
-    if (jResp.ok) {
-      const reader = jResp.body.getReader();
-      const dec = new TextDecoder();
-      let buf = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split('\n'); buf = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const d = line.slice(6).trim();
-          if (d === '[DONE]') break;
-          try {
-            const delta = JSON.parse(d).choices?.[0]?.delta?.content || '';
-            if (delta) {
-              rawVerdict += delta;
-              const jt = document.getElementById('ens-r2-judge-text');
-              if (jt) jt.textContent += delta;
-            }
-          } catch {}
-        }
-      }
-    }
-  } catch {}
-
-  let verdict = { winner: round2[0]?.model || '', reasoning: '' };
-  try { const m = rawVerdict.match(/\{[\s\S]*\}/); if (m) verdict = JSON.parse(m[0]); } catch {}
-
-  const sameWinner = verdict.winner === r1Winner;
-  if (banner) banner.innerHTML =
-    `<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-       <span style="color:var(--green)">R1: <b>${esc(r1Winner)}</b></span>
-       <span style="color:var(--fg-muted)">→</span>
-       <span style="color:${sameWinner ? 'var(--green)' : 'var(--yellow)'}">R2: <b>${esc(verdict.winner)}</b></span>
-       ${sameWinner ? '<span style="font-size:10px;color:var(--fg-muted)">consistent</span>' : '<span style="font-size:10px;color:var(--yellow)">changed</span>'}
-     </div>
-     <div style="font-size:11px;color:var(--fg-dim);white-space:pre-wrap">${esc(verdict.reasoning)}</div>`;
-
-  // Outline the R2 winner card in yellow
-  if (cards[verdict.winner]) cards[verdict.winner].style.outline = '2px solid var(--yellow)';
-}
 
 async function _ensChallengeModel(model, prompt, originalResponse) {
   const outEl = document.getElementById(`ens-r2-${_ensModelId(model)}`);
@@ -9030,10 +7151,7 @@ async function saveConfig() {
       setViToggleState(payload.web_ui_vi_mode);
       if (payload.web_ui_vi_mode) injectViMode(); else removeViMode?.();
     }
-    if ('voice_enabled' in payload) {
-      if (payload.voice_enabled) enableVoiceUI(payload.voice_hotkey || '');
-      else { const btn = document.getElementById('mic-btn'); if (btn) btn.style.display = 'none'; }
-    }
+    // (voice_enabled handler removed — voice subtab deleted in v3 UI cleanup)
     // Re-fetch config to pick up TTS changes live
     try { const fresh = await api('/api/v1/config'); updateTTSConfig(fresh); } catch {}
 
@@ -9881,7 +7999,6 @@ try {
 initChatPanes();
 
 // Bootstrap vi mode and palette from runtime config in a single fetch
-loadZHelp();
 (async function initWebUi() {
   try {
     const d = await api('/api/v1/config');
@@ -9895,10 +8012,7 @@ loadZHelp();
     const palette = d.web_ui?.palette || 'default';
     if (palette !== 'default') applyPalette(palette);
 
-    // Voice PTT
-    if (d.web_ui?.voice_enabled) {
-      enableVoiceUI(d.web_ui?.voice_hotkey || '');
-    }
+    // (Voice PTT bootstrap removed — voice subtab deleted in v3 UI cleanup)
 
     // TTS autoplay config
     updateTTSConfig(d);
@@ -9919,36 +8033,6 @@ loadZHelp();
 
 // ── Discovery tab ─────────────────────────────────────────────────────────────
 
-async function loadDiscoveryOpportunities() {
-  const sel = document.getElementById('disc-opportunity-select');
-  if (!sel || sel.dataset.loaded) return;
-  try {
-    const data = await api('/api/v1/discovery/opportunities');
-    sel.innerHTML = data.opportunities.map(o =>
-      `<option value="${o.opportunity_id}">${o.opportunity_id} — ${o.expected_impact}</option>`
-    ).join('');
-    sel.dataset.loaded = '1';
-  } catch (e) {
-    sel.innerHTML = '<option value="">Failed to load opportunities</option>';
-  }
-
-  // Populate candidate model dropdown from /v1/models
-  const msel = document.getElementById('disc-candidate-model');
-  if (msel && !msel.dataset.loaded) {
-    try {
-      const mdata = await api('/v1/models');
-      const models = (mdata.data || [])
-        .map(m => m.id)
-        .filter(id => !id.includes('embed') && !id.includes('nomic'));
-      msel.innerHTML = models.map(id =>
-        `<option value="${id}"${id.includes('llama3.2:3b') ? ' selected' : ''}>${id}</option>`
-      ).join('');
-      msel.dataset.loaded = '1';
-    } catch (e) {
-      msel.innerHTML = '<option value="">default</option>';
-    }
-  }
-}
 
 async function runDiscoveryExperiment() {
   const oppId = document.getElementById('disc-opportunity-select').value;

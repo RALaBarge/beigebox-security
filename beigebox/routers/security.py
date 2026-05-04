@@ -96,7 +96,9 @@ async def security_audit(hours: int = 24, severity: str = "", tool: str = "", li
     """Queryable audit log with filters: severity, tool, hours."""
     _st = get_state()
     if not _st.audit_logger:
-        return JSONResponse({"error": "Audit logger not initialized"}, status_code=503)
+        # Optional feature: not configured. Return empty result so the UI
+        # renders "no data" instead of a console error.
+        return JSONResponse({"enabled": False, "stats": {}, "entries": []})
     stats = _st.audit_logger.get_stats(hours=hours)
     entries = _st.audit_logger.search_denials(
         severity=severity or None,
@@ -104,7 +106,7 @@ async def security_audit(hours: int = 24, severity: str = "", tool: str = "", li
         limit=limit,
         hours=hours,
     )
-    return JSONResponse({"stats": stats, "entries": entries})
+    return JSONResponse({"enabled": True, "stats": stats, "entries": entries})
 
 
 @router.get("/api/v1/security/audit/patterns")
@@ -112,9 +114,9 @@ async def security_patterns(hours: int = 24):
     """Detect suspicious patterns (many denials, rapid calls, etc.)."""
     _st = get_state()
     if not _st.audit_logger:
-        return JSONResponse({"error": "Audit logger not initialized"}, status_code=503)
+        return JSONResponse({"enabled": False, "patterns": []})
     patterns = _st.audit_logger.search_suspicious_patterns(hours=hours, threshold=1)
-    return JSONResponse({"patterns": patterns})
+    return JSONResponse({"enabled": True, "patterns": patterns})
 
 
 @router.get("/api/v1/security/injection/stats")
@@ -122,9 +124,9 @@ async def injection_stats():
     """Injection guard quarantine statistics."""
     _st = get_state()
     if not _st.injection_guard:
-        return JSONResponse({"enabled": False, "message": "Injection guard not initialized"}, status_code=503)
+        return JSONResponse({"enabled": False, "message": "Injection guard not initialized"})
     stats = _st.injection_guard.get_quarantine_stats()
-    return JSONResponse(stats)
+    return JSONResponse({"enabled": True, **stats})
 
 
 @router.get("/api/v1/security/rag/quarantine")
@@ -132,10 +134,10 @@ async def rag_quarantine():
     """RAG scanner quarantine queue with confidence breakdown."""
     _st = get_state()
     if not _st.rag_scanner:
-        return JSONResponse({"enabled": False, "message": "RAG scanner not initialized"}, status_code=503)
+        return JSONResponse({"enabled": False, "message": "RAG scanner not initialized", "stats": {}, "entries": []})
     stats = _st.rag_scanner.get_quarantine_stats()
     contents = _st.rag_scanner.get_quarantine_contents()
-    return JSONResponse({"stats": stats, "entries": contents})
+    return JSONResponse({"enabled": True, "stats": stats, "entries": contents})
 
 
 @router.get("/api/v1/security/extraction/sessions")
@@ -143,12 +145,12 @@ async def extraction_sessions():
     """All active extraction detector sessions with risk levels."""
     _st = get_state()
     if not _st.extraction_detector:
-        return JSONResponse({"enabled": False, "message": "Extraction detector not initialized"}, status_code=503)
+        return JSONResponse({"enabled": False, "message": "Extraction detector not initialized", "sessions": []})
     sessions = []
     for session_id, metrics in _st.extraction_detector._sessions.items():
         analysis = _st.extraction_detector.analyze_pattern(session_id)
         sessions.append(analysis)
-    return JSONResponse({"sessions": sessions})
+    return JSONResponse({"enabled": True, "sessions": sessions})
 
 
 @router.get("/api/v1/security/honeypots")
@@ -156,12 +158,12 @@ async def honeypots_list():
     """Honeypot trap definitions and status."""
     _st = get_state()
     if not _st.honeypot_manager:
-        return JSONResponse({"enabled": False, "message": "Honeypot manager not initialized"}, status_code=503)
+        return JSONResponse({"enabled": False, "message": "Honeypot manager not initialized", "traps": [], "recent_triggers": []})
     traps = _st.honeypot_manager.get_honeypot_definitions()
     recent_triggers = []
     if _st.audit_logger:
         recent_triggers = _st.audit_logger.search_bypass_attempts(limit=20)
-    return JSONResponse({"traps": traps, "recent_triggers": recent_triggers})
+    return JSONResponse({"enabled": True, "traps": traps, "recent_triggers": recent_triggers})
 
 
 # ── Search (vector-store backed) ──────────────────────────────────────────

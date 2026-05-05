@@ -67,6 +67,7 @@ the reproducible measurements that ground them.
 | Bypass attempts on isolation guards | Honeypot canary tools that alert on touch | `security/honeypots.py` |
 | Browser noise leaking through proxy | Path-based silent rejection | `main.py:catch_all` |
 | Querystring API-key leakage | `?api_key=` rejected; only headers accepted | `middleware.py` |
+| CDP process compromise (Chrome exploit) | Network isolation: CDP cannot reach inference engine (separate host) or other backing services | `docker-compose.yml` network rules, firewall |
 | Clickjacking, MIME sniffing, referrer leakage | CSP, X-Frame-Options, nosniff, Referrer-Policy | `middleware.SecurityHeadersMiddleware` |
 | Output-side secret/PII leakage | Regex + entropy-based scanner on responses | `security/output_redactor.py` |
 
@@ -96,7 +97,10 @@ boundary, code review). BeigeBox will not save you.
 6. **Local privilege escalation from the BeigeBox process.** We don't run
    under bwrap/firejail by default. A vulnerability in any tool wrapper or
    any router can escalate to the BeigeBox process user. Run it as an
-   unprivileged user; consider a sandbox profile if you can't.
+   unprivileged user; consider a sandbox profile if you can't. **Note:** If
+   your inference engine runs on a separate machine (isolated via network
+   firewall), a compromised BeigeBox process cannot reach it, limiting the
+   blast radius to the host filesystem and local services.
 7. **Network-level DoS.** Rate limits are per-key, in-process. They do not
    replace a proper edge proxy with connection-level shedding.
 8. **Compromise of the host filesystem.** Memory-integrity HMAC keys live

@@ -14,6 +14,11 @@ Query preprocessing (optional):
   from the raw query before hitting ChromaDB. This improves recall for vague
   or conversational queries like "what did we decide last week?" where the raw
   text embeds poorly compared to "decision architecture database schema".
+
+RAG chunk redaction:
+  Retrieved chunks are redacted in-flight before being passed to the model.
+  This prevents RAG-poisoned documents (containing secrets/PII) from reaching
+  the model context, even if they survive ingest-time scanning.
 """
 
 import logging
@@ -42,6 +47,7 @@ class MemoryTool:
         query_preprocess: bool = False,
         query_preprocess_model: str = "",
         backend_url: str = "http://localhost:11434",
+        output_redactor=None,
     ):
         """
         Args:
@@ -53,6 +59,8 @@ class MemoryTool:
             query_preprocess_model:  Model name to use for preprocessing (should be
                                      small/fast, e.g. "qwen3:4b").
             backend_url:             Ollama base URL for the preprocessing call.
+            output_redactor:         OutputRedactor instance for redacting RAG chunks
+                                     at retrieval time (prevents poisoned docs reaching model).
         """
         self.vector_store           = vector_store
         self.max_results            = max_results
@@ -62,10 +70,12 @@ class MemoryTool:
         self.query_preprocess       = query_preprocess and bool(query_preprocess_model)
         self.query_preprocess_model = query_preprocess_model
         self.backend_url            = backend_url.rstrip("/")
+        self.output_redactor        = output_redactor
         logger.info(
-            "MemoryTool initialized (max_results=%d, min_score=%.1f, preprocess=%s model=%s)",
+            "MemoryTool initialized (max_results=%d, min_score=%.1f, preprocess=%s model=%s, redaction=%s)",
             max_results, min_score,
             self.query_preprocess, query_preprocess_model or "—",
+            "enabled" if output_redactor else "disabled",
         )
 
     # ------------------------------------------------------------------
@@ -132,6 +142,17 @@ class MemoryTool:
                 role    = meta.get("role", "?")
                 model   = meta.get("model", "?")
                 content = hit["content"]
+
+                # Redact secrets/PII from RAG chunks at retrieval time.
+                # Prevents poisoned documents from reaching the model context.
+                if self.output_redactor:
+                    result = self.output_redactor.redact(content)
+                    content = result.text
+                    if result.redacted:
+                        logger.info(
+                            "RAG chunk redacted: %d finding(s) (%s)",
+                            result.total, ", ".join(f.label for f in result.findings)
+                        )
 
                 if len(content) > 300:
                     content = content[:300] + "..."

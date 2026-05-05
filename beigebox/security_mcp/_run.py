@@ -27,6 +27,10 @@ DEFAULT_TIMEOUT_SECONDS = 600  # 10 min
 # design; tools that produce structured JSONL/JSON should parse it themselves).
 MAX_STDOUT_BYTES = 256 * 1024
 MAX_STDERR_BYTES = 32 * 1024
+# Argument size limits to prevent DoS via subprocess. These are the hard caps
+# that apply to all subprocess invocations regardless of per-route policy.
+MAX_ARGV_BYTES = 256 * 1024        # 256 KiB total argv size
+MAX_ARGV_STRING_LENGTH = 16 * 1024  # 16 KiB per single argument
 
 
 @dataclass
@@ -94,6 +98,21 @@ def run_argv(
     """
     if not argv:
         return RunResult(False, "", [], -1, "", "", 0.0, error="empty argv")
+
+    # Argument size validation: prevent DoS via subprocess.
+    # Check before subprocess.run() to fail fast on oversized args.
+    argv_bytes = sum(len(arg.encode("utf-8", errors="ignore")) for arg in argv)
+    if argv_bytes > MAX_ARGV_BYTES:
+        return RunResult(
+            False, argv[0] if argv else "", argv, -1, "", "", 0.0,
+            error=f"argv {argv_bytes} bytes exceeds {MAX_ARGV_BYTES} limit",
+        )
+    for arg in argv:
+        if len(arg) > MAX_ARGV_STRING_LENGTH:
+            return RunResult(
+                False, argv[0] if argv else "", argv, -1, "", "", 0.0,
+                error=f"arg length {len(arg)} exceeds {MAX_ARGV_STRING_LENGTH} limit",
+            )
 
     binary = argv[0]
     resolved = which(binary)

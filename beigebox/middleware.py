@@ -341,7 +341,30 @@ class PolicyMiddleware(BaseHTTPMiddleware):
         max_body = rule.max_body_bytes
 
         # Content-Length pre-check — refuse before buffering anything.
+        # Also reject Transfer-Encoding: chunked (bypasses Content-Length check).
         if max_body is not None:
+            # Reject chunked encoding when body size limits are enforced.
+            # Chunked requests don't have Content-Length, so they would skip
+            # the pre-check and force full buffering up to max_body.
+            transfer_encoding = request.headers.get("transfer-encoding", "").lower()
+            if transfer_encoding == "chunked":
+                _emit_auth_denied(
+                    "body_too_large", _principal_name(request), "policy", path, request,
+                )
+                return JSONResponse(
+                    {
+                        "error": {
+                            "message": (
+                                f"Request denied by policy '{rule.rule_id}': "
+                                f"Transfer-Encoding: chunked not allowed (policy enforces body size limits)"
+                            ),
+                            "type": "policy_denied",
+                            "code": "body_too_large",
+                        }
+                    },
+                    status_code=413,
+                )
+
             try:
                 declared_len = int(request.headers.get("content-length") or "0")
             except ValueError:

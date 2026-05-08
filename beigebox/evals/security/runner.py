@@ -85,24 +85,30 @@ class SuiteResult:
 
 
 def _load_yaml(path: Path) -> list[dict]:
-    """Minimal YAML reader avoiding a hard PyYAML dep at eval time."""
+    """Load YAML corpus with JIT-generated test secrets (no real API keys in git)."""
     try:
-        import yaml  # type: ignore
-        with open(path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-        return data.get("rows", []) if isinstance(data, dict) else (data or [])
-    except ModuleNotFoundError:
-        # Fallback: simple JSON-Lines corpus. We ship .yaml but accept .jsonl.
-        jsonl = path.with_suffix(".jsonl")
-        if jsonl.exists():
-            rows = []
-            with open(jsonl, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        rows.append(json.loads(line))
-            return rows
-        raise
+        # Use corpus loader which substitutes ${SECRET:type} placeholders
+        from beigebox.evals.security.corpus_loader import load_corpus
+        return load_corpus(path)
+    except (ModuleNotFoundError, ImportError):
+        # Fallback: load YAML directly (secrets will be unsubstituted ${SECRET:...})
+        try:
+            import yaml  # type: ignore
+            with open(path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+            return data.get("rows", []) if isinstance(data, dict) else (data or [])
+        except ModuleNotFoundError:
+            # Final fallback: JSON-Lines corpus
+            jsonl = path.with_suffix(".jsonl")
+            if jsonl.exists():
+                rows = []
+                with open(jsonl, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            rows.append(json.loads(line))
+                return rows
+            raise
 
 
 def _tally(rows: list[dict], predict: Callable[[dict], bool]) -> SuiteResult:

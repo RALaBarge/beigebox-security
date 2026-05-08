@@ -208,6 +208,26 @@ _RUNTIME_CONFIG_PATH = Path(__file__).parent.parent / "data" / "runtime_config.y
 
 _config: dict | None = None
 
+
+def _bootstrap_runtime_config() -> None:
+	"""Create runtime_config.yaml from config.yaml if it doesn't exist."""
+	if _RUNTIME_CONFIG_PATH.exists():
+		return
+	if not _CONFIG_PATH.exists():
+		return
+	try:
+		_RUNTIME_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+		with open(_CONFIG_PATH) as src:
+			content = src.read()
+		with open(_RUNTIME_CONFIG_PATH, "w") as dst:
+			dst.write(content)
+		_vlog.info("Created runtime_config.yaml from config.yaml")
+	except Exception as e:
+		_vlog.warning("Failed to bootstrap runtime_config.yaml: %s", e)
+
+
+_bootstrap_runtime_config()
+
 # Runtime config hot-reload state
 _runtime_config: dict = {}
 _runtime_mtime: float = 0.0

@@ -159,11 +159,6 @@ class TestWasmReloadEndpoint:
         cfg_mod._runtime_mtime  = 0.0
         cfg_mod._runtime_config = {}
 
-        mock_da = MagicMock()
-        mock_da.from_config.return_value = MagicMock(enabled=False, model="")
-        mock_da.from_config.return_value.preload = AsyncMock(return_value=None)
-        mock_ec = MagicMock(); mock_ec.ready = True
-
         # Mock WasmRuntime so we control reload()
         mock_wasm = MagicMock()
         mock_wasm.enabled = False
@@ -174,21 +169,19 @@ class TestWasmReloadEndpoint:
         mock_proxy = MagicMock()
         mock_proxy.wasm_runtime = mock_wasm
 
-        with patch("beigebox.main.make_conversation_repo"), \
-             patch("beigebox.main.VectorStore"), \
-             patch("beigebox.main.ToolRegistry") as MockTR, \
-             patch("beigebox.main.DecisionAgent", mock_da), \
-             patch("beigebox.main.HookManager") as MockHM, \
-             patch("beigebox.main.get_embedding_classifier", return_value=mock_ec), \
-             patch("beigebox.main.Proxy", return_value=mock_proxy), \
-             patch("beigebox.main._preload_embedding_model", AsyncMock()):
+        from beigebox.app_state import AppState
+        from beigebox.state import set_state
+        mock_state = AppState(proxy=mock_proxy)
 
-            MockTR.return_value.list_tools.return_value = []
-            MockHM.return_value.list_hooks.return_value = []
+        async def _fake_startup(app):  # noqa: ARG001
+            set_state(mock_state)
+            return mock_state
 
-            import beigebox.main as main_mod
-            main_mod.proxy = mock_proxy
+        async def _fake_shutdown(state):  # noqa: ARG001
+            pass
 
+        with patch("beigebox.bootstrap.startup", side_effect=_fake_startup), \
+             patch("beigebox.bootstrap.shutdown", side_effect=_fake_shutdown):
             from beigebox.main import app
             with TestClient(app, raise_server_exceptions=False) as c:
                 yield c, mock_wasm
@@ -197,7 +190,6 @@ class TestWasmReloadEndpoint:
         cfg_mod._RUNTIME_CONFIG_PATH = orig_rt_path
         cfg_mod._runtime_config = orig_rt_cfg
         cfg_mod._runtime_mtime  = orig_rt_mt
-        main_mod.proxy = None
 
     def test_reload_returns_ok(self, client):
         c, mock_wasm = client
@@ -265,31 +257,25 @@ class TestConfigEndpointWasm:
         cfg_mod._runtime_mtime  = 0.0
         cfg_mod._runtime_config = {}
 
-        mock_da = MagicMock()
-        mock_da.from_config.return_value = MagicMock(enabled=False, model="")
-        mock_da.from_config.return_value.preload = AsyncMock(return_value=None)
-        mock_ec = MagicMock(); mock_ec.ready = True
         mock_wasm = MagicMock()
         mock_wasm.enabled = False
         mock_wasm.list_modules.return_value = []
         mock_wasm.default_module = ""
         mock_proxy = MagicMock(); mock_proxy.wasm_runtime = mock_wasm
 
-        with patch("beigebox.main.make_conversation_repo"), \
-             patch("beigebox.main.VectorStore"), \
-             patch("beigebox.main.ToolRegistry") as MockTR, \
-             patch("beigebox.main.DecisionAgent", mock_da), \
-             patch("beigebox.main.HookManager") as MockHM, \
-             patch("beigebox.main.get_embedding_classifier", return_value=mock_ec), \
-             patch("beigebox.main.Proxy", return_value=mock_proxy), \
-             patch("beigebox.main._preload_embedding_model", AsyncMock()):
+        from beigebox.app_state import AppState
+        from beigebox.state import set_state
+        mock_state = AppState(proxy=mock_proxy)
 
-            MockTR.return_value.list_tools.return_value = []
-            MockHM.return_value.list_hooks.return_value = []
+        async def _fake_startup(app):  # noqa: ARG001
+            set_state(mock_state)
+            return mock_state
 
-            import beigebox.main as main_mod
-            main_mod.proxy = mock_proxy
+        async def _fake_shutdown(state):  # noqa: ARG001
+            pass
 
+        with patch("beigebox.bootstrap.startup", side_effect=_fake_startup), \
+             patch("beigebox.bootstrap.shutdown", side_effect=_fake_shutdown):
             from beigebox.main import app
             with TestClient(app, raise_server_exceptions=False) as c:
                 yield c
@@ -298,7 +284,6 @@ class TestConfigEndpointWasm:
         cfg_mod._RUNTIME_CONFIG_PATH = orig_rt_path
         cfg_mod._runtime_config = orig_rt_cfg
         cfg_mod._runtime_mtime  = orig_rt_mt
-        main_mod.proxy = None
 
     def test_config_has_wasm_block(self, client):
         r = client.get("/api/v1/config")

@@ -56,6 +56,8 @@ from typing import Any
 
 import httpx
 
+from beigebox.security.safe_url import SsrfRefusedError, validate_browser_ws_url
+
 logger = logging.getLogger(__name__)
 
 # ── Defaults ────────────────────────────────────────────────────────────────
@@ -79,7 +81,8 @@ class CDPClient:
 
     def __init__(self, ws_url: str, timeout: float = _DEFAULT_TIMEOUT,
                  session_id: str | None = None) -> None:
-        self._ws_url = ws_url
+        # ws/wss only, no embedded creds. Local Chrome → private permitted.
+        self._ws_url = validate_browser_ws_url(ws_url)
         self._timeout = timeout
         self._ws = None
         self._cmd_id = 0

@@ -220,6 +220,12 @@ _GENESIS_DIGEST = "0" * 64
 
 
 def _audit_path() -> Path:
+    # SECURITY: BEIGEBOX_AUDIT_LOG is operator-trusted (process env, not a
+    # request body). The defense is filesystem permissions on the chosen
+    # path, not in-process validation. An attacker who controls process
+    # env already has a foothold; SafePath would only block legitimate
+    # operator choices like "/var/log/beigebox/audit.jsonl". If the threat
+    # model expands to LLM-controlled env, revisit.
     override = os.environ.get("BEIGEBOX_AUDIT_LOG")
     return Path(override) if override else _AUDIT_CHAIN_PATH_DEFAULT
 
@@ -346,6 +352,8 @@ _ANCHOR_PATH_DEFAULT = Path.home() / ".beigebox" / "integrity_anchor.json"
 
 
 def _anchor_path() -> Path:
+    # SECURITY: BEIGEBOX_AUDIT_ANCHOR is operator-trusted; see _audit_path
+    # for the rationale on not adding SafePath here.
     override = os.environ.get("BEIGEBOX_AUDIT_ANCHOR")
     return Path(override) if override else _ANCHOR_PATH_DEFAULT
 

@@ -1,58 +1,43 @@
 # Backend Plugins — Custom Inference Engines
 
-Drop custom LLM backend implementations here and BeigeBox will auto-discover and load them at startup.
+Files in this directory are loaded with `importlib.exec_module` at startup
+and run **in-process** with full Python privileges. They are BeigeBox code,
+just discovered at startup rather than statically imported.
 
-## Shared Model Path
+## Trust model
 
-**All backends use the same model path** configured in `config.yaml`:
+- **Plugins are operator-trusted.** You vouch for every file on the
+  `backend_plugins.allowed` list in `config.yaml`. The loader does not
+  sandbox them.
+- **Allow-list gated.** A `.py` file in this directory is only loaded if
+  its stem (filename without `.py`) is in `backend_plugins.allowed`.
+  Without that list, the loader logs a deprecation warning and loads
+  everything (one release of grace, then it'll refuse).
+- **Filesystem-perms gated.** The loader refuses to scan this directory if
+  it's world-writable (`o+w`). Keep it owned by the BeigeBox process user
+  with mode 750 or stricter.
+- **Third-party plugin loading is not a supported flow.** Community plugins
+  get vendored, code-reviewed, and added to the allow-list explicitly. See
+  `BEIGEBOX_IS_NOT.md` § "Plugin model".
 
-```yaml
-backend:
-  models_path: "/mnt/storage/models"  # Shared across Ollama, llama.cpp, Mini-SGLang, etc.
-```
+## Adding a plugin
 
-This means:
-- Store your models in one place (e.g., `/mnt/storage/models/model.gguf`)
-- All inference engines can access them without duplication
-- No need to download models separately for each backend
-- Use `${MODELS_PATH}` env var override in Docker
+1. Drop a `.py` file in this directory with a `BaseBackend` subclass.
+2. Add the file's stem to `backend_plugins.allowed` in `config.yaml`.
+3. Reference the backend in `backends:` by `provider: <snake_case>` where
+   `<snake_case>` is the class name minus `Backend`, snake-cased.
+4. Restart BeigeBox.
 
-**Example Docker setup:**
-```yaml
-services:
-  ollama:
-    volumes:
-      - /mnt/storage/models:/root/.ollama/models
-
-  llama-cpp:
-    volumes:
-      - /mnt/storage/models:/models
-    command: --models-path /models
-
-  mini-sglang:
-    volumes:
-      - /mnt/storage/models:/models
-    command: --model-dir /models
-```
-
-All three see the same model files — no redundant storage.
-
-## Quick Start
-
-1. **Create a new Python file** with your backend implementation
-2. **Inherit from `BaseBackend`** and implement abstract methods
-3. **Drop it in this directory** — it auto-loads on startup
-4. **Use in `config.yaml`** — reference by provider name (converted from class name)
-
-## Example: llama.cpp
+## Plugin contract
 
 ```python
-# backends/plugins/my_custom_engine.py
-
+# backends/plugins/llama_cpp.py
 from beigebox.backends.base import BaseBackend, BackendResponse
 import httpx
 
-class MyCustomEngineBackend(BaseBackend):
+class LlamaCppBackend(BaseBackend):
+    """llama.cpp HTTP server integration."""
+
     async def forward(self, body: dict) -> BackendResponse:
         async with httpx.AsyncClient() as client:
             resp = await client.post(
@@ -60,6 +45,7 @@ class MyCustomEngineBackend(BaseBackend):
                 json=body,
                 timeout=self.timeout,
             )
+            resp.raise_for_status()
             return BackendResponse(
                 ok=True,
                 data=resp.json(),
@@ -78,7 +64,7 @@ class MyCustomEngineBackend(BaseBackend):
             async with httpx.AsyncClient() as client:
                 resp = await client.get(f"{self.url}/health")
                 return resp.status_code == 200
-        except:
+        except Exception:
             return False
 
     async def list_models(self) -> list[str]:
@@ -86,93 +72,70 @@ class MyCustomEngineBackend(BaseBackend):
             async with httpx.AsyncClient() as client:
                 resp = await client.get(f"{self.url}/v1/models")
                 return [m["id"] for m in resp.json().get("data", [])]
-        except:
+        except Exception:
             return []
 ```
 
-## Config Usage
+## Required methods on `BaseBackend`
 
-Once you define your backend, reference it by provider name (class name → snake_case):
+| Method | Purpose |
+|---|---|
+| `async forward(body) -> BackendResponse` | Non-streaming chat completion. |
+| `async forward_stream(body)` | Streaming chat completion (yields SSE lines). |
+| `async health_check() -> bool` | Reachability probe. Called periodically by the router. |
+| `async list_models() -> list[str]` | Model catalog. Store in `self._available_models` so the router's `supports_model()` works. |
+
+## Config example
 
 ```yaml
 # config.yaml
-backends_enabled: true
+
+backend_plugins:
+  allowed:
+    - llama_cpp           # ← stem of llama_cpp.py
+    - executorch
+    - mini_sglang
 
 backends:
-  # Built-in backends
-  - provider: ollama
-    name: local-ollama
-    url: http://localhost:11434
-    priority: 1
-
-  # Your custom backend (auto-discovered)
-  - provider: my_custom_engine        # ← Class name MyCustomEngineBackend → my_custom_engine
-    name: my-engine
-    url: http://localhost:8000
-    priority: 2
-
-  - provider: llama_cpp               # ← Included example
-    name: llama-cpp
+  - provider: llama_cpp   # ← snake_case of LlamaCppBackend (minus "Backend")
+    name: llama-local
     url: http://localhost:9000
     priority: 3
 ```
 
-## Included Examples
+## Shared model path
 
-- **llama.cpp** (`llama_cpp.py`) — Ultra-lightweight C++ inference, ~15KB binary
-- **Mini-SGLang** (`mini_sglang.py`) — Clean, readable 5k-line serving framework
-- **ExecuTorch** (`executorch.py`) — Meta's embedded engine, 50KB footprint
+All in-tree backend integrations share the model path configured in
+`config.yaml` under `backend.models_path`. Drop your model files there and
+all engines see them:
 
-## Abstract Methods (Required)
+```yaml
+backend:
+  models_path: "/mnt/storage/models"
+```
 
-Every backend must implement:
+## Included examples
 
-### `async def forward(self, body: dict) -> BackendResponse`
-Non-streaming chat completion. Return `BackendResponse` with:
-- `ok: bool` — success/failure
-- `data: dict` — OpenAI-compatible response data
-- `error: str` — error message (if ok=False)
+- `llama_cpp.py` — llama.cpp HTTP server integration.
+- `executorch.py` — Meta's embedded engine.
+- `mini_sglang.py` — readable serving framework.
 
-### `async def forward_stream(self, body: dict)`
-Streaming chat completion. Yield SSE lines (strings starting with `data: `).
+## Router behaviour
 
-### `async def health_check(self) -> bool`
-Return True if backend is healthy and reachable. Called periodically by router.
+The router tracks per-backend latency (P95) and:
 
-### `async def list_models(self) -> list[str]`
-Return list of model names available on this backend.
-Store in `self._available_models` for router's `supports_model()` check.
+- Deprioritizes slow backends via `latency_p95_threshold_ms`.
+- Fails over to the next-priority backend on error.
+- Splits traffic across backends via `traffic_split` weights.
 
-## How It Works
-
-1. **Startup** — BeigeBox calls `load_backend_plugins("backends/plugins")`
-2. **Discovery** — Loader finds all `.py` files and imports them
-3. **Registration** — Each `BaseBackend` subclass is extracted and registered
-4. **Name conversion** — `MyEngineBackend` → `my_engine` (class name → snake_case)
-5. **Router integration** — `PROVIDERS` dict updated with your backend
-6. **Config usage** — Use provider name in `config.yaml` backends list
-
-## Latency & Failover
-
-The router tracks per-backend latency (P95) and can:
-- **Deprioritize** slow backends via `latency_p95_threshold_ms`
-- **Failover** to next priority backend on error
-- **A/B split** traffic across backends via `traffic_split` weights
-
-Your backend just needs to respond with correct `BackendResponse`; the router handles the rest.
+Your backend just needs to return correct `BackendResponse` values; the
+router handles the rest.
 
 ## Tips
 
-- **Test first** — ensure your HTTP server returns OpenAI-compatible format
-- **Error handling** — always catch exceptions and return `BackendResponse(ok=False, error=...)`
-- **Timeout** — respect `self.timeout` from config
-- **Logging** — use `logger.error/warning()` for debugging
-
-## Common Engines
-
-See [TESTING.md](../../TESTING.md) for a curated list of lightweight inference engines:
-- llama.cpp (15KB, C++)
-- Mini-SGLang (5k lines, Python)
-- InferLLM (ARM/RISC-V optimized)
-- ExecuTorch (50KB, Meta)
-- SimpleLLM (~950 lines, educational)
+- **Test the upstream first.** Make sure the engine returns
+  OpenAI-compatible JSON before wiring up the plugin.
+- **Catch exceptions.** Always return `BackendResponse(ok=False, error=…)`
+  on failure rather than letting an exception bubble.
+- **Respect `self.timeout`.** It's read from config per-backend.
+- **Use `logger.error/warning()` for diagnostics.** No `print` statements.

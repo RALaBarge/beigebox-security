@@ -191,7 +191,6 @@ async def api_config():
         },
         "hooks": cfg.get("hooks", []),
         "web_ui": {
-            "vi_mode":      rt.get("web_ui_vi_mode", False),
             "palette":      rt.get("web_ui_palette", "default"),
         },
         "runtime": {
@@ -257,7 +256,6 @@ async def api_config_save(request: Request):
 
     allowed = {
         # Web UI
-        "web_ui_vi_mode": "web_ui_vi_mode",
         "web_ui_palette": "web_ui_palette",
         # Features (Phase 1)
         "features_backends": "features_backends",

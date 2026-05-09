@@ -626,22 +626,6 @@ input::placeholder { color: var(--fg-muted); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── π Vi mode pill (inline status bar) ─────────────────────────────── */
-  #vi-pill {
-    cursor: pointer;
-    font-size: 11px;
-    opacity: 0.4;
-    color: var(--fg-dim);
-    user-select: none;
-    transition: opacity 0.15s, color 0.15s;
-    padding: 0 1px;
-    line-height: 1;
-  }
-
-#vi-pill:hover { opacity: 0.85; color: var(--lavender); }
-
-#vi-pill.active { opacity: 1; color: var(--lavender); }
-
 /* ── Context token counter ───────────────────────────────────────────── */
   #ctx-usage {
     font-size: 10px;
@@ -1800,7 +1784,6 @@ hr { border: none; border-top: 1px solid var(--bg-border); margin: 8px 0; }
       <span id="sys-ram" class="sys-m">RAM —</span>
       <span id="sys-gpu" class="sys-m"></span>
     </span>
-    <span id="vi-pill" onclick="toggleViMode()" title="toggle vi mode">π</span>
     <span id="cdp-pill" onclick="launchCDP()" title="Launch Chrome browser (CDP)" style="cursor:pointer;padding:0 6px;border-radius:3px">🌐</span>
     <span id="clock"></span>
   </div>
@@ -2246,7 +2229,6 @@ hr { border: none; border-top: 1px solid var(--bg-border); margin: 8px 0; }
 const BASE = '';  // same origin
 let chatHistory = [];
 let currentModel = localStorage.getItem('bb_model') || '';
-let viModeActive = false;
 let allModels = [];
 
 // ── rAF-batched DOM append ───────────────────────────────────────────────────
@@ -2759,16 +2741,6 @@ function applyPalette(name) {
   Object.entries(vars).forEach(([prop, val]) => root.style.setProperty(prop, val));
 }
 
-// ── Vi mode ─────────────────────────────────────────────────────────────────
-function setViToggleState(active) {
-  viModeActive = active;
-  const pill = document.getElementById('vi-pill');
-  if (pill) {
-    pill.classList.toggle('active', active);
-    pill.title = `vi mode: ${active ? 'on' : 'off'}`;
-  }
-}
-
 // ── Context token usage counter ──────────────────────────────────────────────
 function updateCtxUsage(pane) {
   const el = document.getElementById('ctx-usage');
@@ -2782,31 +2754,6 @@ function updateCtxUsage(pane) {
   const label = tok >= 1000 ? `~${(tok/1000).toFixed(1)}k tok` : `~${tok} tok`;
   el.textContent = label;
   el.className = tok > 24000 ? 'danger' : tok > 12000 ? 'warn' : '';
-}
-
-function injectViMode() {
-  if (document.getElementById('vi-script')) return;
-  const s = document.createElement('script');
-  s.id  = 'vi-script';
-  s.src = '/web/vi.js';
-  document.body.appendChild(s);
-}
-
-function removeViMode() {
-  const s = document.getElementById('vi-script');
-  if (s) s.remove();
-  const ind = document.getElementById('vi-indicator');
-  if (ind) ind.remove();
-}
-
-async function toggleViMode() {
-  try {
-    const d = await api('/api/v1/web-ui/toggle-vi-mode', { method: 'POST' });
-    setViToggleState(d.vi_mode);
-    if (d.vi_mode) injectViMode(); else removeViMode();
-  } catch(e) {
-    console.error('vi mode toggle failed:', e);
-  }
 }
 
 // ── CDP (Chrome DevTools Protocol) browser launcher ────────────────────────
@@ -3809,7 +3756,6 @@ const TOOLTIPS = {
   log_level:                   'Verbosity of server-side logs: DEBUG → INFO → WARNING → ERROR.',
   // Web UI
   web_ui_palette:              'Colour theme for this interface. Applied immediately on save.',
-  web_ui_vi_mode:              'Enable vi/vim keybindings in the chat input (hjkl, i, Esc, etc.).',
   // Voice
   voice_enabled:               'Show the microphone button and enable push-to-talk via the STT service URL.',
   voice_hotkey:                'Keyboard key that triggers push-to-talk while the Chat tab is focused.',
@@ -7028,7 +6974,6 @@ async function loadConfig() {
     html += SO('Interface');
     html += cfgSelect('web_ui_palette', 'Palette theme', c.web_ui?.palette || 'default',
                       ['default','dracula','gruvbox','nord','phosphor','cobalt','sakura','slate','random']);
-    html += cfgToggle('web_ui_vi_mode', 'Vi mode', c.web_ui?.vi_mode ?? false);
     html += `<div style="font-size:11px;color:var(--fg-dim);margin-top:6px">Voice settings are in <strong>Features → Speech I/O (STT + TTS)</strong> above.</div>`;
     html += SC;
 
@@ -7100,7 +7045,7 @@ async function saveConfig() {
     'features_amf_mesh','features_voice','features_hooks',
     // Other toggles
     'cost_tracking_enabled','cost_track_openrouter','cost_track_local',
-    'log_conversations','web_ui_vi_mode','voice_enabled','tts_autoplay','system_context_enabled','gen_force',
+    'log_conversations','voice_enabled','tts_autoplay','system_context_enabled','gen_force',
     'force_decision','local_models_filter_enabled',
   ];
   const strings = [
@@ -7147,10 +7092,6 @@ async function saveConfig() {
 
     // Apply immediately in the UI where possible
     if ('web_ui_palette' in payload) applyPalette(payload.web_ui_palette);
-    if ('web_ui_vi_mode' in payload) {
-      setViToggleState(payload.web_ui_vi_mode);
-      if (payload.web_ui_vi_mode) injectViMode(); else removeViMode?.();
-    }
     // (voice_enabled handler removed — voice subtab deleted in v3 UI cleanup)
     // Re-fetch config to pick up TTS changes live
     try { const fresh = await api('/api/v1/config'); updateTTSConfig(fresh); } catch {}
@@ -7998,15 +7939,10 @@ try {
 // Initialize multi-pane chat (creates first pane, no history restore needed — per-pane history is in memory only)
 initChatPanes();
 
-// Bootstrap vi mode and palette from runtime config in a single fetch
+// Bootstrap palette from runtime config in a single fetch
 (async function initWebUi() {
   try {
     const d = await api('/api/v1/config');
-
-    // Vi mode
-    const viEnabled = d.web_ui?.vi_mode === true;
-    setViToggleState(viEnabled);
-    if (viEnabled) injectViMode();
 
     // Palette
     const palette = d.web_ui?.palette || 'default';

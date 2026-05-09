@@ -81,8 +81,8 @@ Usage: prompt_tokens=4335, completion_tokens=1938, total_tokens=6273, cost=$0.01
   Classes: TestIsEnabled, TestValidate, TestCheckModel, TestCheckEndpoint, TestRateLimit, TestNamedKeyACL
 - **test_web_auth_factory.py** (73 LOC) — Tests for the AuthProvider ABC, NullAuthProvider, and make_auth() factory in web_auth.py.
   Classes: TestAuthProviderABC, TestNullAuthProvider, TestMakeAuth
-- **test_web_ui.py** (409 LOC) — Tests for web UI config endpoint and vi mode toggle.
-  Classes: TestUpdateRuntimeConfig, TestConfigEndpointWebUi, TestToggleViModeEndpoint, TestWebFileServing
+- **test_web_ui.py** — Tests for web UI config endpoint and web file serving.
+  Classes: TestUpdateRuntimeConfig, TestConfigEndpointWebUi, TestWebFileServing
 - **test_workspace.py** (261 LOC) — Tests for workspace API endpoints:
   Classes: TestApiWorkspaceList, TestApiWorkspaceDelete, TestApiWorkspaceUpload
 - **test_static.py** (616 LOC) — Tests for the static skill (beigebox.skills.static).

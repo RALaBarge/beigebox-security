@@ -81,13 +81,26 @@ class WasmRuntime:
         except ImportError:
             return
 
+        # WASM modules are operator-trusted code (they execute in the
+        # wasmtime sandbox but with whatever capabilities we grant). Pin
+        # paths under the project's wasm_modules/ directory so a misconfig
+        # can't cause Module.from_file() to load /tmp/anywhere.
+        from beigebox.security.safe_path import SafePath, UnsafePathError
+        from pathlib import Path as _Path
+        _wasm_base = _Path(__file__).resolve().parent.parent / "wasm_modules"
+
         for name, mcfg in self._modules_cfg.items():
             if not mcfg.get("enabled", True):
                 logger.debug("WASM module '%s' disabled in config", name)
                 continue
-            path = mcfg.get("path", "")
-            if not path:
+            raw_path = mcfg.get("path", "")
+            if not raw_path:
                 logger.warning("WASM module '%s' has no path configured", name)
+                continue
+            try:
+                path = str(SafePath(raw_path, base=_wasm_base).path)
+            except UnsafePathError as e:
+                logger.error("WASM module '%s' refused: %s", name, e)
                 continue
             if not os.path.exists(path):
                 logger.warning("WASM module '%s' not found at: %s", name, path)

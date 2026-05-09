@@ -352,6 +352,16 @@ def _get_host_metrics_url() -> str | None:
             url = (cfg.get("metrics", {}) or {}).get("host_metrics_url", "").strip()
         except Exception:
             url = ""
+    if url:
+        # urllib.request.urlopen accepts file:// by default — refuse anything
+        # other than http/https, plus reject embedded creds. Private IPs are
+        # permitted (the host bridge legitimately runs on the LAN/loopback).
+        from beigebox.security.safe_url import SsrfRefusedError, validate_backend_url
+        try:
+            url = validate_backend_url(url)
+        except SsrfRefusedError as e:
+            logger.error("metrics: rejecting host_metrics_url %r: %s", url, e)
+            url = ""
     _host_metrics_url = url or None
     _host_metrics_resolved = True
     if _host_metrics_url:

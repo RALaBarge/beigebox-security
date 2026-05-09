@@ -23,6 +23,9 @@ import time
 
 import httpx
 from fastapi import APIRouter, Request
+
+from beigebox.routers._shared import _require_admin
+from beigebox.security.safe_url import SsrfRefusedError, validate_backend_url
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from beigebox import __version__ as _BB_VERSION
@@ -92,7 +95,15 @@ async def api_probe(request: Request):
     }
     Returns: {status, reason, latency_ms, headers, body}
          or: {error, latency_ms}
+
+    SECURITY: admin-only. The probe deliberately permits private/loopback
+    targets (it exists to reach internal Docker services), but rejects
+    `file://`, embedded credentials, and similar SSRF gadgets via
+    `validate_backend_url`.
     """
+    if (denied := _require_admin(request)) is not None:
+        return denied
+
     try:
         body = await request.json()
     except Exception as e:
@@ -102,6 +113,10 @@ async def api_probe(request: Request):
     url = body.get("url", "").strip()
     if not url:
         return JSONResponse({"error": "url required"}, status_code=400)
+    try:
+        url = validate_backend_url(url)
+    except SsrfRefusedError as e:
+        return JSONResponse({"error": f"refused: {e}"}, status_code=400)
 
     req_headers = body.get("headers") or {}
     req_body = body.get("body") or None

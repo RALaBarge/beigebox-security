@@ -722,6 +722,14 @@ async def _http_metadata(ip: str, port: int, use_tls: bool = False, timeout: flo
     """
     Fetch HTTP metadata: title, server header, detect admin panels.
     Returns dict with title, server, admin_panel_detected, findings.
+
+    SECURITY: this helper deliberately probes attacker-controlled IPs/ports
+    — that is the network-audit tool's documented purpose. URL validation
+    here would defeat the function. Defense lives at the tool-dispatch
+    layer (`beigebox/tools/validation.py::_validate_network_audit`) and
+    by virtue of the tool only being invokable through admin-gated paths.
+    Do NOT add SafeURL validation here; do tighten the dispatch layer if
+    further restriction is needed.
     """
     meta = {
         "server": None,

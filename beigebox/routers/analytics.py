@@ -241,7 +241,18 @@ async def api_set_model_option(request: Request):
 async def api_routing_stats(lines: int = 10000):
     """Session-cache hit rate from the wiretap (tail-scans wire.jsonl)."""
     cfg = get_config()
-    wire_path = Path(cfg.get("wiretap", {}).get("path", "./data/wire.jsonl"))
+    raw_wire_path = cfg.get("wiretap", {}).get("path", "./data/wire.jsonl")
+    # SafePath: pin the wire log under project root. Operators wanting an
+    # off-tree location should mount the destination into the project tree
+    # (a bind mount or a directory symlink resolves correctly under the
+    # project root, but a path like /etc/passwd is refused).
+    from beigebox.security.safe_path import SafePath, UnsafePathError
+    _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+    try:
+        wire_path = SafePath(raw_wire_path, base=_PROJECT_ROOT).path
+    except UnsafePathError as e:
+        logger.error("routing-stats: refusing wiretap path %r: %s", raw_wire_path, e)
+        return JSONResponse({"error": "wiretap path refused"}, status_code=400)
 
     hits = misses = sampled = 0
 

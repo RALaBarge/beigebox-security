@@ -221,11 +221,13 @@ class DocParserTool:
         if not query:
             return "Usage: provide a filename from workspace/in/ (e.g. report.pdf)"
 
-        # Resolve path
-        if os.path.isabs(query):
-            file_path = Path(query)
-        else:
-            file_path = _WORKSPACE_IN / query
+        # Resolve under workspace/in/ — refuses ../escape, /etc/passwd, and
+        # symlinks pointing outside the workspace.
+        from beigebox.security.safe_path import SafePath, UnsafePathError
+        try:
+            file_path = SafePath(query, base=_WORKSPACE_IN).path
+        except UnsafePathError as e:
+            return f"Refused: {e}"
 
         if not file_path.exists():
             try:

@@ -103,9 +103,16 @@ class RepoTool:
         if not path_str:
             return 'Error: "path" required for read_file'
 
+        # If a root is supplied, the path must resolve under it. Without a
+        # root we resolve as-given (caller responsibility — typically the
+        # operator pointing at a known checkout).
         root_str = p.get("root", "").strip()
-        if root_str and not Path(path_str).is_absolute():
-            target = (Path(root_str) / path_str).resolve()
+        if root_str:
+            from beigebox.security.safe_path import SafePath, UnsafePathError
+            try:
+                target = SafePath(path_str, base=root_str).path
+            except UnsafePathError as e:
+                return f"Refused: {e}"
         else:
             target = Path(path_str).resolve()
 

@@ -47,7 +47,15 @@ import logging
 import sys
 from pathlib import Path
 
+from beigebox.security.plugin_safety import (
+    UnsafePluginDirError,
+    filter_by_allowlist,
+    safe_plugin_dir,
+)
+
 logger = logging.getLogger(__name__)
+
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def _class_to_name(cls_name: str) -> str:
@@ -88,17 +96,21 @@ def load_plugins(plugins_dir: str | Path, tools_cfg: dict) -> dict[str, object]:
         logger.debug("Plugin loader disabled (tools.plugins.enabled=false)")
         return {}
 
-    base = Path(plugins_dir).resolve()
-    if not base.is_dir():
-        logger.warning("Plugin directory not found: %s", base)
+    try:
+        base = safe_plugin_dir(plugins_dir, project_root=_PROJECT_ROOT)
+    except UnsafePluginDirError as e:
+        logger.error("Refusing to load tool plugins: %s", e)
         return {}
+    if base is None:
+        logger.warning("Plugin directory not found: %s", plugins_dir)
+        return {}
+
+    allowed = plugins_cfg.get("allowed")  # None | list[str]
+    candidates = sorted(p for p in base.glob("*.py") if not p.name.startswith("_"))
 
     registered: dict[str, object] = {}
 
-    for py_file in sorted(base.glob("*.py")):
-        if py_file.name.startswith("_"):
-            continue  # skip __init__.py, _helpers.py, etc.
-
+    for py_file in filter_by_allowlist(candidates, allowed, context="tool_plugin"):
         module_name = f"bb_plugin_{py_file.stem}"
         try:
             spec = importlib.util.spec_from_file_location(module_name, py_file)

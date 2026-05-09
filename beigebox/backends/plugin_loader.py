@@ -1,103 +1,105 @@
 """
 Backend plugin auto-discovery and registration.
 
-Users can drop custom backend implementations into backends/plugins/
-and they'll be automatically discovered and registered with the router.
+Loads custom `BaseBackend` subclasses from a plugins directory. Plugins are
+operator-trusted code (see `BEIGEBOX_IS_NOT.md`, "Plugin model") — this
+loader does not sandbox them. Two defenses-in-depth do apply:
 
-Example: backends/plugins/llama_cpp.py
+  1. The plugins directory must be under the project root and not
+     world-writable (`beigebox.security.plugin_safety.safe_plugin_dir`).
+  2. Only files whose stem is listed in `backend_plugins.allowed` (config.yaml)
+     are loaded. Without that key, the loader logs a deprecation warning and
+     loads everything (backwards compat for one release).
 
-    from beigebox.backends.base import BaseBackend, BackendResponse
-    import httpx
+Operator workflow to add a new plugin:
+  1. Drop the .py into `backends/plugins/`.
+  2. Add the file's stem to `backend_plugins.allowed` in `config.yaml`.
 
-    class LlamaCppBackend(BaseBackend):
-        '''Interface to llama.cpp HTTP server'''
-
-        async def forward(self, body: dict) -> BackendResponse:
-            async with httpx.AsyncClient() as client:
-                resp = await client.post(
-                    f"{self.url}/v1/chat/completions",
-                    json=body,
-                    timeout=self.timeout,
-                )
-                resp.raise_for_status()
-                return BackendResponse(
-                    ok=True,
-                    data=resp.json(),
-                    backend_name=self.name,
-                )
-
-        # ... implement other abstract methods
+Example: `backends/plugins/llama_cpp.py` → `backend_plugins.allowed: [llama_cpp]`.
 """
 
 import importlib.util
 import logging
+import re
 from pathlib import Path
 
 from beigebox.backends.base import BaseBackend
+from beigebox.security.plugin_safety import (
+    UnsafePluginDirError,
+    filter_by_allowlist,
+    safe_plugin_dir,
+)
 
 logger = logging.getLogger(__name__)
 
+# beigebox/backends/plugin_loader.py → parent.parent.parent = project root
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
-def load_backend_plugins(plugins_dir: str = "backends/plugins") -> dict[str, type[BaseBackend]]:
+
+def load_backend_plugins(
+    plugins_dir: str = "backends/plugins",
+    cfg: dict | None = None,
+) -> dict[str, type[BaseBackend]]:
     """
-    Discover and load custom backend implementations from a plugins directory.
+    Discover and load custom backend implementations.
 
     Args:
-        plugins_dir: Path to directory containing backend plugin modules
+        plugins_dir: Directory to scan, relative to project root or absolute.
+        cfg: Full BeigeBox config dict. Reads `backend_plugins.allowed` for the
+            allow-list. If None or the key is missing, falls back to
+            load-everything with a deprecation warning.
 
     Returns:
-        Dict mapping provider name → backend class
+        Dict mapping provider name (snake_case of class name minus "Backend")
+        → backend class.
     """
-    plugins = {}
-    plugins_path = Path(plugins_dir)
+    plugins: dict[str, type[BaseBackend]] = {}
 
-    if not plugins_path.exists():
-        logger.debug(f"Backend plugins directory not found: {plugins_dir}")
+    try:
+        base = safe_plugin_dir(plugins_dir, project_root=_PROJECT_ROOT)
+    except UnsafePluginDirError as e:
+        logger.error("Refusing to load backend plugins: %s", e)
         return plugins
 
-    # Find all Python files in plugins directory
-    for py_file in plugins_path.glob("*.py"):
-        if py_file.name.startswith("_"):
-            continue
+    if base is None:
+        return plugins
 
+    bp_cfg = (cfg or {}).get("backend_plugins") or {}
+    allowed = bp_cfg.get("allowed")  # None | list[str]
+
+    candidates = sorted(p for p in base.glob("*.py") if not p.name.startswith("_"))
+    for py_file in filter_by_allowlist(candidates, allowed, context="backend_plugin"):
         try:
-            # Dynamically import module
             spec = importlib.util.spec_from_file_location(
                 f"beigebox.backends.plugins.{py_file.stem}",
                 py_file,
             )
             if not spec or not spec.loader:
-                logger.warning(f"Could not load spec for {py_file}")
+                logger.warning("Could not load spec for %s", py_file)
                 continue
 
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 
-            # Find all BaseBackend subclasses in the module
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
-
-                # Check if it's a class and subclass of BaseBackend (but not BaseBackend itself)
                 if (
                     isinstance(attr, type)
                     and issubclass(attr, BaseBackend)
                     and attr is not BaseBackend
                 ):
-                    # Provider name: convert class name to snake_case
-                    # LlamaCppBackend → llama_cpp
                     provider_name = _camel_to_snake(attr.__name__.replace("Backend", ""))
-
                     plugins[provider_name] = attr
-                    logger.info(f"Loaded backend plugin: {provider_name} ({attr.__name__})")
-
+                    logger.info(
+                        "Loaded backend plugin: %s (%s)", provider_name, attr.__name__
+                    )
         except Exception as e:
-            logger.error(f"Failed to load backend plugin from {py_file}: {e}")
+            logger.error("Failed to load backend plugin from %s: %s", py_file, e)
 
     return plugins
 
 
 def _camel_to_snake(name: str) -> str:
     """Convert CamelCase to snake_case."""
-    import re
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()

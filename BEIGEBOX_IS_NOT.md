@@ -93,6 +93,17 @@ paragraph to defend a NO, the rule probably isn't a clean line yet.
   it, we don't execute it. "Just shell out to whatever the LLM said" is the
   exact thing we refuse to do.
 
+- **Plugin model: operator-trusted, allow-list gated, in-process. (permanent)**
+  Files in `backends/plugins/` and `plugins/` are loaded with `exec_module` and
+  run with full Python privileges — they ARE BeigeBox code, just discovered
+  at startup. The loaders enforce two cheap defenses (the directory must not
+  be world-writable, and only files whose stem is on the explicit
+  `backend_plugins.allowed` / `tools.plugins.allowed` list are loaded), but
+  neither is a sandbox. The operator is responsible for the contents of every
+  file on the allow-list. Third-party plugin loading is NOT a supported flow:
+  community plugins get vendored, code-reviewed, and added to the allow-list
+  explicitly. (Decided 2026-05-08.)
+
 - **No `shell=True` with user input.** Argv lists only. No f-string
   interpolation of user-supplied data into shell commands. (See
   `beigebox/security_mcp/_run.py` for the canonical example.)
@@ -151,11 +162,6 @@ it squishy" or "still deciding," keep it here.
 
 - **License model.** AGPL-3.0 + Commercial dual-license is set; is BeigeBox
   ever offered as a hosted service, or always self-hosted only?
-  {{TODO: decide}}
-
-- **Plugin / extension model.** `plugins/` exists. Is third-party plugin
-  loading welcomed, discouraged, or banned? (Banning has security upside;
-  welcoming has community upside.)
   {{TODO: decide}}
 
 - **MCP server scope.** Two MCP endpoints today (`/mcp` regular + `/pen-mcp`

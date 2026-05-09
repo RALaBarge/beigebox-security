@@ -47,7 +47,8 @@ PROVIDERS: dict[str, type[BaseBackend]] = {
 }
 
 # Load custom backend plugins from backends/plugins/
-_PLUGINS = load_backend_plugins("backends/plugins")
+# (Allow-list lives at backend_plugins.allowed in config.yaml.)
+_PLUGINS = load_backend_plugins("backends/plugins", cfg=get_config())
 PROVIDERS.update(_PLUGINS)
 
 _LATENCY_WINDOW = 100  # rolling window size per backend

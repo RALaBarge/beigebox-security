@@ -48,6 +48,19 @@ backends:
     max_retries: 1
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Backend Plugins — operator-trusted allow-list
+# ─────────────────────────────────────────────────────────────────────────────
+# Files in beigebox/backends/plugins/ that BeigeBox is allowed to import at
+# startup. Plugins run in-process with full Python privileges; the operator
+# is responsible for the contents of any file on this list. See
+# BEIGEBOX_IS_NOT.md, "Plugin model".
+backend_plugins:
+  allowed:
+    - llama_cpp
+    - executorch
+    - mini_sglang
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Models — Unified allocation (Phase 2)
 # ─────────────────────────────────────────────────────────────────────────────
 models:
@@ -206,6 +219,17 @@ tools:
   plugins:
     enabled: true
     path: ./plugins
+    # Allow-list of plugin file stems (filename without .py). Only files on
+    # this list are loaded. Plugins run in-process with full Python
+    # privileges; the operator is responsible for their contents. See
+    # BEIGEBOX_IS_NOT.md, "Plugin model".
+    allowed:
+      - dice
+      - doc_parser
+      - repo_tool
+      - units
+      - wiretap_summary
+      - zip_inspector
     repo:
       enabled: true
     zip_inspector:

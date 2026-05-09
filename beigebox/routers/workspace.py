@@ -306,15 +306,3 @@ async def api_transform_pdf(file: UploadFile):
         )
 
     return JSONResponse({"ok": True, "text": text, "chars": len(text), "filename": filename})
-
-
-# ── UI toggle ─────────────────────────────────────────────────────────────
-
-@router.post("/api/v1/web-ui/toggle-vi-mode")
-async def toggle_vi_mode():
-    """Toggle vi mode in runtime_config.yaml. Returns new state."""
-    rt = get_runtime_config()
-    current = rt.get("web_ui_vi_mode", False)
-    new_val = not current
-    ok = update_runtime_config("web_ui_vi_mode", new_val)
-    return JSONResponse({"vi_mode": new_val, "ok": ok})

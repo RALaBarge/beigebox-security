@@ -156,10 +156,8 @@ def _parse_mapping(lines: list[str], block_indent: int, pos: int) -> tuple[dict,
             else:
                 result[key] = _parse_scalar(raw_value)
         else:
-            # Value is on the following lines
+            # Value is on the following lines; None means no child block → null
             val, pos = _parse_value(lines, block_indent + 2, pos)
-            if val is None:
-                val = {}
             result[key] = val
 
     return result, pos
@@ -206,6 +204,31 @@ def _strip_inline_comment(s: str) -> str:
     return s
 
 
+def _unescape_dq(s: str) -> str:
+    """Single-pass unescape for double-quoted YAML strings."""
+    out: list[str] = []
+    i = 0
+    while i < len(s):
+        if s[i] == "\\" and i + 1 < len(s):
+            c = s[i + 1]
+            if c == "\\":
+                out.append("\\")
+            elif c == '"':
+                out.append('"')
+            elif c == "n":
+                out.append("\n")
+            elif c == "t":
+                out.append("\t")
+            else:
+                out.append("\\")
+                out.append(c)
+            i += 2
+        else:
+            out.append(s[i])
+            i += 1
+    return "".join(out)
+
+
 def _parse_scalar(val: str) -> Any:
     val = val.strip()
     if not val or val.lower() in ("null", "~"):
@@ -223,9 +246,9 @@ def _parse_scalar(val: str) -> Any:
         raise YAMLError(f"Unclosed flow sequence: {val!r}")
     if val.startswith("{") and not val.endswith("}"):
         raise YAMLError(f"Unclosed flow mapping: {val!r}")
-    # Quoted strings
+    # Quoted strings — single-pass unescape to avoid \\t inside \\\\t ambiguity
     if (val.startswith('"') and val.endswith('"') and len(val) >= 2):
-        return val[1:-1].replace('\\"', '"').replace("\\n", "\n").replace("\\t", "\t")
+        return _unescape_dq(val[1:-1])
     if (val.startswith("'") and val.endswith("'") and len(val) >= 2):
         return val[1:-1].replace("''", "'")
     # Numbers
@@ -302,11 +325,30 @@ def _dump_node(val: Any, indent: int, sort_keys: bool = False) -> list[str]:
     return [f"{prefix}{_dump_str(str(val))}"]
 
 
+_SAFE_STR = re.compile(r'^[a-zA-Z0-9 _./:@\-]+$')
+_KEYWORDS = frozenset(("true", "false", "null", "yes", "no", "on", "off", "~"))
+
+
+def _would_reparse_as_non_str(s: str) -> bool:
+    """Return True if an unquoted s would be parsed back as a non-string type."""
+    sl = s.lower()
+    if sl in _KEYWORDS:
+        return True
+    # Would it parse as a number?
+    try:
+        if "." in s or ("e" in sl and not s.startswith("0x")):
+            float(s)
+        else:
+            int(s, 0)
+        return True
+    except (ValueError, OverflowError):
+        return False
+
+
 def _dump_str(s: str) -> str:
-    _SAFE = re.compile(r'^[a-zA-Z0-9 _./:@\-]+$')
     if not s:
         return "''"
-    if _SAFE.match(s) and s.lower() not in ("true", "false", "null", "yes", "no", "on", "off"):
+    if _SAFE_STR.match(s) and not _would_reparse_as_non_str(s):
         return s
     escaped = s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n").replace("\t", "\\t")
     return f'"{escaped}"'

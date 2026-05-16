@@ -37,8 +37,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from threading import Lock
 from typing import Optional
+from beigebox._math import _mean, _std
 
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -320,8 +320,8 @@ class ExtractionDetector:
                 "total_queries": len(session.query_tokens),
                 "baseline_established": session.baseline_established,
                 "inversion_attempts": session.inversion_attempt_count,
-                "mean_query_length": float(np.mean(session.query_lengths)) if session.query_lengths else 0.0,
-                "std_query_length": float(np.std(session.query_lengths)) if len(session.query_lengths) > 1 else 0.0,
+                "mean_query_length": _mean(session.query_lengths) if session.query_lengths else 0.0,
+                "std_query_length": _std(session.query_lengths) if len(session.query_lengths) > 1 else 0.0,
                 "instruction_pattern_frequency": sum(session.instruction_keywords) / max(1, len(session.instruction_keywords)),
             }
 
@@ -386,8 +386,8 @@ class ExtractionDetector:
         if not recent_diversity:
             return 0.0
 
-        mean_diversity = float(np.mean(recent_diversity))
-        std_diversity = float(np.std(recent_diversity))
+        mean_diversity = _mean(recent_diversity)
+        std_diversity = _std(recent_diversity)
 
         if std_diversity < 1e-6:
             return 0.0
@@ -416,8 +416,8 @@ class ExtractionDetector:
             return 0.0
 
         recent = list(session.response_tokens)[-20:]
-        mean_resp = float(np.mean(recent))
-        std_resp = float(np.std(recent))
+        mean_resp = _mean(recent)
+        std_resp = _std(recent)
 
         if std_resp < 1e-6:
             return 0.0

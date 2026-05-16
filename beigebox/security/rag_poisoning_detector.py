@@ -18,8 +18,9 @@ False positives: <1% when sensitivity=0.95 (z-score threshold 3.0).
 """
 
 import logging
-import numpy as np
+import math
 from collections import deque
+from beigebox._math import _mean, _std, _norm
 from threading import Lock
 
 logger = logging.getLogger(__name__)
@@ -95,7 +96,7 @@ class RAGPoisoningDetector:
         # Linear interpolation: z = 2.0 + (sensitivity - 0.90) / 0.09 * 2.0
         return 2.0 + (sensitivity - 0.90) / 0.09 * 2.0
 
-    def update_baseline(self, embedding: np.ndarray | list[float]) -> None:
+    def update_baseline(self, embedding: list[float]) -> None:
         """
         Update baseline statistics with a safe (known-good) embedding.
 
@@ -107,11 +108,11 @@ class RAGPoisoningDetector:
             embedding: Embedding vector (numpy array or list of floats).
         """
         if isinstance(embedding, list):
-            embedding = np.array(embedding, dtype=np.float32)
+            embedding = [float(x) for x in embedding]
         else:
-            embedding = np.asarray(embedding, dtype=np.float32)
+            embedding = [float(x) for x in embedding]
 
-        norm = float(np.linalg.norm(embedding))
+        norm = _norm(embedding)
 
         with self._lock:
             self._norms.append(norm)
@@ -119,9 +120,9 @@ class RAGPoisoningDetector:
 
             # Incremental mean and std
             if len(self._norms) > 0:
-                self._mean_norm = float(np.mean(self._norms))
+                self._mean_norm = _mean(self._norms)
                 if len(self._norms) > 1:
-                    self._std_norm = float(np.std(self._norms))
+                    self._std_norm = _std(self._norms)
                     # Avoid division by zero
                     if self._std_norm < 1e-6:
                         self._std_norm = 1.0
@@ -134,7 +135,7 @@ class RAGPoisoningDetector:
         )
 
     def is_poisoned(
-        self, embedding: np.ndarray | list[float]
+        self, embedding: list[float]
     ) -> tuple[bool, float, str]:
         """
         Detect if an embedding is poisoned.
@@ -146,15 +147,15 @@ class RAGPoisoningDetector:
                 reason: Human-readable explanation
         """
         if isinstance(embedding, list):
-            embedding = np.array(embedding, dtype=np.float32)
+            embedding = [float(x) for x in embedding]
         else:
-            embedding = np.asarray(embedding, dtype=np.float32)
+            embedding = [float(x) for x in embedding]
 
         # Handle empty or all-zeros embeddings
-        if embedding.size == 0:
+        if len(embedding) == 0:
             return (True, 1.0, "Empty embedding")
 
-        norm = float(np.linalg.norm(embedding))
+        norm = _norm(embedding)
 
         # Rule 1: Magnitude out of safe range
         if norm < self.min_norm:

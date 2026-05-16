@@ -33,12 +33,12 @@ import json
 import logging
 import sqlite3
 import time
-import numpy as np
 from collections import deque
 from pathlib import Path
 from threading import Lock
 from typing import Optional
 from dataclasses import dataclass, field
+from beigebox._math import _mean, _std
 
 logger = logging.getLogger(__name__)
 
@@ -173,12 +173,12 @@ class AnomalyBaselinesDB:
             error_samples = list(stats.error_rate_samples)
             payload_sizes = list(stats.payload_sizes)
 
-            mean_rate = float(np.mean(rate_samples)) if rate_samples else 0.0
-            std_rate = float(np.std(rate_samples)) if len(rate_samples) > 1 else 1.0
-            mean_err = float(np.mean(error_samples)) if error_samples else 0.0
-            std_err = float(np.std(error_samples)) if len(error_samples) > 1 else 0.1
-            mean_payload = float(np.mean(payload_sizes)) if payload_sizes else 0.0
-            std_payload = float(np.std(payload_sizes)) if len(payload_sizes) > 1 else 1.0
+            mean_rate = _mean(rate_samples) if rate_samples else 0.0
+            std_rate = _std(rate_samples) if len(rate_samples) > 1 else 1.0
+            mean_err = _mean(error_samples) if error_samples else 0.0
+            std_err = _std(error_samples) if len(error_samples) > 1 else 0.1
+            mean_payload = _mean(payload_sizes) if payload_sizes else 0.0
+            std_payload = _std(payload_sizes) if len(payload_sizes) > 1 else 1.0
 
             self._conn.execute(
                 """INSERT OR REPLACE INTO anomaly_baselines
@@ -482,8 +482,8 @@ class APIAnomalyDetector:
 
             # Update latency baseline (mean + std)
             if len(session.latency_history) > 1:
-                session.mean_latency = float(np.mean(session.latency_history))
-                session.std_latency = float(np.std(session.latency_history))
+                session.mean_latency = session.latency_history and _mean(list(session.latency_history)) or 0.0
+                session.std_latency = _std(session.latency_history)
                 if session.std_latency < 1e-3:
                     session.std_latency = 1.0
 
@@ -714,8 +714,8 @@ class APIAnomalyDetector:
         current_rate = len(recent)
 
         if self._has_baseline(session) and len(session.rate_samples) >= 5:
-            mean_rate = float(np.mean(session.rate_samples))
-            std_rate = float(np.std(session.rate_samples))
+            mean_rate = session.rate_samples and _mean(list(session.rate_samples)) or 0.0
+            std_rate = _std(session.rate_samples)
             z = self._zscore(current_rate, mean_rate, std_rate)
             if z > self.z_threshold:
                 logger.warning(
@@ -741,8 +741,8 @@ class APIAnomalyDetector:
         error_rate = self._calc_error_rate(session, now)
 
         if self._has_baseline(session) and len(session.error_rate_samples) >= 5:
-            mean_err = float(np.mean(session.error_rate_samples))
-            std_err = float(np.std(session.error_rate_samples))
+            mean_err = session.error_rate_samples and _mean(list(session.error_rate_samples)) or 0.0
+            std_err = _std(session.error_rate_samples)
             if std_err < 0.01:
                 std_err = 0.01  # Prevent z-score explosion on near-zero baseline
             z = self._zscore(error_rate, mean_err, std_err)
@@ -823,8 +823,8 @@ class APIAnomalyDetector:
 
         # Z-score check if baseline available
         if self._has_baseline(session) and len(session.payload_sizes) >= 10:
-            mean_payload = float(np.mean(session.payload_sizes))
-            std_payload = float(np.std(session.payload_sizes))
+            mean_payload = session.payload_sizes and _mean(list(session.payload_sizes)) or 0.0
+            std_payload = _std(session.payload_sizes)
             if std_payload > 1.0:
                 z = self._zscore(request_bytes, mean_payload, std_payload)
                 if abs(z) > self.z_threshold:
@@ -898,8 +898,8 @@ class APIAnomalyDetector:
             rate = len(recent)
             z = None
             if len(session.rate_samples) >= 5:
-                mean_r = float(np.mean(session.rate_samples))
-                std_r = float(np.std(session.rate_samples))
+                mean_r = session.rate_samples and _mean(list(session.rate_samples)) or 0.0
+                std_r = _std(session.rate_samples)
                 z = round(self._zscore(rate, mean_r, std_r), 2)
             return {"detail": f"{rate} requests/min (threshold: {self.request_rate_threshold})", "z_score": z}
 
@@ -907,8 +907,8 @@ class APIAnomalyDetector:
             err_rate = self._calc_error_rate(session, now)
             z = None
             if len(session.error_rate_samples) >= 5:
-                mean_e = float(np.mean(session.error_rate_samples))
-                std_e = float(np.std(session.error_rate_samples))
+                mean_e = session.error_rate_samples and _mean(list(session.error_rate_samples)) or 0.0
+                std_e = _std(session.error_rate_samples)
                 if std_e < 0.01:
                     std_e = 0.01
                 z = round(self._zscore(err_rate, mean_e, std_e), 2)

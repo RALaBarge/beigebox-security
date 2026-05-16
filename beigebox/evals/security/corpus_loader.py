@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-import yaml
+import beigebox._yaml as yaml
 
 from beigebox.evals.security.test_secrets import generate_test_secret
 

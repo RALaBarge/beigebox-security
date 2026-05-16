@@ -3,10 +3,17 @@ ApiKeyRepo — entity repo for the api_keys table.
 
 Sits on top of BaseDB; callers inject the driver.  Knows nothing about how the
 driver stores bytes — that's BaseDB's job.  Knows everything about what an API
-key *is*: creation, verification (constant-time bcrypt), listing, revocation.
+key *is*: creation, verification (constant-time scrypt), listing, revocation.
+
+Hash format: scrypt:<log2n>:<r>:<p>:<hex_salt>:<hex_hash>
+Existing bcrypt hashes (starting with $2) are detected and rejected gracefully
+— keys must be rotated after upgrading.
 """
 from __future__ import annotations
 
+import hashlib
+import hmac
+import os
 import secrets
 import uuid
 from datetime import datetime, timezone
@@ -31,20 +38,34 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_user_id  ON api_keys(user_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key_hash);
 """
 
-# BCrypt cost kept at 12 (matches sqlite_store.py).  Import is deferred so the
-# module can be imported even without bcrypt installed in environments that
-# don't use this repo.
-_BCRYPT_ROUNDS = 12
+# scrypt parameters: N=2^14, r=8, p=1 — ~100ms on commodity hardware
+_N = 14   # log2 of N
+_R = 8
+_P = 1
+_DKLEN = 32
 
 
-def _bcrypt():
+def _hash_key(plain_key: str) -> str:
+    salt = os.urandom(16)
+    dk = hashlib.scrypt(plain_key.encode(), salt=salt, n=2 ** _N, r=_R, p=_P, dklen=_DKLEN)
+    return f"scrypt:{_N}:{_R}:{_P}:{salt.hex()}:{dk.hex()}"
+
+
+def _verify_key(plain_key: str, stored_hash: str) -> bool:
+    if stored_hash.startswith("$2"):
+        # Legacy bcrypt hash — can't verify without bcrypt; force rotation
+        return False
+    parts = stored_hash.split(":")
+    if len(parts) != 6 or parts[0] != "scrypt":
+        return False
     try:
-        import bcrypt
-        return bcrypt
-    except ImportError as e:
-        raise ImportError(
-            "bcrypt is required for ApiKeyRepo. Install: pip install bcrypt"
-        ) from e
+        log2n, r, p = int(parts[1]), int(parts[2]), int(parts[3])
+        salt = bytes.fromhex(parts[4])
+        expected = bytes.fromhex(parts[5])
+    except (ValueError, TypeError):
+        return False
+    dk = hashlib.scrypt(plain_key.encode(), salt=salt, n=2 ** log2n, r=r, p=p, dklen=len(expected))
+    return hmac.compare_digest(dk, expected)
 
 
 def _now_utc() -> str:
@@ -64,7 +85,6 @@ class ApiKeyRepo:
 
     def create_tables(self) -> None:
         """Idempotent DDL for api_keys (+ indexes)."""
-        ph = self._db._placeholder()
         for stmt in _DDL.strip().split(";"):
             stmt = stmt.strip()
             if stmt:
@@ -75,13 +95,12 @@ class ApiKeyRepo:
     def create(self, user_id: str, name: str = "default") -> tuple[str, str]:
         """Create a new API key.  Returns (key_id, plain_key).
 
-        The plain key is returned once and never stored.  Only the bcrypt hash
+        The plain key is returned once and never stored.  Only the scrypt hash
         is persisted.
         """
-        bc = _bcrypt()
         key_id = str(uuid.uuid4())
         plain_key = secrets.token_urlsafe(32)
-        key_hash = bc.hashpw(plain_key.encode(), bc.gensalt(rounds=_BCRYPT_ROUNDS)).decode()
+        key_hash = _hash_key(plain_key)
         now = _now_utc()
         ph = self._db._placeholder()
         self._db.execute(
@@ -112,16 +131,12 @@ class ApiKeyRepo:
         )
 
     def verify(self, plain_key: str) -> str | None:
-        """Verify a plain-text key against stored bcrypt hashes.
+        """Verify a plain-text key against stored scrypt hashes.
 
-        Returns the owning user_id on success, None on failure.  Uses full
-        bcrypt comparison (constant-time) for every active, non-expired hash —
-        same approach as the original sqlite_store.verify_api_key().
-
-        An extra dummy bcrypt call is made when no keys are found so that the
-        response time is indistinguishable whether or not any keys exist.
+        Returns the owning user_id on success, None on failure.  Constant-time
+        guard: always iterates all active hashes so timing reveals nothing about
+        key count.  An extra dummy hash is computed when the result set is empty.
         """
-        bc = _bcrypt()
         now = _now_utc()
         ph = self._db._placeholder()
         rows = self._db.fetchall(
@@ -130,22 +145,21 @@ class ApiKeyRepo:
             (now,),
         )
 
+        found_user: str | None = None
         for row in rows:
             try:
-                if bc.checkpw(plain_key.encode(), row["key_hash"].encode()):
+                if _verify_key(plain_key, row["key_hash"]):
                     self._db.execute(
                         f"UPDATE api_keys SET last_used={ph} WHERE id={ph}",
                         (_now_utc(), row["id"]),
                     )
-                    return row["user_id"]
-            except ValueError:
+                    found_user = row["user_id"]
+                    # Don't break — keep iterating for constant-time behaviour
+            except Exception:
                 continue
 
-        # Constant-time guard: always pay at least one bcrypt operation.
-        # gensalt() returns bytes; don't .encode() it.
-        try:
-            bc.checkpw(plain_key.encode(), bc.gensalt(rounds=4))
-        except (ValueError, Exception):
-            pass
+        if not rows:
+            # Constant-time guard: pay at least one scrypt operation
+            _verify_key(plain_key, _hash_key(secrets.token_urlsafe(8)))
 
-        return None
+        return found_user

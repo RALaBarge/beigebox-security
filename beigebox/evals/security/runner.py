@@ -93,11 +93,11 @@ def _load_yaml(path: Path) -> list[dict]:
     except (ModuleNotFoundError, ImportError):
         # Fallback: load YAML directly (secrets will be unsubstituted ${SECRET:...})
         try:
-            import yaml  # type: ignore
+            import beigebox._yaml as yaml
             with open(path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
             return data.get("rows", []) if isinstance(data, dict) else (data or [])
-        except ModuleNotFoundError:
+        except Exception:
             # Final fallback: JSON-Lines corpus
             jsonl = path.with_suffix(".jsonl")
             if jsonl.exists():
@@ -154,31 +154,46 @@ def suite_injection() -> SuiteResult:
     return out
 
 
+def _randn_vec(rng, size: int) -> list[float]:
+    """Box-Muller normal samples seeded from rng."""
+    import math
+    out = []
+    for _ in range(size):
+        u1, u2 = rng.random(), rng.random()
+        z = math.sqrt(-2.0 * math.log(max(u1, 1e-300))) * math.cos(2.0 * math.pi * u2)
+        out.append(z)
+    return out
+
+
+def _unit_norm(v: list[float]) -> list[float]:
+    from beigebox._math import _norm
+    n = _norm(v)
+    return [x / n for x in v] if n > 0 else v
+
+
 def suite_rag_poisoning() -> SuiteResult:
     name = "rag_poisoning"
     try:
-        import numpy as np  # noqa: F401
         from beigebox.security.rag_poisoning_detector import RAGPoisoningDetector
     except Exception as exc:  # noqa: BLE001
         return SuiteResult(name=name, skipped_reason=f"import failed: {exc}")
 
-    import numpy as np
-    rng = np.random.default_rng(42)
+    import random
+    rng = random.Random(42)
     detector = RAGPoisoningDetector(sensitivity=0.95, baseline_window=200)
 
     # Build benign baseline: 200 unit-norm-ish embeddings
     benign = []
     for i in range(200):
-        v = rng.standard_normal(384)
-        v /= np.linalg.norm(v)
+        v = _unit_norm(_randn_vec(rng, 384))
         benign.append({"id": f"benign_{i}", "label": "benign", "vec": v})
         detector.update_baseline(v)
 
     # Malicious: inflated-norm or zero-norm vectors
     malicious = []
     for i in range(50):
-        scale = float(rng.choice([0.001, 50.0, 200.0]))
-        v = rng.standard_normal(384) * scale
+        scale = rng.choice([0.001, 50.0, 200.0])
+        v = [x * scale for x in _randn_vec(rng, 384)]
         malicious.append({"id": f"mal_{i}", "label": "malicious", "vec": v})
 
     rows = malicious + benign[:50]  # equal size for symmetric metrics

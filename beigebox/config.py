@@ -13,7 +13,7 @@ import logging
 import os
 import re
 import time
-import yaml
+import beigebox._yaml as yaml
 from pathlib import Path
 from typing import Optional
 
@@ -493,7 +493,7 @@ def write_runtime_config(data: dict) -> bool:
             dir=_RUNTIME_CONFIG_PATH.parent, suffix=".tmp"
         )
         try:
-            import yaml as _yaml
+            import beigebox._yaml as _yaml
             with os.fdopen(tmp_fd, "w") as f:
                 _yaml.dump(full, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
             os.replace(tmp_path, _RUNTIME_CONFIG_PATH)

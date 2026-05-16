@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-import yaml
+import beigebox._yaml as yaml
 
 logger = logging.getLogger(__name__)
 

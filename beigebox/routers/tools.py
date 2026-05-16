@@ -393,7 +393,7 @@ async def api_toolbox_validate(request: Request):
                     "error": "unterminated frontmatter (missing closing '---')",
                     "line": 1,
                 })
-            import yaml
+            import beigebox._yaml as yaml
             try:
                 meta = yaml.safe_load(content[3:end].strip()) or {}
             except yaml.YAMLError as e:

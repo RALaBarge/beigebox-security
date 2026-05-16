@@ -268,12 +268,7 @@ class ResponseValidator:
 
     def _validate_yaml(self, text: str) -> ValidationResult:
         """Basic YAML parse check."""
-        try:
-            import yaml  # type: ignore[import]
-        except ImportError:
-            logger.debug("PyYAML not installed — skipping YAML validation")
-            return ValidationResult(valid=True, format="yaml")
-
+        import beigebox._yaml as yaml
         try:
             yaml.safe_load(text)
             return ValidationResult(valid=True, format="yaml")

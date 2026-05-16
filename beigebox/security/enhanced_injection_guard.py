@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import logging
 import re
 import time
@@ -38,7 +39,6 @@ from enum import Enum
 from threading import Lock
 from typing import Optional
 
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -462,7 +462,7 @@ class EnhancedInjectionGuard:
         entropy = 0.0
         for count in byte_counts.values():
             p = count / len(text)
-            entropy -= p * np.log2(p)
+            entropy -= p * math.log2(p)
         return entropy
 
     def get_quarantine_stats(self) -> dict:

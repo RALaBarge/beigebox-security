@@ -14,7 +14,6 @@ state, matching the convention used by PostgresBackend.
 import logging
 import threading
 
-import numpy as np
 
 from .base import VectorBackend
 from beigebox.security.rag_poisoning_detector import RAGPoisoningDetector
@@ -42,8 +41,8 @@ class MemoryBackend(VectorBackend):
                 store path that other backends use.
         """
         self._lock = threading.Lock()
-        # id → (embedding: np.ndarray, document: str, metadata: dict)
-        self._store: dict[str, tuple[np.ndarray, str, dict]] = {}
+        # id → (embedding: list[float], document: str, metadata: dict)
+        self._store: dict[str, tuple[list[float], str, dict]] = {}
 
         self._detector = rag_detector or RAGPoisoningDetector()
         self._detection_mode = detection_mode
@@ -105,7 +104,7 @@ class MemoryBackend(VectorBackend):
             else:
                 self._detector.update_baseline(emb)
 
-            arr = np.asarray(emb, dtype=np.float32)
+            arr = [float(x) for x in emb]
             with self._lock:
                 self._store[vid] = (arr, doc, dict(meta) if meta else {})
 
@@ -149,19 +148,19 @@ class MemoryBackend(VectorBackend):
             if not items:
                 return empty
 
-        query_vec = np.asarray(embedding, dtype=np.float32)
-        q_norm = float(np.linalg.norm(query_vec))
+        query_vec = [float(x) for x in embedding]
+        q_norm = _norm(query_vec)
         if q_norm == 0.0:
             # Degenerate query — return empty rather than NaN distances
             return empty
 
         scored: list[tuple[float, str, str, dict]] = []
         for vid, (vec, doc, meta) in items:
-            v_norm = float(np.linalg.norm(vec))
+            v_norm = _norm(vec)
             if v_norm == 0.0:
                 distance = 1.0
             else:
-                similarity = float(np.dot(query_vec, vec) / (q_norm * v_norm))
+                similarity = _dot(query_vec, vec) / (q_norm * v_norm)
                 # Clamp to handle floating-point drift outside [-1, 1]
                 similarity = max(-1.0, min(1.0, similarity))
                 distance = 1.0 - similarity

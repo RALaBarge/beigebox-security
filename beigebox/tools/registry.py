@@ -42,6 +42,12 @@ from beigebox.tools.research_agent import ResearchAgentTool
 from beigebox.tools.parallel_research import ParallelResearchTool
 from beigebox.tools.evidence_synthesis import EvidenceSynthesisTool
 from beigebox.tools.research_agent_flexible import ResearchAgentFlexibleTool
+from beigebox.tools.fs import (
+    ReadFileTool, WriteFileTool, EditFileTool,
+    GlobTool, SearchTool, DirectoryTreeTool,
+)
+from beigebox.tools.bash import BashTool
+from beigebox.tools.operator_tool import OperatorTool
 
 logger = logging.getLogger(__name__)
 
@@ -314,6 +320,32 @@ class ToolRegistry:
         if es_cfg.get("enabled", False):
             self.tools["evidence_synthesis"] = EvidenceSynthesisTool(workspace_out=_ws_out)
             logger.info("EvidenceSynthesis tool registered")
+
+        # --- Filesystem tools (read_file, write_file, edit_file, glob, search, directory_tree) ---
+        # Enabled by default — no external deps. Scoped to tools.fs.working_dir.
+        fs_cfg = tools_cfg.get("fs", {})
+        if fs_cfg.get("enabled", True):
+            self.tools["read_file"] = ReadFileTool()
+            self.tools["write_file"] = WriteFileTool()
+            self.tools["edit_file"] = EditFileTool()
+            self.tools["glob"] = GlobTool()
+            self.tools["search"] = SearchTool()
+            self.tools["directory_tree"] = DirectoryTreeTool()
+            logger.info("Filesystem tools registered (working_dir=%s)", fs_cfg.get("working_dir", "cwd"))
+
+        # --- Bash (sandboxed escape hatch — disabled by default) ---
+        bash_cfg = tools_cfg.get("bash", {})
+        if bash_cfg.get("enabled", False):
+            self.tools["bash"] = BashTool()
+            logger.info("Bash tool registered (default_profile=%s)", bash_cfg.get("default_profile", "code-task"))
+
+        # --- Operator (agentic loop — disabled by default) ---
+        # Lets external MCP clients invoke a full operator session via /mcp.
+        # Runs in a thread to avoid event loop conflicts with FastAPI.
+        op_cfg = tools_cfg.get("operator", {})
+        if op_cfg.get("enabled", False):
+            self.tools["operator"] = OperatorTool()
+            logger.info("Operator tool registered")
 
         # Connection tool auto-enables whenever the top-level connections: section
         # is present in config.yaml — no separate enabled flag needed.

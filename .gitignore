@@ -1,3 +1,10 @@
+# External repos cloned for reference — not part of this project
+openclaude/
+mcp-bash/
+mcp-servers/
+jupyter-ai/
+marimo/
+
 # Local env overrides — machine-specific, never commit
 docker/.env
 docker/docker-compose.yml

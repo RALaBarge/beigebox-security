@@ -458,26 +458,18 @@ class McpServer:
     async def _tools_call_dispatch(self, name: str, input_text: str, _emit) -> dict:
         """Inner dispatch — split out so _tools_call can wrap it in try/finally."""
 
-        # discover_tools — search the capability index and return summaries
+        # discover_tools — return full MCP tool schemas as JSON so the operator
+        # can add them to its active tool list and call them by name.
         if name == "discover_tools":
             candidates = self._search_capabilities(input_text)
-            if not candidates:
-                text = (
-                    "No matching tools found for that query. "
-                    "Available tool names: " + ", ".join(self._registry.tools.keys())
-                )
-            else:
-                lines = [
-                    f"Found {len(candidates)} tool(s) matching your query. "
-                    "Call any of them directly by name:\n"
-                ]
-                for c in candidates:
-                    risk_marker = " [write]" if c["risk"] == "write" else ""
-                    lines.append(f"- **{c['tool']}**{risk_marker}: {c['summary']}")
-                text = "\n".join(lines)
+            schemas = []
+            for c in candidates:
+                tool_obj = self._registry.tools.get(c["tool"])
+                if tool_obj is not None:
+                    schemas.append(_tool_schema(c["tool"], tool_obj))
             _emit("ok")
             return {
-                "content": [{"type": "text", "text": text}],
+                "content": [{"type": "text", "text": json.dumps(schemas)}],
                 "isError": False,
             }
 

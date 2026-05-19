@@ -68,6 +68,16 @@ async def list_models(cfg: dict, backend_url: str, backend_router) -> dict:
                 seen.add(mid)
                 all_models.append(m)
 
+    # If nothing was found from Ollama or pinned lists, surface the configured
+    # default model so clients always have at least one entry to work with.
+    if not all_models:
+        default_model = cfg.get("backend", {}).get("default_model", "")
+        if default_model:
+            logger.debug(
+                "list_models: no models from backends; surfacing default_model=%s", default_model
+            )
+            all_models = [{"id": default_model, "object": "model", "owned_by": "local"}]
+
     data = {"object": "list", "data": all_models}
     return transform_model_names(data, cfg)
 

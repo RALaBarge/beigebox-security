@@ -13,11 +13,17 @@ which logs to wiretap and streams the upstream response verbatim.
 """
 from __future__ import annotations
 
+import logging
+
+import httpx
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
+from beigebox.config import get_config
 from beigebox.routers._shared import _wire_and_forward
 from beigebox.state import get_state
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
@@ -118,10 +124,34 @@ async def assistants_passthrough(path: str, request: Request):
 # Ollama-native passthroughs (frontends that speak Ollama directly)
 # ---------------------------------------------------------------------------
 
+def _ollama_base_url() -> str:
+    """Return the local Ollama URL from config (old backend.url field).
+
+    Ollama-native routes must target this directly, not get_primary_backend_url()
+    which may return OpenRouter. When OpenRouter is the primary backend its URL
+    contains a path component (/api/v1) that, prepended to /api/tags, forms a
+    double-path that OpenRouter serves as HTML — the original bug.
+    """
+    return get_config().get("backend", {}).get("url", "http://localhost:11434").rstrip("/")
+
+
+async def _ollama_forward(path: str, fallback: dict) -> JSONResponse:
+    """GET a path from the local Ollama backend; return fallback JSON on any error."""
+    url = f"{_ollama_base_url()}{path}"
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            return JSONResponse(resp.json(), status_code=resp.status_code)
+    except Exception as exc:
+        logger.warning("Ollama unreachable at %s (%s) — returning empty fallback", url, exc)
+        return JSONResponse(fallback)
+
+
 @router.api_route("/api/tags", methods=["GET"])
 async def ollama_tags(request: Request):
-    """Ollama model list — forward and log."""
-    return await _wire_and_forward(request, "ollama/tags")
+    """Ollama model list — forward to local Ollama; return empty list if unavailable."""
+    return await _ollama_forward("/api/tags", {"models": []})
 
 
 @router.api_route("/api/chat", methods=["POST"])
@@ -175,7 +205,8 @@ async def ollama_embeddings(request: Request):
 
 @router.api_route("/api/ps", methods=["GET"])
 async def ollama_ps(request: Request):
-    return await _wire_and_forward(request, "ollama/ps")
+    """Ollama running processes — forward to local Ollama; return empty list if unavailable."""
+    return await _ollama_forward("/api/ps", {"models": []})
 
 
 @router.api_route("/api/version", methods=["GET"])

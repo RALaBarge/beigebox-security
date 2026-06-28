@@ -33,7 +33,7 @@ def e2e_client(tmp_path_factory):
     tmp_path = tmp_path_factory.mktemp("e2e")
 
     cfg_data = {
-        "backend": {"url": "http://localhost:11434", "default_model": "llama3.2", "timeout": 120},
+        "backend": {"url": "http://localhost:11434", "default_model": "gemma3", "timeout": 120},
         "server": {"host": "0.0.0.0", "port": 8000},
         "embedding": {"model": "nomic-embed-text", "backend_url": "http://localhost:11434"},
         "storage": {
@@ -49,7 +49,7 @@ def e2e_client(tmp_path_factory):
         "wiretap": {"path": str(tmp_path / "wire.jsonl")},
         "routing": {},
         "model_advertising": {"mode": "hidden"},
-        "operator": {"model": "llama3.2"},
+        "operator": {"model": "gemma3"},
         "backends_enabled": False,
         "cost_tracking": {"enabled": False},
         "wasm": {

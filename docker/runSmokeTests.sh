@@ -77,7 +77,7 @@ fi
 _hdr "E2E chat"
 curl -fsS "$BB/v1/chat/completions" \
   -H 'Content-Type: application/json' \
-  -d '{"model":"llama3.2:3b","messages":[{"role":"user","content":"reply with exactly one word: ok"}],"stream":false}' \
+  -d '{"model":"gemma3:4b","messages":[{"role":"user","content":"reply with exactly one word: ok"}],"stream":false}' \
   >/dev/null \
   && _ok "POST /v1/chat/completions (non-stream)" \
   || _fail "POST /v1/chat/completions (non-stream)"
@@ -86,7 +86,7 @@ curl -fsS "$BB/v1/chat/completions" \
 _hdr "Streaming"
 curl -fsS "$BB/v1/chat/completions" \
   -H 'Content-Type: application/json' \
-  -d '{"model":"llama3.2:3b","messages":[{"role":"user","content":"say hi"}],"stream":true}' \
+  -d '{"model":"gemma3:4b","messages":[{"role":"user","content":"say hi"}],"stream":true}' \
   | head -c 200 >/dev/null \
   && _ok "POST /v1/chat/completions (stream)" \
   || _fail "POST /v1/chat/completions (stream)"

@@ -18,7 +18,7 @@ Open your terminal in the `docker/` folder and run:
 1. **First time only:** You'll be asked 2 simple questions
    - Do you want browser automation (CDP)? (yes/no)
    - Where should models be stored? (use the default, or pick a custom folder)
-2. Models are automatically downloaded (`llama3.2:3b` and `nomic-embed-text`)
+2. Models are automatically downloaded (`gemma3:4b` and `nomic-embed-text`)
 3. BeigeBox starts automatically
 4. Your choices are saved to `~/.beigebox/config` (shared across all BeigeBox versions on your machine)
 
@@ -56,7 +56,7 @@ No wizard this time — it remembers your choices and just launches.
 |---------|-------------|-------|
 | **BeigeBox** | The main app — web UI + API | http://localhost:1337 |
 | **Postgres** | Stores vectors for search | Internal only |
-| Models | `llama3.2:3b` (chat) + `nomic-embed-text` (search) | On your machine via Ollama |
+| Models | `gemma3:4b` (chat) + `nomic-embed-text` (search) | On your machine via Ollama |
 
 ---
 
@@ -196,7 +196,7 @@ Edit `config.yaml` and change the `default` model. For example:
 
 ```yaml
 models:
-  default: "mistral:7b"  # Instead of llama3.2:3b
+  default: "mistral:7b"  # Instead of gemma3:4b
 ```
 
 Then restart:
@@ -262,7 +262,7 @@ ollama list
 If you see nothing, manually pull the model:
 
 ```bash
-ollama pull llama3.2:3b
+ollama pull gemma3:4b
 ollama pull nomic-embed-text
 ```
 

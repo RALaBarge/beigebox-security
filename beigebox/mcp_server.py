@@ -38,6 +38,7 @@ Usage (Claude Desktop claude_desktop_config.json):
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import Any
@@ -483,7 +484,10 @@ class McpServer:
                 "isError": True,
             }
 
-        result = self._registry.run_tool(name, input_text)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, self._registry.run_tool, name, input_text
+        )
 
         if result is None:
             _emit("error", error="no_result")

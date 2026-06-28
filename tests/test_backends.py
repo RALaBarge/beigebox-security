@@ -66,7 +66,7 @@ async def test_ollama_forward_success():
         mock_client.__aexit__ = AsyncMock(return_value=False)
         mock_client_cls.return_value = mock_client
 
-        result = await b.forward({"model": "llama3.2", "messages": []})
+        result = await b.forward({"model": "gemma3", "messages": []})
         assert result.ok
         assert result.content == "hello"
         assert result.cost_usd is None  # Ollama is always free
@@ -86,7 +86,7 @@ async def test_ollama_forward_timeout():
         mock_client.__aexit__ = AsyncMock(return_value=False)
         mock_client_cls.return_value = mock_client
 
-        result = await b.forward({"model": "llama3.2", "messages": []})
+        result = await b.forward({"model": "gemma3", "messages": []})
         assert not result.ok
         assert "Timeout" in result.error
 
@@ -179,7 +179,7 @@ async def test_router_forward_tries_priority_order():
     # Patch global config check so this test isn't affected by runtime_config.yaml
     # state OR by config.yaml absence (it lives at docker/config.yaml, not repo root).
     with patch.object(router, "_global_allow_openrouter_for_plain_models", return_value=False):
-        result = await router.forward({"model": "llama3.2", "messages": []})
+        result = await router.forward({"model": "gemma3", "messages": []})
     assert result.ok
     assert result.backend_name == "local"
     router.backends[1].forward.assert_not_called()
@@ -202,7 +202,7 @@ async def test_router_forward_fallback_on_failure():
 
     # Patch global config check so this test is not affected by runtime_config.yaml state
     with patch.object(router, "_global_allow_openrouter_for_plain_models", return_value=False):
-        result = await router.forward({"model": "llama3.2", "messages": []})
+        result = await router.forward({"model": "gemma3", "messages": []})
     assert not result.ok
     assert result.status_code == 503
     router.backends[1].forward.assert_not_called()
@@ -223,7 +223,7 @@ async def test_router_can_opt_in_openrouter_for_plain_model_ids():
     router.backends[0].forward = AsyncMock(return_value=fail_resp)
     router.backends[1].forward = AsyncMock(return_value=success_resp)
 
-    result = await router.forward({"model": "llama3.2", "messages": []})
+    result = await router.forward({"model": "gemma3", "messages": []})
     assert result.ok
     assert result.backend_name == "or"
     assert result.cost_usd == 0.001

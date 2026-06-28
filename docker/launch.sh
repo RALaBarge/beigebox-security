@@ -331,7 +331,7 @@ ARGS+=("${@:+$@}")
 # Pre-flight: Ensure required models are available
 # ─────────────────────────────────────────────────────────────────────────────
 ensure_models() {
-  local models=("llama3.2:3b" "nomic-embed-text")
+  local models=("gemma3:4b" "nomic-embed-text")
 
   echo "[launch.sh] Checking for required models…"
 

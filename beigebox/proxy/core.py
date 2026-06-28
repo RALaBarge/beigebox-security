@@ -1034,12 +1034,7 @@ class Proxy:
             yield "data: [DONE]\n"
             return
 
-        # Emit a routing metadata chunk before the real stream starts. The
-        # frontend reads bb_type=="routing" and updates the model badge in the
-        # pane header immediately — before any tokens arrive. Not sent for
-        # synthetic requests because synthetic clients don't have a UI.
-        if not is_synthetic:
-            yield f"data: {json.dumps({'bb_type': 'routing', 'model': model})}\n\n"
+        # Routing metadata chunk no longer emitted — no frontend consumes it.
 
         # Capture pipeline: request envelope deferred until first chunk
         # arrives (so we know upstream is alive).

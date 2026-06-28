@@ -1,6 +1,6 @@
 ---
 name: make-tool
-version: 2
+version: 3
 description: Use when the user says "make a tool that …", "write a tool for …", "I need a tool that does …", "add a tool to BeigeBox", or describes a capability the decision LLM should be able to invoke (search, fetch, lookup, parse, automate). Produces a new tool module under `beigebox/tools/<name>.py` plus the registry hook in `beigebox/tools/registry.py` and a `tools.<name>:` config block in `config.yaml`. Tools are Python classes with a `description` attribute and a single `run(self, input_str: str) -> str` entrypoint, returning user-facing strings (errors included) — they never raise to the caller.
 ---
 

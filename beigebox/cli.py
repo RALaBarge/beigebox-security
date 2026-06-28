@@ -62,8 +62,9 @@ def cmd_dial(args):
     from beigebox.config import get_config
 
     cfg = get_config()
-    host = args.host or cfg["server"]["host"]
-    port = args.port or cfg["server"]["port"]
+    srv = cfg["server"]
+    host = args.host or srv["host"]
+    port = args.port or srv["port"]
 
     print(BANNER)
     print(f"  Dialing up on {host}:{port}")
@@ -75,12 +76,20 @@ def cmd_dial(args):
     print(f"  Model: {default_model}")
     print()
 
+    ssl_kwargs = {}
+    if srv.get("ssl_keyfile") and srv.get("ssl_certfile"):
+        ssl_kwargs["ssl_keyfile"] = srv["ssl_keyfile"]
+        ssl_kwargs["ssl_certfile"] = srv["ssl_certfile"]
+        print(f"  TLS enabled: {srv['ssl_certfile']}")
     uvicorn.run(
         "beigebox.main:app",
         host=host,
         port=port,
         reload=args.reload,
         log_level="info",
+        limit_concurrency=None,
+        backlog=4096,
+        **ssl_kwargs,
     )
 
 

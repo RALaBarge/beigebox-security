@@ -48,6 +48,8 @@ from beigebox.tools.fs import (
 )
 from beigebox.tools.bash import BashTool
 from beigebox.tools.operator_tool import OperatorTool
+from beigebox.tools.tts import TTSTool
+from beigebox.tools.stt import STTTool
 
 logger = logging.getLogger(__name__)
 
@@ -346,6 +348,20 @@ class ToolRegistry:
         if op_cfg.get("enabled", False):
             self.tools["operator"] = OperatorTool()
             logger.info("Operator tool registered")
+
+        # --- TTS (text-to-speech — disabled by default) ---
+        # Calls the voice.tts_url backend (OpenAI-compatible /v1/audio/speech).
+        tts_cfg = tools_cfg.get("tts", {})
+        if tts_cfg.get("enabled", False):
+            self.tools["tts"] = TTSTool()
+            logger.info("TTS tool registered")
+
+        # --- STT (speech-to-text — disabled by default) ---
+        # Calls the voice.stt_url backend (OpenAI-compatible /v1/audio/transcriptions).
+        stt_cfg = tools_cfg.get("stt", {})
+        if stt_cfg.get("enabled", False):
+            self.tools["stt"] = STTTool()
+            logger.info("STT tool registered")
 
         # Connection tool auto-enables whenever the top-level connections: section
         # is present in config.yaml — no separate enabled flag needed.

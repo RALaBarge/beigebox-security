@@ -5,7 +5,7 @@ Config (config.yaml):
   aliases:
     fast: "qwen3:4b"
     smart: "qwen3:30b"
-    cheap: "llama3.2:1b"
+    cheap: "gemma3:1b"
     code: "qwen2.5-coder:7b"
 
 Usage:

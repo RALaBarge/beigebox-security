@@ -160,49 +160,57 @@ async def _streaming_turn(
 
     Text tokens are passed to on_token as they arrive.
     Tool call deltas are accumulated by index into complete descriptors.
+
+    On stream failure (connection drop, timeout after first chunk), the already-
+    accumulated content and tool calls are preserved so the caller can surface a
+    partial answer rather than losing everything from this turn.
     """
     accumulated_content = ""
-    tool_call_chunks: dict[int, dict] = {}  # index -> {id, name, arguments}
+    tool_call_chunks: dict[int, dict] = {}
     finish_reason = "stop"
 
-    async with client.stream("POST", f"{base_url}/v1/chat/completions", json=body) as resp:
-        resp.raise_for_status()
-        async for line in resp.aiter_lines():
-            if not line.startswith("data: "):
-                continue
-            data = line[6:].strip()
-            if data == "[DONE]":
-                break
-            try:
-                chunk = json.loads(data)
-            except json.JSONDecodeError:
-                continue
+    try:
+        async with client.stream("POST", f"{base_url}/v1/chat/completions", json=body) as resp:
+            resp.raise_for_status()
+            async for line in resp.aiter_lines():
+                if not line.startswith("data: "):
+                    continue
+                data = line[6:].strip()
+                if data == "[DONE]":
+                    break
+                try:
+                    chunk = json.loads(data)
+                except json.JSONDecodeError:
+                    continue
 
-            choice = chunk.get("choices", [{}])[0]
-            delta = choice.get("delta", {})
-            fr = choice.get("finish_reason")
-            if fr:
-                finish_reason = fr
+                choice = chunk.get("choices", [{}])[0]
+                delta = choice.get("delta", {})
+                fr = choice.get("finish_reason")
+                if fr:
+                    finish_reason = fr
 
-            # Text token
-            token = delta.get("content") or ""
-            if token:
-                accumulated_content += token
-                if on_token:
-                    on_token(token)
+                token = delta.get("content") or ""
+                if token:
+                    accumulated_content += token
+                    if on_token:
+                        on_token(token)
 
-            # Tool call deltas — accumulate by index
-            for tc in delta.get("tool_calls", []):
-                idx = tc.get("index", 0)
-                if idx not in tool_call_chunks:
-                    tool_call_chunks[idx] = {"id": "", "name": "", "arguments": ""}
-                if tc.get("id"):
-                    tool_call_chunks[idx]["id"] = tc["id"]
-                fn = tc.get("function", {})
-                if fn.get("name"):
-                    tool_call_chunks[idx]["name"] = fn["name"]
-                if fn.get("arguments"):
-                    tool_call_chunks[idx]["arguments"] += fn["arguments"]
+                for tc in delta.get("tool_calls", []):
+                    idx = tc.get("index", 0)
+                    if idx not in tool_call_chunks:
+                        tool_call_chunks[idx] = {"id": "", "name": "", "arguments": ""}
+                    if tc.get("id"):
+                        tool_call_chunks[idx]["id"] = tc["id"]
+                    fn = tc.get("function", {})
+                    if fn.get("name"):
+                        tool_call_chunks[idx]["name"] = fn["name"]
+                    if fn.get("arguments"):
+                        tool_call_chunks[idx]["arguments"] += fn["arguments"]
+    except Exception as exc:
+        logger.warning("streaming_turn interrupted after %d content chars: %s",
+                       len(accumulated_content), exc)
+        if accumulated_content or tool_call_chunks:
+            finish_reason = "error"
 
     # Assemble message in the same shape as a non-streaming response
     message: dict[str, Any] = {"role": "assistant", "content": accumulated_content or None}

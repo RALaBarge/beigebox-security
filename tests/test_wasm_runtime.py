@@ -130,7 +130,7 @@ class TestWasmReloadEndpoint:
         from unittest.mock import AsyncMock
 
         cfg_data = {
-            "backend": {"url": "http://localhost:11434", "default_model": "llama3.2", "timeout": 120},
+            "backend": {"url": "http://localhost:11434", "default_model": "gemma3", "timeout": 120},
             "server": {"host": "0.0.0.0", "port": 8000},
             "embedding": {"model": "nomic-embed-text", "backend_url": "http://localhost:11434"},
             "storage": {"sqlite_path": str(tmp_path / "test.db"), "vector_store_path": str(tmp_path / "vectors"), "vector_backend": "memory"},
@@ -141,7 +141,7 @@ class TestWasmReloadEndpoint:
             "wiretap": {"path": str(tmp_path / "wire.jsonl")},
             "routing": {},
             "model_advertising": {"mode": "hidden"},
-            "operator": {"model": "llama3.2"},
+            "operator": {"model": "gemma3"},
             "backends_enabled": False,
             "cost_tracking": {"enabled": False},
             "wasm": {"enabled": False, "modules": {}},
@@ -221,7 +221,7 @@ class TestConfigEndpointWasm:
         from unittest.mock import AsyncMock
 
         cfg_data = {
-            "backend": {"url": "http://localhost:11434", "default_model": "llama3.2", "timeout": 120},
+            "backend": {"url": "http://localhost:11434", "default_model": "gemma3", "timeout": 120},
             "server": {"host": "0.0.0.0", "port": 8000},
             "embedding": {"model": "nomic-embed-text", "backend_url": "http://localhost:11434"},
             "storage": {"sqlite_path": str(tmp_path / "test.db"), "vector_store_path": str(tmp_path / "vectors"), "vector_backend": "memory"},
@@ -232,7 +232,7 @@ class TestConfigEndpointWasm:
             "wiretap": {"path": str(tmp_path / "wire.jsonl")},
             "routing": {},
             "model_advertising": {"mode": "hidden"},
-            "operator": {"model": "llama3.2"},
+            "operator": {"model": "gemma3"},
             "backends_enabled": False,
             "cost_tracking": {"enabled": False},
             "wasm": {

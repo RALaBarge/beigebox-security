@@ -11,6 +11,7 @@ the lifespan() startup path which delegates to ``beigebox.bootstrap``.
 """
 
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -33,6 +34,12 @@ from beigebox.state import get_state, maybe_state, set_state  # noqa: F401, E402
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup / shutdown lifecycle — thin orchestrator over ``bootstrap``."""
+    import asyncio
+    loop = asyncio.get_running_loop()
+    loop.set_default_executor(ThreadPoolExecutor(
+        max_workers=256,
+        thread_name_prefix="bb-tool-",
+    ))
     from beigebox import bootstrap
     state = await bootstrap.startup(app)
     set_state(state)
@@ -148,9 +155,17 @@ if __name__ == "__main__":
     import uvicorn
 
     cfg = get_config()
+    srv = cfg["server"]
+    ssl_kwargs = {}
+    if srv.get("ssl_keyfile") and srv.get("ssl_certfile"):
+        ssl_kwargs["ssl_keyfile"] = srv["ssl_keyfile"]
+        ssl_kwargs["ssl_certfile"] = srv["ssl_certfile"]
     uvicorn.run(
         "beigebox.main:app",
-        host=cfg["server"]["host"],
-        port=cfg["server"]["port"],
+        host=srv["host"],
+        port=srv["port"],
         reload=False,
+        limit_concurrency=None,
+        backlog=4096,
+        **ssl_kwargs,
     )

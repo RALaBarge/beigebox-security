@@ -64,11 +64,11 @@ backend_plugins:
 # Models — Unified allocation (Phase 2)
 # ─────────────────────────────────────────────────────────────────────────────
 models:
-  default: "llama3.2:3b"           # Used by all subsystems unless overridden
+  default: "gemma3:4b"           # Used by all subsystems unless overridden
   profiles:
-    routing: "llama3.2:3b"         # Decision LLM / routing judge (fast, lightweight)
-    agentic: "llama3.2:3b"         # Operator / tool use
-    summary: "llama3.2:3b"         # Context compression (lightweight)
+    routing: "gemma3:4b"         # Decision LLM / routing judge (fast, lightweight)
+    agentic: "gemma3:4b"         # Operator / tool use
+    summary: "gemma3:4b"         # Context compression (lightweight)
   per_task:
     pre_hook: null
     post_hook: null
@@ -127,18 +127,18 @@ routing:
     system_prompt: "You are a helpful routing assistant that decides which tool or backend to use."
     routes:
       default:
-        model: "llama3.2:3b"
+        model: "gemma3:4b"
         description: "General purpose conversation and Q&A"
         wasm_module: "opener_strip"
       code:
-        model: "llama3.2:3b"
+        model: "gemma3:4b"
         description: "Code generation, debugging, technical programming tasks"
       large:
-        model: "llama3.2:3b"
+        model: "gemma3:4b"
         description: "Complex reasoning, analysis, long-form writing"
         wasm_module: "opener_strip"
       fast:
-        model: "llama3.2:3b"
+        model: "gemma3:4b"
         description: "Quick responses, simple questions, brainstorming"
         wasm_module: "opener_strip"
 

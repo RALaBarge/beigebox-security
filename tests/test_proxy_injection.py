@@ -103,10 +103,10 @@ class TestInjectGenerationParams:
         assert result["num_ctx"] == 4096
 
     def test_returns_body_unchanged_type(self):
-        body = {"messages": [], "model": "llama3.2"}
+        body = {"messages": [], "model": "gemma3"}
         result = _inject_generation_params(body, {})
         assert isinstance(result, dict)
-        assert result["model"] == "llama3.2"
+        assert result["model"] == "gemma3"
 
     def test_force_false_preserves_existing_none(self):
         """If frontend explicitly passed None for a key, and force=False, we still inject."""

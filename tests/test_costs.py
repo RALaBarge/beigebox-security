@@ -64,7 +64,7 @@ def test_store_message_with_cost(store):
 
 def test_store_message_without_cost(store):
     """Messages without cost default to NULL."""
-    msg = Message(conversation_id="c1", role="assistant", content="hi", model="llama3.2")
+    msg = Message(conversation_id="c1", role="assistant", content="hi", model="gemma3")
     store.store_message(msg)
 
     messages, _ = store.get_conversation("c1")
@@ -82,13 +82,13 @@ def test_stats_include_cost(store):
         cost_usd=0.005,
     )
     store.store_message(
-        Message(conversation_id="c1", role="assistant", content="c", model="llama3.2", token_count=200),
+        Message(conversation_id="c1", role="assistant", content="c", model="gemma3", token_count=200),
     )
 
     stats = store.get_stats()
     assert stats["cost_usd"] == pytest.approx(0.015)
     assert stats["models"]["gpt-4"]["cost_usd"] == pytest.approx(0.015)
-    assert stats["models"]["llama3.2"]["cost_usd"] == 0
+    assert stats["models"]["gemma3"]["cost_usd"] == 0
 
 
 # ---------------------------------------------------------------------------

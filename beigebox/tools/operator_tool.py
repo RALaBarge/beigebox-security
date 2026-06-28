@@ -5,9 +5,9 @@ Registered in the tool registry under the name "operator". This lets any
 MCP client (Claude Code, external scripts, other operators) invoke the
 agentic loop via /mcp tools/call without needing to run the CLI directly.
 
-The tool is sync (Tool protocol requires run(input_text) -> str) but the
-operator loop is async. We run it in a thread with its own event loop to
-avoid conflicts with BeigeBox's FastAPI event loop.
+Runs on a thread pool thread (called via loop.run_in_executor from the
+MCP server) so the async operator loop uses its own event loop without
+blocking the FastAPI event loop.
 
 Input JSON
 ----------
@@ -25,10 +25,8 @@ Or pass a plain string — it's treated as the task.
 from __future__ import annotations
 
 import asyncio
-import concurrent.futures
 import json
 import logging
-import threading
 
 logger = logging.getLogger(__name__)
 
@@ -64,29 +62,11 @@ class OperatorTool:
 
         from beigebox.skills.operator.loop import run
 
-        result_holder: list[dict | Exception] = []
-
-        def _run_in_thread() -> None:
-            try:
-                result_holder.append(asyncio.run(run(**kwargs)))
-            except Exception as exc:
-                result_holder.append(exc)
-
-        t = threading.Thread(target=_run_in_thread, daemon=True)
-        t.start()
-        t.join(timeout=600)
-
-        if t.is_alive():
-            return "Error: operator timed out after 600s"
-        if not result_holder:
-            return "Error: operator thread returned no result"
-
-        outcome = result_holder[0]
-        if isinstance(outcome, Exception):
-            logger.error("OperatorTool error: %s", outcome)
-            return f"Error: {outcome}"
-
-        result = outcome
+        try:
+            result = asyncio.run(run(**kwargs))
+        except Exception as exc:
+            logger.error("OperatorTool error: %s", exc)
+            return f"Error: {exc}"
 
         answer = result.get("answer", "")
         turns = result.get("turns", 0)

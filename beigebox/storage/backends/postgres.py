@@ -124,7 +124,7 @@ class PostgresBackend(VectorBackend):
                 """
                 CREATE TABLE IF NOT EXISTS embeddings (
                     id TEXT PRIMARY KEY,
-                    embedding vector(1536),
+                    embedding vector(768),
                     document TEXT,
                     metadata JSONB,
                     created_at TIMESTAMP DEFAULT NOW(),

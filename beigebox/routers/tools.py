@@ -77,6 +77,19 @@ async def _read_mcp_body(request: Request) -> tuple[dict | None, JSONResponse | 
         )
 
 
+@router.get("/mcp")
+async def mcp_get_endpoint(request: Request):
+    """MCP GET — Streamable HTTP transport handshake (2025-03-26).
+
+    Responds 200 OK so that MCP clients (e.g. opencode) don't fall through
+    to the catch-all passthrough route and flood the upstream backend.
+    """
+    _st = get_state()
+    if _st.mcp_server is None:
+        return JSONResponse({"error": "MCP server not initialised"}, status_code=503)
+    return Response(content="", status_code=200, media_type="text/plain")
+
+
 @router.post("/mcp")
 async def mcp_endpoint(request: Request):
     """MCP (Model Context Protocol) server — Streamable HTTP transport.

@@ -102,10 +102,10 @@ ROUTE_FAST = "fast"
 #
 # DO NOT hardcode model names elsewhere. Use these constants.
 
-DEFAULT_MODEL = "llama3.2:3b"                    # General chat (fast, good enough)
-DEFAULT_ROUTING_MODEL = "llama3.2:3b"            # Backend picker (fast, lightweight)
-DEFAULT_AGENTIC_MODEL = "llama3.2:3b"            # Tool use agent (multi-step reasoning)
-DEFAULT_SUMMARY_MODEL = "llama3.2:3b"            # Context compression (lightweight)
+DEFAULT_MODEL = "gemma3:4b"                    # General chat (fast, good enough)
+DEFAULT_ROUTING_MODEL = "gemma3:4b"            # Backend picker (fast, lightweight)
+DEFAULT_AGENTIC_MODEL = "gemma3:4b"            # Tool use agent (multi-step reasoning)
+DEFAULT_SUMMARY_MODEL = "gemma3:4b"            # Context compression (lightweight)
 DEFAULT_EMBEDDING_MODEL = "nomic-embed-text"     # Semantic search & caching (unchanged)
 
 # ─────────────────────────────────────────────────────────────────────────────

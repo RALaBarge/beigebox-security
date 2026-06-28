@@ -39,7 +39,7 @@ def test_model_advertising_hidden_mode(mock_proxy):
     # Sample response from Ollama
     response = {
         "data": [
-            {"name": "llama3.2", "model": "llama3.2"},
+            {"name": "gemma3", "model": "gemma3"},
             {"name": "gpt-oss-20b", "model": "gpt-oss-20b"},
             {"name": "claude", "model": "claude"}
         ]
@@ -48,7 +48,7 @@ def test_model_advertising_hidden_mode(mock_proxy):
     result = mock_proxy._transform_model_names(response)
     
     # Should be unchanged
-    assert result["data"][0]["name"] == "llama3.2"
+    assert result["data"][0]["name"] == "gemma3"
     assert result["data"][1]["name"] == "gpt-oss-20b"
     assert result["data"][2]["name"] == "claude"
 
@@ -63,7 +63,7 @@ def test_model_advertising_advertise_mode(mock_proxy):
     
     response = {
         "data": [
-            {"name": "llama3.2", "model": "llama3.2"},
+            {"name": "gemma3", "model": "gemma3"},
             {"name": "gpt-oss-20b", "model": "gpt-oss-20b"},
             {"name": "claude", "model": "claude"}
         ]
@@ -72,8 +72,8 @@ def test_model_advertising_advertise_mode(mock_proxy):
     result = mock_proxy._transform_model_names(response)
     
     # Should have prefix added
-    assert result["data"][0]["name"] == "beigebox:llama3.2"
-    assert result["data"][0]["model"] == "beigebox:llama3.2"
+    assert result["data"][0]["name"] == "beigebox:gemma3"
+    assert result["data"][0]["model"] == "beigebox:gemma3"
     assert result["data"][1]["name"] == "beigebox:gpt-oss-20b"
     assert result["data"][2]["name"] == "beigebox:claude"
 
@@ -87,12 +87,12 @@ def test_model_advertising_custom_prefix(mock_proxy):
     
     response = {
         "data": [
-            {"name": "llama3.2", "model": "llama3.2"}
+            {"name": "gemma3", "model": "gemma3"}
         ]
     }
     
     result = mock_proxy._transform_model_names(response)
-    assert result["data"][0]["name"] == "🔗 llama3.2"
+    assert result["data"][0]["name"] == "🔗 gemma3"
 
 
 def test_model_advertising_defaults(mock_proxy):
@@ -102,13 +102,13 @@ def test_model_advertising_defaults(mock_proxy):
     
     response = {
         "data": [
-            {"name": "llama3.2", "model": "llama3.2"}
+            {"name": "gemma3", "model": "gemma3"}
         ]
     }
     
     result = mock_proxy._transform_model_names(response)
     # Should be unchanged (hidden mode is default)
-    assert result["data"][0]["name"] == "llama3.2"
+    assert result["data"][0]["name"] == "gemma3"
 
 
 def test_model_advertising_malformed_response(mock_proxy):
@@ -135,7 +135,7 @@ def test_model_advertising_missing_data_key(mock_proxy):
     
     response = {
         "models": [  # Different key name
-            {"name": "llama3.2"}
+            {"name": "gemma3"}
         ]
     }
     

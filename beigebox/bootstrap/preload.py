@@ -20,7 +20,7 @@ import logging
 
 import httpx
 
-from beigebox.config import get_primary_backend_url
+from beigebox.config import get_ollama_backend_url
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ async def _preload_embedding_model(cfg: dict) -> None:
     """Pin the embedding model in Ollama's memory at startup."""
     embed_cfg = cfg.get("embedding", {})
     model = embed_cfg.get("model", "")
-    url = embed_cfg.get("backend_url") or get_primary_backend_url(cfg)
+    url = embed_cfg.get("backend_url") or get_ollama_backend_url(cfg)
     if not model:
         return
     # Embedding-only models (e.g. nomic-embed-text) reject /api/generate
@@ -111,7 +111,7 @@ def schedule_preloads(cfg: dict) -> list[asyncio.Task]:
     # Collect all distinct special-purpose models (judge, operator, summary)
     # and pin them in Ollama at startup so cold-start latency never hits a
     # live request. Stagger by 15s each to avoid VRAM bandwidth contention.
-    backend_url = get_primary_backend_url(cfg)
+    backend_url = get_ollama_backend_url(cfg)
     models_cfg = cfg.get("models", {})
     profiles = models_cfg.get("profiles", {})
     default_model = models_cfg.get("default", "")

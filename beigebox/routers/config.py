@@ -98,6 +98,7 @@ async def api_config():
             "wasm":                  rt.get("features_wasm", cfg.get("features", {}).get("wasm", cfg.get("wasm", {}).get("enabled", False))),
             "guardrails":            rt.get("features_guardrails", cfg.get("features", {}).get("guardrails", cfg.get("guardrails", {}).get("enabled", False))),
             "hooks":                 rt.get("features_hooks", cfg.get("features", {}).get("hooks", cfg.get("hooks", {}).get("enabled", False))),
+            "voice":                 rt.get("features_voice", cfg.get("features", {}).get("voice", False)),
         },
         "backend": {
             "url":           cfg.get("backend", {}).get("url", ""),
@@ -192,6 +193,16 @@ async def api_config():
         "hooks": cfg.get("hooks", []),
         "web_ui": {
             "palette":      rt.get("web_ui_palette", "default"),
+            "voice_enabled": rt.get("voice_enabled", cfg.get("web_ui", {}).get("voice_enabled", False)),
+            "voice_hotkey":  rt.get("voice_hotkey", cfg.get("web_ui", {}).get("voice_hotkey", "")),
+        },
+        "voice": {
+            "stt_url":     rt.get("voice_stt_url", cfg.get("voice", {}).get("stt_url", "")),
+            "tts_url":     rt.get("voice_tts_url", cfg.get("voice", {}).get("tts_url", "")),
+            "tts_model":   rt.get("voice_tts_model", cfg.get("voice", {}).get("tts_model", "kokoro")),
+            "tts_voice":   rt.get("voice_tts_voice", cfg.get("voice", {}).get("tts_voice", "af_bella")),
+            "tts_speed":   rt.get("voice_tts_speed", cfg.get("voice", {}).get("tts_speed", 1.0)),
+            "tts_autoplay": rt.get("voice_tts_autoplay", cfg.get("voice", {}).get("tts_autoplay", False)),
         },
         "runtime": {
             "system_prompt_prefix": rt.get("system_prompt_prefix", ""),
@@ -314,6 +325,16 @@ async def api_config_save(request: Request):
         "browserbox_ws_url": "browserbox_ws_url",
         "browserbox_timeout": "browserbox_timeout",
         "payload_log_enabled": "payload_log_enabled",
+        # Voice
+        "features_voice": "features_voice",
+        "voice_enabled": "voice_enabled",
+        "voice_hotkey": "voice_hotkey",
+        "voice_stt_url": "voice_stt_url",
+        "voice_tts_url": "voice_tts_url",
+        "voice_tts_model": "voice_tts_model",
+        "voice_tts_voice": "voice_tts_voice",
+        "voice_tts_speed": "voice_tts_speed",
+        "voice_tts_autoplay": "voice_tts_autoplay",
     }
 
     for key, rt_key in allowed.items():

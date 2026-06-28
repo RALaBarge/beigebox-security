@@ -12,7 +12,7 @@ Config (config.yaml):
         allowed_models: ["*"]
         allowed_endpoints: ["*"]
       - name: readonly-client
-        allowed_models: ["llama3.2", "qwen3:*"]
+        allowed_models: ["gemma3", "qwen3:*"]
         allowed_endpoints: ["/v1/chat/completions", "/v1/models"]
         rate_limit_rpm: 60
 

@@ -79,14 +79,14 @@ class TestRuntimeConfigHotReload:
         assert cfg_mod.get_runtime_config() == {}
 
         # External edit
-        runtime_yaml.write_text("runtime:\n  default_model: llama3.2\n")
+        runtime_yaml.write_text("runtime:\n  default_model: gemma3\n")
         # Bypass the 1s stat() debounce + force re-read by clearing both
         # mtime trackers — this is exactly what update_runtime_config does.
         cfg_mod._runtime_mtime = 0.0
         cfg_mod._runtime_mtime_last_checked = 0.0
 
         rt = cfg_mod.get_runtime_config()
-        assert rt["default_model"] == "llama3.2"
+        assert rt["default_model"] == "gemma3"
 
     def test_second_call_within_debounce_returns_cached(self, runtime_yaml):
         """The 1s ``_RUNTIME_MTIME_CHECK_INTERVAL`` debounces stat()
@@ -112,11 +112,11 @@ class TestRuntimeConfigHotReload:
         revert to ``{}``. Otherwise a botched edit takes routing /
         backends with it."""
         # Establish a known-good baseline
-        runtime_yaml.write_text("runtime:\n  default_model: llama3.2\n")
+        runtime_yaml.write_text("runtime:\n  default_model: gemma3\n")
         cfg_mod._runtime_mtime = 0.0
         cfg_mod._runtime_mtime_last_checked = 0.0
         good = cfg_mod.get_runtime_config()
-        assert good["default_model"] == "llama3.2"
+        assert good["default_model"] == "gemma3"
 
         # Now write garbage and force a re-read
         runtime_yaml.write_text("runtime:\n  default_model: [unclosed list\n")
@@ -125,7 +125,7 @@ class TestRuntimeConfigHotReload:
 
         # The parse fails — but we must keep the last good value.
         result = cfg_mod.get_runtime_config()
-        assert result["default_model"] == "llama3.2"
+        assert result["default_model"] == "gemma3"
 
     def test_missing_file_returns_empty_not_raises(self, tmp_path):
         """If runtime_config.yaml doesn't exist (fresh install / dev),
@@ -223,7 +223,7 @@ class TestRuntimeOverridesAffectBackendsConfig:
         something to merge against."""
         orig = cfg_mod._config
         cfg_mod._config = {
-            "backend": {"url": "http://127.0.0.1:11434", "default_model": "llama3.2"},
+            "backend": {"url": "http://127.0.0.1:11434", "default_model": "gemma3"},
             "backends_enabled": False,
             "backends": [
                 {"provider": "ollama", "name": "primary",

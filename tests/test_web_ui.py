@@ -51,7 +51,7 @@ class TestUpdateRuntimeConfig:
 
     def test_preserves_other_keys(self, tmp_path):
         rt_path = tmp_path / "runtime_config.yaml"
-        rt_path.write_text("runtime:\n  default_model: llama3.2\n  force_route: ''\n")
+        rt_path.write_text("runtime:\n  default_model: gemma3\n  force_route: ''\n")
 
         from beigebox import config as cfg_mod
         orig_path = cfg_mod._RUNTIME_CONFIG_PATH
@@ -61,7 +61,7 @@ class TestUpdateRuntimeConfig:
         try:
             cfg_mod.update_runtime_config("web_ui_palette", "gruvbox")
             data = yaml.safe_load(rt_path.read_text())
-            assert data["runtime"]["default_model"] == "llama3.2"
+            assert data["runtime"]["default_model"] == "gemma3"
             assert data["runtime"]["web_ui_palette"] == "gruvbox"
         finally:
             cfg_mod._RUNTIME_CONFIG_PATH = orig_path
@@ -104,7 +104,7 @@ def client(tmp_path):
 
     # Minimal config
     cfg_data = {
-        "backend": {"url": "http://localhost:11434", "default_model": "llama3.2", "timeout": 120},
+        "backend": {"url": "http://localhost:11434", "default_model": "gemma3", "timeout": 120},
         "server": {"host": "0.0.0.0", "port": 8000},
         "embedding": {"model": "nomic-embed-text", "backend_url": "http://localhost:11434"},
         "storage": {"sqlite_path": str(tmp_path / "test.db"), "vector_store_path": str(tmp_path / "vectors"), "vector_backend": "memory", "log_conversations": True},
@@ -115,7 +115,7 @@ def client(tmp_path):
         "wiretap": {"path": str(tmp_path / "wire.jsonl")},
         "routing": {},
         "model_advertising": {"mode": "hidden"},
-        "operator": {"model": "llama3.2"},
+        "operator": {"model": "gemma3"},
         "backends_enabled": False,
         "cost_tracking": {"enabled": False},
         "wasm": {"enabled": False, "modules": {}},

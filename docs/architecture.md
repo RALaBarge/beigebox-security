@@ -156,7 +156,7 @@ backends:
     name: ollama-local
     url: http://ollama:11434
     priority: 1
-    allowed_models: ["llama3.2:*", "qwen3:*", "nomic-embed-text*"]
+    allowed_models: ["gemma3:*", "qwen3:*", "nomic-embed-text*"]
 
   - provider: openrouter
     name: openrouter

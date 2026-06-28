@@ -55,14 +55,14 @@ def test_replay_empty_conversation(replayer):
 def test_replay_basic(store, replayer):
     """Replay reconstructs messages in order."""
     store.store_message(Message(conversation_id="c1", role="user", content="Hello"))
-    store.store_message(Message(conversation_id="c1", role="assistant", content="Hi there!", model="llama3.2"))
+    store.store_message(Message(conversation_id="c1", role="assistant", content="Hi there!", model="gemma3"))
 
     result = replayer.replay("c1")
     assert result["conversation_id"] == "c1"
     assert len(result["timeline"]) == 2
     assert result["timeline"][0]["role"] == "user"
     assert result["timeline"][1]["role"] == "assistant"
-    assert result["timeline"][1]["model"] == "llama3.2"
+    assert result["timeline"][1]["model"] == "gemma3"
 
 
 def test_replay_includes_cost(store, replayer):
@@ -83,7 +83,7 @@ def test_replay_includes_cost(store, replayer):
 def test_replay_stats(store, replayer):
     """Replay computes aggregate stats."""
     store.store_message(Message(conversation_id="c1", role="user", content="q1", model="", token_count=10))
-    store.store_message(Message(conversation_id="c1", role="assistant", content="a1", model="llama3.2", token_count=50))
+    store.store_message(Message(conversation_id="c1", role="assistant", content="a1", model="gemma3", token_count=50))
     store.store_message(Message(conversation_id="c1", role="user", content="q2", model="", token_count=15))
     store.store_message(Message(conversation_id="c1", role="assistant", content="a2", model="code", token_count=100))
 
@@ -91,7 +91,7 @@ def test_replay_stats(store, replayer):
     stats = result["stats"]
     assert stats["message_count"] == 4
     assert stats["total_tokens"] == 175
-    assert "llama3.2" in stats["models"]
+    assert "gemma3" in stats["models"]
     assert "code" in stats["models"]
 
 
@@ -107,7 +107,7 @@ def test_replay_with_routing_decisions(store, wire_path):
     ))
     store.store_message(Message(
         id="msg2", conversation_id="c1", role="assistant", content="hi",
-        model="llama3.2", timestamp="2026-02-20T10:00:02",
+        model="gemma3", timestamp="2026-02-20T10:00:02",
     ))
 
     _write_wire(wire_path, [
@@ -116,7 +116,7 @@ def test_replay_with_routing_decisions(store, wire_path):
             "dir": "internal",
             "role": "decision",
             "conv": "c1",
-            "content": "session cache hit: model=llama3.2",
+            "content": "session cache hit: model=gemma3",
         },
     ])
 
@@ -133,7 +133,7 @@ def test_replay_with_tools(store, wire_path):
     """Replay detects tool invocations from wiretap."""
     store.store_message(Message(
         id="msg1", conversation_id="c1", role="assistant", content="found it",
-        model="llama3.2", timestamp="2026-02-20T10:00:05",
+        model="gemma3", timestamp="2026-02-20T10:00:05",
     ))
 
     _write_wire(wire_path, [

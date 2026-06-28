@@ -57,6 +57,7 @@ class _FeaturesCfg(BaseModel):
     guardrails: bool = False
     voice: bool = False
     hooks: bool = False
+    emit_routing_meta: bool = True  # stream bb_type/routing chunk; disable for OpenAI-compat clients
 
 class _ServerCfg(BaseModel):
     model_config = ConfigDict(extra="allow")
@@ -414,6 +415,29 @@ def get_primary_backend_url(cfg: dict | None = None) -> str:
 
     # Fall back to old format for compatibility
     return cfg.get("backend", {}).get("url", "").rstrip("/")
+
+
+def get_ollama_backend_url(cfg: dict | None = None) -> str:
+    """
+    Return the Ollama backend URL from the backends list.
+    Falls back to the primary backend URL if no Ollama backend is configured.
+    Used by preload and Ollama-native endpoints (/api/generate, /api/embed, etc.).
+    """
+    cfg = cfg or get_config()
+
+    backends = cfg.get("backends", [])
+    for b in (backends or []):
+        if b.get("provider") == "ollama":
+            url = b.get("url", "")
+            if url:
+                return url.rstrip("/")
+
+    _vlog.warning(
+        "No Ollama backend found in backends list — falling back to primary backend URL. "
+        "Ollama-native endpoints (/api/generate, /api/embed, etc.) will fail if the "
+        "primary backend is not an Ollama instance."
+    )
+    return get_primary_backend_url(cfg)
 
 
 def update_runtime_config(key: str, value) -> bool:

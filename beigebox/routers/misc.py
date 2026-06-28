@@ -249,4 +249,55 @@ async def cdp_status():
     })
 
 
+@router.post("/api/wake-m1")
+async def wake_m1(request: Request):
+    """Send a Wake-on-LAN magic packet to the M1 Mac (MLX backend at 192.168.1.214).
+    
+    Returns immediately with the WOL status, then polls for 15s to see if the
+    MLX port (8080) comes online and returns that status too.
+    """
+    import socket, struct, asyncio as _asyncio
+
+    M1_IP = "192.168.1.214"
+    M1_MAC = "08:ff:44:9a:89:6e"
+    M1_PORT = 8080
+
+    # 1. Send WOL magic packet
+    wol_sent = False
+    try:
+        mac_bytes = bytes.fromhex(M1_MAC.replace(":", ""))
+        packet = b"\xff" * 6 + mac_bytes * 16
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        s.sendto(packet, ("192.168.1.255", 9))
+        s.sendto(packet, ("192.168.1.255", 7))
+        s.close()
+        wol_sent = True
+        logger.info("WOL magic packet sent to M1 (%s)", M1_MAC)
+    except Exception as e:
+        logger.warning("WOL send failed: %s", e)
+
+    # 2. Poll for the MLX port to come online
+    online = False
+    for _ in range(8):
+        try:
+            _, writer = await _asyncio.wait_for(
+                _asyncio.open_connection(M1_IP, M1_PORT), timeout=2.0
+            )
+            writer.close()
+            await writer.wait_closed()
+            online = True
+            break
+        except Exception:
+            await _asyncio.sleep(2)
+
+    return JSONResponse({
+        "wol_sent": wol_sent,
+        "mlx_online": online,
+        "ip": M1_IP,
+        "port": M1_PORT,
+        "note": "M1 is online" if online else "M1 still asleep — may need physical wake or Wake for network access enabled",
+    })
+
+
 __all__ = ["router"]

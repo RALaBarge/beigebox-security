@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1117">
+<link rel="manifest" href="/web/manifest.json">
+<title>BeigeBox Voice</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0d1117; color: #c9d1d9;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; user-select: none;
+}
+#app { display: flex; flex-direction: column; height: 100%; max-width: 600px; margin: 0 auto; }
+
+#log {
+  flex: 1; overflow-y: auto; padding: 12px 14px 4px;
+  display: flex; flex-direction: column; gap: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.msg {
+  max-width: 88%; padding: 10px 14px; border-radius: 16px;
+  font-size: 15px; line-height: 1.45; word-wrap: break-word;
+  animation: msgIn .2s ease-out;
+}
+@keyframes msgIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+.msg.user { background: #238636; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+.msg.bot  { background: #21262d; color: #c9d1d9; align-self: flex-start; border-bottom-left-radius: 4px; }
+.msg.info { background: transparent; color: #8b949e; align-self: center; font-size: 13px; text-align: center; }
+.msg.err  { background: #4a1a1a; color: #f85149; align-self: center; font-size: 13px; }
+
+/* iOS-style wheel picker */
+.pickers { background: #161b22; border-bottom: 1px solid #21262d; }
+.picker-row { display: flex; align-items: stretch; }
+.picker-label {
+  font-size: 11px; color: #484f58; text-transform: uppercase;
+  letter-spacing: .5px; writing-mode: vertical-rl; transform: rotate(180deg);
+  padding: 6px 8px; flex-shrink: 0; text-align: center; width: 32px;
+}
+.wheel-wrap {
+  flex: 1; position: relative; height: 130px; overflow: hidden; background: #0d1117;
+}
+.wheel-wrap::before, .wheel-wrap::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 48px; z-index: 2; pointer-events: none;
+}
+.wheel-wrap::before { top: 0; background: linear-gradient(to bottom, #0d1117 30%, transparent); }
+.wheel-wrap::after  { bottom: 0; background: linear-gradient(to top, #0d1117 30%, transparent); }
+.wheel-highlight {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  left: 8px; right: 8px; height: 36px;
+  border-top: 1px solid #30363d; border-bottom: 1px solid #30363d;
+  z-index: 1; pointer-events: none;
+}
+.wheel-track {
+  height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory;
+  padding: 48px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.wheel-track::-webkit-scrollbar { display: none; }
+.wheel-item {
+  height: 36px; display: flex; align-items: center; gap: 8px;
+  padding: 0 14px; scroll-snap-align: center;
+  font-size: 13px; color: #484f58; cursor: pointer;
+}
+.wheel-item .prov {
+  font-size: 10px; padding: 1px 5px; border-radius: 4px;
+  font-weight: 700; flex-shrink: 0; min-width: 28px; text-align: center;
+}
+.prov-m1   { background: #1a3a2a; color: #3fb950; }
+.prov-or   { background: #1a2538; color: #79c0ff; }
+.wheel-item .nm { flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wheel-item .sz { font-size: 10px; color: #30363d; flex-shrink: 0; }
+
+/* footer */
+#footer {
+  padding: 10px 14px max(10px, env(safe-area-inset-bottom));
+  background: #161b22; border-top: 1px solid #30363d;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+#wave-ring {
+  width: 80px; height: 80px; border-radius: 50%;
+  border: 3px solid #30363d; display: flex; align-items: center; justify-content: center;
+  transition: border-color .2s, transform .15s;
+}
+#wave-ring:active { transform: scale(.96); }
+#wave-ring.recording { border-color: #f85149; animation: pulse 1.2s ease infinite; }
+#wave-ring.thinking { border-color: #d2991d; }
+#wave-ring.speaking { border-color: #238636; animation: pulse .6s ease infinite; }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(248,81,73,.35); }
+  50%      { box-shadow: 0 0 0 18px rgba(248,81,73,0); }
+}
+#mic-icon { width: 36px; height: 36px; fill: #c9d1d9; transition: fill .2s, transform .2s; }
+.recording #mic-icon { fill: #f85149; transform: scale(1.15); }
+#status { font-size: 13px; color: #8b949e; min-height: 18px; text-align: center; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="log">
+    <div class="msg info">Tap &amp; hold mic to speak — release to send</div>
+  </div>
+  <div id="wake-bar" style="display:none; padding:6px 14px; background:#1a2332; text-align:center; border-bottom:1px solid #21262d;">
+    <span style="color:#d2991d; font-size:13px;">M1 MLX asleep</span>
+    <button id="wake-btn" style="margin-left:10px; padding:4px 14px; border-radius:12px; border:1px solid #d2991d; background:transparent; color:#d2991d; font-size:13px; cursor:pointer;">Wake</button>
+    <span id="wake-status" style="margin-left:10px; font-size:12px; color:#8b949e;"></span>
+  </div>
+  <div class="pickers">
+    <div class="picker-row">
+      <div class="picker-label">Model</div>
+      <div class="wheel-wrap">
+        <div class="wheel-highlight"></div>
+        <div id="model-wheel" class="wheel-track"></div>
+      </div>
+    </div>
+    <div class="picker-row">
+      <div class="picker-label">Voice</div>
+      <div class="wheel-wrap">
+        <div class="wheel-highlight"></div>
+        <div id="voice-wheel" class="wheel-track"></div>
+      </div>
+    </div>
+  </div>
+  <div id="footer">
+    <div id="status">Ready</div>
+    <button id="wave-ring" aria-label="Hold to record">
+      <svg id="mic-icon" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1H3v1a9 9 0 0 0 8 8.93V22h2v-2.07A9 9 0 0 0 21 11v-1h-2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+const BASE = '';
+const logEl = document.getElementById('log');
+const ring  = document.getElementById('wave-ring');
+const statusEl = document.getElementById('status');
+const modelWheel = document.getElementById('model-wheel');
+const voiceWheel = document.getElementById('voice-wheel');
+
+let isRecording = false, isProcessing = false;
+let currentModel = '', currentVoice = '';
+
+/* iOS-style wheel picker */
+function buildWheel(track, items, storageKey, onChange) {
+  const saved = localStorage.getItem(storageKey) || (items[0] && items[0].id);
+  track.innerHTML = '';
+  let activeIdx = 0;
+
+  items.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'wheel-item';
+    el.dataset.id = item.id;
+    el.innerHTML = `<span class="prov ${item.provClass}">${item.provider}</span><span class="nm">${item.name}</span><span class="sz">${item.hint || ''}</span>`;
+    if (item.id === saved) activeIdx = i;
+    el.addEventListener('click', () => {
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
+    track.appendChild(el);
+  });
+
+  // Snap to saved position
+  if (activeIdx >= 0) {
+    requestAnimationFrame(() => {
+      track.children[activeIdx].scrollIntoView({ block: 'center' });
+    });
+  }
+
+  // Detect which item is centered via IntersectionObserver
+  const wrap = track.parentElement;
+  const io = new IntersectionObserver(entries => {
+    const visible = entries.filter(e => e.isIntersecting);
+    if (!visible.length) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    const center = wrapRect.top + wrapRect.height / 2;
+    let best = visible[0].target;
+    let bestDist = Math.abs(best.getBoundingClientRect().top + 18 - center);
+    visible.forEach(e => {
+      const d = Math.abs(e.target.getBoundingClientRect().top + 18 - center);
+      if (d < bestDist) { best = e.target; bestDist = d; }
+    });
+    const id = best.dataset.id;
+    if (id) { onChange(id); }
+  }, { root: wrap, threshold: [0.5, 0.6, 0.7, 0.8] });
+
+  track.querySelectorAll('.wheel-item').forEach(el => io.observe(el));
+
+  onChange(items[activeIdx]?.id || '');
+}
+
+/* Model definitions */
+const MODELS = [
+  { id: 'mlx-community/gemma-3-27b-it-qat-4bit',  provider: 'M1', name: 'Gemma 3 27B', hint: '27B', provClass: 'prov-m1' },
+  { id: 'mlx-community/Devstral-Small-2505-4bit', provider: 'M1', name: 'Devstral 24B', hint: '24B', provClass: 'prov-m1' },
+  { id: 'nvidia/nemotron-nano-9b-v2:free',    provider: 'OR', name: 'Nemotron 9B',  hint: 'free', provClass: 'prov-or' },
+  { id: 'liquid/lfm-2.5-1.2b-instruct:free',  provider: 'OR', name: 'LFM 1.2B',     hint: 'fast', provClass: 'prov-or' },
+  { id: 'google/gemma-4-31b-it:free',          provider: 'OR', name: 'Gemma 4 31B',  hint: 'OR',  provClass: 'prov-or' },
+  { id: 'nvidia/nemotron-3-super-120b-a12b:free', provider: 'OR', name: 'Nemotron 120B', hint: 'heavy', provClass: 'prov-or' },
+  { id: 'qwen/qwen3-next-80b-a3b-instruct:free', provider: 'OR', name: 'Qwen 3 80B', hint: 'MoE', provClass: 'prov-or' },
+];
+
+const VOICES = [
+  { id: 'af_heart',    provider: 'M1', name: 'Heart',    hint: '', provClass: 'prov-m1' },
+  { id: 'af_bella',    provider: 'M1', name: 'Bella',    hint: '', provClass: 'prov-m1' },
+  { id: 'af_nicole',   provider: 'M1', name: 'Nicole',   hint: '', provClass: 'prov-m1' },
+  { id: 'af_sarah',    provider: 'M1', name: 'Sarah',    hint: '', provClass: 'prov-m1' },
+  { id: 'af_sky',      provider: 'M1', name: 'Sky',      hint: '', provClass: 'prov-m1' },
+  { id: 'am_adam',     provider: 'M1', name: 'Adam',     hint: '', provClass: 'prov-m1' },
+  { id: 'am_michael',  provider: 'M1', name: 'Michael',  hint: '', provClass: 'prov-m1' },
+  { id: 'bf_emma',     provider: 'M1', name: 'Emma',     hint: '', provClass: 'prov-m1' },
+  { id: 'bf_isabella', provider: 'M1', name: 'Isabella', hint: '', provClass: 'prov-m1' },
+  { id: 'bm_george',   provider: 'M1', name: 'George',   hint: '', provClass: 'prov-m1' },
+  { id: 'bm_lewis',    provider: 'M1', name: 'Lewis',    hint: '', provClass: 'prov-m1' },
+];
+
+buildWheel(modelWheel, MODELS, 'bb-model', id => { currentModel = id; });
+buildWheel(voiceWheel, VOICES, 'bb-voice', id => { currentVoice = id; });
+
+/* ── Helpers ── */
+function addMsg(text, role) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.textContent = text;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+  return div;
+}
+function setStatus(s, cls) { statusEl.textContent = s; ring.className = cls || ''; }
+
+async function transcribe(blob) {
+  const fd = new FormData();
+  fd.append('file', blob, 'recording.webm');
+  const r = await fetch(BASE + '/v1/audio/transcriptions', { method: 'POST', body: fd });
+  const data = await r.json();
+  if (!r.ok || data.error) throw new Error(data.error?.message || 'STT failed');
+  return data.text || '';
+}
+
+/* ── MCP tools ── */
+let _tools = null;
+let _toolsPromise = null;
+
+async function fetchTools() {
+  if (_tools) return _tools;
+  if (_toolsPromise) return _toolsPromise;
+  _toolsPromise = (async () => {
+    try {
+      const r = await fetch(BASE + '/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+      });
+      const data = await r.json();
+      _tools = (data.result?.tools || []).map(t => ({
+        type: 'function',
+        function: { name: t.name, description: t.description, parameters: t.inputSchema || {} },
+      }));
+    } catch(e) {
+      console.warn('MCP tools fetch failed:', e);
+      _tools = [];
+    }
+    return _tools;
+  })();
+  return _toolsPromise;
+}
+
+async function callTool(name, input) {
+  const r = await fetch(BASE + '/mcp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name, arguments: { input } } }),
+  });
+  const data = await r.json();
+  if (data.error) throw new Error(data.error.message || 'Tool error');
+  const content = data.result?.content;
+  if (!content) return '';
+  return content.map(c => c.text || '').join('\n') || JSON.stringify(content);
+}
+
+/* ── Chat with tool-calling loop ── */
+async function chatWithTools(userText) {
+  const tools = await fetchTools();
+  const messages = [{ role: 'user', content: userText }];
+  let finalAnswer = '';
+  const MAX_TURNS = 5;
+
+  for (let turn = 0; turn < MAX_TURNS; turn++) {
+    const body = { model: currentModel, messages };
+    if (tools.length) body.tools = tools;
+    if (tools.length) body.tool_choice = 'auto';
+
+    const r = await fetch(BASE + '/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sk-no-key-required' },
+      body: JSON.stringify(body),
+    });
+    const data = await r.json();
+    if (!r.ok || data.error) throw new Error(data.error?.message || 'Chat failed');
+
+    const msg = data.choices?.[0]?.message;
+    if (!msg) throw new Error('No response from model');
+
+    messages.push(msg);
+
+    if (msg.tool_calls && msg.tool_calls.length) {
+      for (const tc of msg.tool_calls) {
+        const name = tc.function?.name;
+        const args = tc.function?.arguments;
+        let input = '';
+        try { input = JSON.parse(args).input || args; } catch(_) { input = args; }
+        try {
+          setStatus('Running ' + name + '…', 'thinking');
+          const result = await callTool(name, input);
+          messages.push({ role: 'tool', tool_call_id: tc.id, content: result });
+        } catch(e) {
+          messages.push({ role: 'tool', tool_call_id: tc.id, content: 'Error: ' + e.message });
+        }
+      }
+      continue;
+    }
+
+    finalAnswer = msg.content || '';
+    break;
+  }
+
+  return finalAnswer || '(no answer)';
+}
+
+async function synthesize(text) {
+  const r = await fetch(BASE + '/v1/audio/speech', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input: text, voice: currentVoice }),
+  });
+  if (!r.ok) throw new Error('TTS failed');
+  return r.blob();
+}
+
+async function playAudio(blob) {
+  const url = URL.createObjectURL(blob);
+  try {
+    const a = new Audio(url);
+    await a.play();
+  } catch(e) {
+    console.log('autoplay blocked, adding controls:', e);
+    const a2 = new Audio(url);
+    a2.controls = true;
+    a2.style.width = '100%';
+    a2.style.marginTop = '6px';
+    const msgs = logEl.querySelectorAll('.msg.bot');
+    if (msgs.length) msgs[msgs.length-1].appendChild(a2);
+  }
+}
+
+/* ── Main loop ── */
+async function handleRecording(blob) {
+  if (isProcessing) return;
+  isProcessing = true;
+  try {
+    setStatus('Transcribing…', 'thinking');
+    const text = await transcribe(blob);
+    if (!text.trim()) { addMsg('Nothing heard — try again', 'info'); return; }
+
+    addMsg(text, 'user');
+    logEl.scrollTop = logEl.scrollHeight;
+
+    setStatus('Thinking…', 'thinking');
+    const reply = await chatWithTools(text);
+    addMsg(reply, 'bot');
+    logEl.scrollTop = logEl.scrollHeight;
+
+    setStatus('Speaking…', 'speaking');
+    const audioBlob = await synthesize(reply);
+    await playAudio(audioBlob);
+    setStatus('Ready');
+  } catch(e) {
+    addMsg(e.message, 'err');
+    setStatus('Ready');
+  } finally {
+    isProcessing = false;
+  }
+}
+
+/* ── Recording ── */
+let mediaRecorder = null, audioChunks = [], micStreamPromise = null;
+
+async function startRecording() {
+  if (!navigator.mediaDevices || !micStreamPromise) return;
+  try {
+    const stream = await micStreamPromise;
+    micStreamPromise = null;
+    if (!stream) return;
+    mediaRecorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/mp4' });
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => { if (e.data.size) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      if (audioChunks.length) handleRecording(new Blob(audioChunks, { type: mediaRecorder.mimeType }));
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    ring.classList.add('recording');
+    setStatus('Recording… release to send', 'recording');
+  } catch(e) {
+    addMsg('Mic error: ' + e.message, 'err');
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) { mediaRecorder.stop(); isRecording = false; ring.classList.remove('recording'); }
+}
+
+ring.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (isProcessing || isRecording) return;
+  micStreamPromise = navigator.mediaDevices.getUserMedia({ audio: true }).catch(err => {
+    addMsg('Mic: ' + (err.name === 'NotAllowedError' ? 'blocked — check Settings → Safari → Microphone' : err.message), 'err');
+    return null;
+  });
+  startRecording();
+});
+const _stop = e => { e.preventDefault(); stopRecording(); };
+ring.addEventListener('pointerup', _stop);
+ring.addEventListener('pointerleave', _stop);
+ring.addEventListener('pointercancel', _stop);
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !isRecording && !isProcessing && document.activeElement === document.body) {
+    e.preventDefault();
+    micStreamPromise = navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null);
+    startRecording();
+  }
+});
+document.addEventListener('keyup', e => {
+  if (e.code === 'Space' && isRecording) { e.preventDefault(); stopRecording(); }
+});
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/web/sw.js').catch(() => {});
+}
+
+/* ── M1 Wake ── */
+const wakeBar = document.getElementById('wake-bar');
+const wakeBtn = document.getElementById('wake-btn');
+const wakeStatus = document.getElementById('wake-status');
+async function checkM1() { try { return (await fetch(BASE + '/api/wake-m1', { method: 'HEAD' })).ok; } catch(_) { return false; } }
+async function wakeM1() {
+  wakeBtn.disabled = true; wakeBtn.textContent = 'Waking…'; wakeStatus.textContent = 'polling 15s…';
+  try {
+    const d = await (await fetch(BASE + '/api/wake-m1', { method: 'POST' })).json();
+    if (d.mlx_online) { wakeBar.style.display = 'none'; addMsg('M1 awake — ready', 'info'); }
+    else { wakeBtn.disabled = false; wakeBtn.textContent = 'Retry'; wakeStatus.textContent = 'Still asleep'; }
+  } catch(_) { wakeBtn.disabled = false; wakeBtn.textContent = 'Retry'; wakeStatus.textContent = 'Failed'; }
+}
+wakeBtn.addEventListener('click', wakeM1);
+(async () => { if (!(await checkM1())) wakeBar.style.display = ''; })();
+
+// Pre-fetch MCP tools on load
+fetchTools();
+</script>
+</body>
+</html>

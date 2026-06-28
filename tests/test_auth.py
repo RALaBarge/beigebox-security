@@ -86,11 +86,11 @@ class TestCheckModel:
 
     def test_exact_match(self):
         r = _registry({})
-        assert r.check_model(self._meta(["llama3.2"]), "llama3.2") is True
+        assert r.check_model(self._meta(["gemma3"]), "gemma3") is True
 
     def test_exact_mismatch(self):
         r = _registry({})
-        assert r.check_model(self._meta(["llama3.2"]), "qwen3:8b") is False
+        assert r.check_model(self._meta(["gemma3"]), "qwen3:8b") is False
 
     def test_glob_match(self):
         r = _registry({})
@@ -100,8 +100,8 @@ class TestCheckModel:
 
     def test_multiple_patterns(self):
         r = _registry({})
-        meta = self._meta(["llama3.2", "qwen3:*"])
-        assert r.check_model(meta, "llama3.2") is True
+        meta = self._meta(["gemma3", "qwen3:*"])
+        assert r.check_model(meta, "gemma3") is True
         assert r.check_model(meta, "qwen3:8b") is True
         assert r.check_model(meta, "mistral:7b") is False
 
@@ -174,12 +174,12 @@ class TestRateLimit:
 class TestNamedKeyACL:
     def test_named_key_has_correct_models(self):
         r = _registry_with_token("ci", "ci-tok", extra={
-            "allowed_models": ["llama3.2", "qwen3:*"],
+            "allowed_models": ["gemma3", "qwen3:*"],
             "allowed_endpoints": ["/v1/chat/completions"],
             "rate_limit_rpm": 60,
         })
         meta = r.validate("ci-tok")
-        assert meta.allowed_models == ["llama3.2", "qwen3:*"]
+        assert meta.allowed_models == ["gemma3", "qwen3:*"]
         assert meta.allowed_endpoints == ["/v1/chat/completions"]
         assert meta.rate_limit_rpm == 60
 

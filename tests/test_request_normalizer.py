@@ -43,7 +43,7 @@ def test_is_reasoning_model_positive(model):
 
 
 @pytest.mark.parametrize("model", [
-    "gpt-4o", "claude-3.5-sonnet", "llama3.2:3b", "", None, 42,
+    "gpt-4o", "claude-3.5-sonnet", "gemma3:4b", "", None, 42,
 ])
 def test_is_reasoning_model_negative(model):
     assert is_reasoning_model(model) is False

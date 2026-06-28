@@ -55,7 +55,7 @@ class TestBackendErrorPaths:
             mock_client.__aexit__ = AsyncMock(return_value=False)
             mock_client_cls.return_value = mock_client
 
-            result = await b.forward({"model": "llama3.2", "messages": []})
+            result = await b.forward({"model": "gemma3", "messages": []})
 
         assert result.ok is False
         assert "connection refused" in (result.error or "").lower()
@@ -78,7 +78,7 @@ class TestBackendErrorPaths:
             mock_client.__aexit__ = AsyncMock(return_value=False)
             mock_client_cls.return_value = mock_client
 
-            result = await b.forward({"model": "llama3.2", "messages": []})
+            result = await b.forward({"model": "gemma3", "messages": []})
 
         assert result.ok is False
         # The error path catches the JSONDecodeError under the broad except
@@ -172,7 +172,7 @@ class TestMultiBackendFallback:
         router.backends[0].forward = AsyncMock(return_value=timeout_resp)
         router.backends[1].forward = AsyncMock(return_value=success_resp)
 
-        result = await router.forward({"model": "llama3.2", "messages": []})
+        result = await router.forward({"model": "gemma3", "messages": []})
 
         assert result.ok is True
         assert result.backend_name == "backup"
@@ -194,7 +194,7 @@ class TestMultiBackendFallback:
         router.backends[0].forward = AsyncMock(return_value=connect_err)
         router.backends[1].forward = AsyncMock(return_value=success_resp)
 
-        result = await router.forward({"model": "llama3.2", "messages": []})
+        result = await router.forward({"model": "gemma3", "messages": []})
         assert result.ok is True
         assert result.backend_name == "backup"
 
@@ -211,7 +211,7 @@ class TestMultiBackendFallback:
             ok=False, backend_name="backup", error="HTTP 503: down",
         ))
 
-        result = await router.forward({"model": "llama3.2", "messages": []})
+        result = await router.forward({"model": "gemma3", "messages": []})
 
         assert result.ok is False
         assert result.status_code == 503
@@ -238,7 +238,7 @@ class TestMultiBackendFallback:
         router.backends[1].forward_stream = _ok_stream
 
         chunks = []
-        async for line in router.forward_stream({"model": "llama3.2", "messages": []}):
+        async for line in router.forward_stream({"model": "gemma3", "messages": []}):
             chunks.append(line)
 
         joined = "\n".join(chunks)
@@ -266,7 +266,7 @@ class TestMultiBackendFallback:
         router.backends[1].forward_stream = _err2
 
         chunks = []
-        async for line in router.forward_stream({"model": "llama3.2", "messages": []}):
+        async for line in router.forward_stream({"model": "gemma3", "messages": []}):
             chunks.append(line)
 
         joined = "\n".join(chunks)
@@ -316,7 +316,7 @@ class TestBackendUsagePreservedOnFailure:
             cost_usd=0.005, latency_ms=100.0,
         ))
 
-        result = await router.forward({"model": "llama3.2", "messages": []})
+        result = await router.forward({"model": "gemma3", "messages": []})
 
         assert result.ok is True
         assert result.backend_name == "backup"
@@ -338,7 +338,7 @@ class TestBackendUsagePreservedOnFailure:
             mock_client.__aexit__ = AsyncMock(return_value=False)
             mock_client_cls.return_value = mock_client
 
-            result = await b.forward({"model": "llama3.2", "messages": []})
+            result = await b.forward({"model": "gemma3", "messages": []})
 
         assert result.ok is False
         assert result.backend_name == "local"

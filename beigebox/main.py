@@ -2,7 +2,7 @@
 BeigeBox — LLM Middleware Control Plane
 
 LICENSING: MIT.
-See LICENSE.md and COMMERCIAL_LICENSE.md for details.
+See LICENSE.
 
 FastAPI application — the BeigeBox entry point. Wires app construction,
 middleware, lifespan, and router registration. Endpoint handlers live in

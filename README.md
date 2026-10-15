@@ -1,6 +1,6 @@
 # BeigeBox **V3** — security-focused fork
 
-[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](./LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 
 > **You are looking at V3.** V3 is the active line — a smaller, sharper, security-focused refactor. It lives here at **`RALaBarge/beigebox-security`** on the `main` branch.
@@ -276,12 +276,7 @@ The `bb` CLI lives at `beigebox/cli.py`. Run `bb --help` for the full command li
 
 ## License
 
-Dual-licensed: **AGPL-3.0** (source available) and **Commercial** (proprietary).
-
-For proprietary use cases, [open an issue](https://github.com/RALaBarge/beigebox-security/issues) — licensing is negotiable.
-
-See [LICENSE.md](LICENSE.md).
-
+[MIT](LICENSE).
 ---
 
 ## Why two repos?

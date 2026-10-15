@@ -160,7 +160,7 @@ it squishy" or "still deciding," keep it here.
   multi-pane analytics dashboard? Where's the line?
   {{TODO: decide}}
 
-- **License model.** AGPL-3.0 + Commercial dual-license is set; is BeigeBox
+- **License model.** MIT-licensed; is BeigeBox
   ever offered as a hosted service, or always self-hosted only?
   {{TODO: decide}}
 

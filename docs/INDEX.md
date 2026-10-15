@@ -216,4 +216,4 @@ See [Security](security.md) for the full threat model.
 - **Main README**: [../README.md](../README.md)
 - **V3 changelog**: [../V3.md](../V3.md)
 - **Constitution**: [../BEIGEBOX_IS_NOT.md](../BEIGEBOX_IS_NOT.md)
-- **License**: [../LICENSE.md](../LICENSE.md) (AGPL-3.0 + Commercial)
+- **License**: [../LICENSE](../LICENSE) (MIT)
